@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Bài 2. Điều khiển LED</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+
+<style>
+:root {
+  --bg1: #0b1020;
+  --bg2: #0f0525;
+  --neon: #7afcff;
+  --lime: #b6ff00;
+  --gold: #ffd700;
+  --text: #f5f8ff;
+  --card: rgba(16,24,48,.52);
+}
+.btn {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 12px 20px;
+
+  font-size: 1rem;
+  font-weight: bold;
+
+  background: linear-gradient(135deg, #00c6ff, #0072ff);
+  color: white;
+
+  border-radius: 10px;
+  text-decoration: none;
+
+  box-shadow: 0 4px 18px rgba(0, 170, 255, 0.5);
+  transition: all 0.25s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(0, 200, 255, 0.8);
+}
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 10% 10%, #121a3a, transparent 45%),
+    radial-gradient(circle at 90% 90%, #1a0b32, transparent 50%),
+    linear-gradient(135deg, var(--bg1), var(--bg2));
+  min-height: 100vh;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.gradient {
+  position: absolute;
+  inset: -25vmax;
+  background: conic-gradient(from 0deg at 50% 50%, #00111a, #101040, #2a004a, #00111a);
+  filter: blur(80px) saturate(150%);
+  animation: spin 24s linear infinite;
+  opacity: .55;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg) scale(1.05); }
+}
+
+canvas#fx {
+  position: absolute;
+  inset: 0;
+  opacity: .5;
+}
+
+.home {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.12);
+  color: var(--neon);
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  border: 2px solid rgba(122,252,255,.6);
+  box-shadow: 0 0 18px rgba(122,252,255,.35);
+  z-index: 10;
+  transition: .25s ease;
+}
+
+.home:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 28px rgba(122,252,255,.8);
+}
+
+.page {
+  position: relative;
+  z-index: 1;
+  width: min(1120px, 94%);
+  margin: 0 auto;
+  padding: 82px 0 60px;
+}
+
+.hero {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.hero .label {
+  display: inline-block;
+  padding: 7px 15px;
+  border: 1px solid rgba(122,252,255,.6);
+  border-radius: 999px;
+  color: var(--neon);
+  font-weight: bold;
+  letter-spacing: 1px;
+  background: rgba(0,20,60,.35);
+}
+
+h1 {
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  margin: 18px 0 10px;
+  color: white;
+  text-shadow: 0 0 24px rgba(122,252,255,.35);
+}
+
+.subtitle {
+  max-width: 840px;
+  margin: 0 auto;
+  color: rgba(245,248,255,.82);
+  font-size: 1.05rem;
+  line-height: 1.75;
+}
+
+.lesson {
+  background: var(--card);
+  border: 1px solid rgba(122,252,255,.18);
+  border-radius: 24px;
+  padding: clamp(18px, 3vw, 30px);
+  margin-bottom: 24px;
+  box-shadow: 0 14px 38px rgba(0,0,0,.42);
+  backdrop-filter: blur(12px);
+}
+
+.lesson h2 {
+  color: var(--gold);
+  margin-top: 0;
+  font-size: clamp(1.35rem, 1.3vw + 1rem, 1.85rem);
+}
+
+.lesson h3 {
+  color: var(--neon);
+  margin-top: 24px;
+  font-size: 1.18rem;
+}
+
+.lesson p,
+.lesson li {
+  font-size: clamp(0.98rem, 0.35vw + 0.9rem, 1.08rem);
+  line-height: 1.8;
+  color: rgba(245,248,255,.88);
+}
+
+.note {
+  border-left: 4px solid var(--lime);
+  background: rgba(182,255,0,.08);
+  padding: 12px 15px;
+  border-radius: 12px;
+  margin: 14px 0;
+}
+
+.warning {
+  border-left: 4px solid #ff7a00;
+  background: rgba(255,122,0,.1);
+  padding: 12px 15px;
+  border-radius: 12px;
+  margin: 14px 0;
+}
+
+.image-wrap {
+  width: 100%;
+  overflow-x: auto;
+  padding: 8px 0;
+}
+
+.lesson-img {
+  display: block;
+  width: 100%;
+  max-width: 980px;
+  height: auto;
+  margin: 20px auto;
+  border-radius: 18px;
+  background: white;
+  box-shadow: 0 14px 38px rgba(0,0,0,.42);
+  object-fit: contain;
+}
+
+/* ===== COLLAPSE PIN TABLE ===== */
+.pin-collapse {
+  margin-top: 20px;
+  border: 1px solid rgba(122,252,255,.22);
+  border-radius: 18px;
+  background: rgba(0,0,0,.24);
+  overflow: hidden;
+}
+
+.pin-collapse-head {
+  width: 100%;
+  border: none;
+  background: rgba(0,170,255,.14);
+  color: white;
+  padding: 15px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.pin-collapse-head:hover {
+  background: rgba(0,170,255,.24);
+}
+
+.pin-collapse-arrow {
+  color: var(--gold);
+  transition: transform .25s ease;
+}
+
+.pin-collapse.open .pin-collapse-arrow {
+  transform: rotate(90deg);
+}
+
+.pin-collapse-body {
+  display: none;
+  padding: 14px;
+  border-top: 1px solid rgba(122,252,255,.16);
+  overflow-x: auto;
+}
+
+.pin-collapse.open .pin-collapse-body {
+  display: block;
+}
+
+.pin-table {
+  width: 100%;
+  min-width: 820px;
+  border-collapse: collapse;
+  font-size: .84rem;
+  background: rgba(0,0,0,.18);
+}
+
+.pin-table th,
+.pin-table td {
+  border: 1px solid rgba(255,255,255,.12);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+  line-height: 1.45;
+}
+
+.pin-table th {
+  color: var(--lime);
+  background: rgba(0,170,255,.16);
+  font-size: .86rem;
+}
+
+.pin-table td:nth-child(3) {
+  color: var(--neon);
+  font-weight: bold;
+  font-family: Consolas, Monaco, monospace;
+}
+
+/* ===== CODE BOX ===== */
+/* ===== CODE COLLAPSE ===== */
+.code-collapse {
+  margin: 18px 0;
+  border: 1px solid rgba(122,252,255,.2);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.code-collapse-head {
+  width: 100%;
+  background: rgba(0,170,255,.12);
+  color: white;
+  padding: 14px;
+  border: none;
+  cursor: pointer;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  font-weight: bold;
+}
+
+.code-collapse-head:hover {
+  background: rgba(0,170,255,.25);
+}
+
+.code-collapse .arrow {
+  transition: 0.3s;
+  color: var(--gold);
+}
+
+.code-collapse.open .arrow {
+  transform: rotate(90deg);
+}
+
+.code-collapse-body {
+  display: none;
+}
+
+.code-collapse.open .code-collapse-body {
+  display: block;
+}
+
+.code-box {
+  position: relative;
+  background: #282c34;
+  border: 1px solid rgba(122,252,255,.22);
+  border-radius: 16px;
+  margin: 16px 0;
+  overflow: hidden;
+  box-shadow: inset 0 0 18px rgba(0,234,255,.06);
+}
+
+.code-title {
+  padding: 10px 14px;
+  background: rgba(255,255,255,.05);
+  color: var(--lime);
+  font-weight: bold;
+  border-bottom: 1px solid rgba(122,252,255,.18);
+}
+
+.code-box pre {
+  margin: 0;
+  padding: 18px;
+  overflow-x: auto;
+}
+
+.code-box code {
+  font-family: Consolas, Monaco, "Courier New", monospace;
+  font-size: .92rem;
+  line-height: 1.55;
+}
+
+.copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  border: 1px solid rgba(122,252,255,.45);
+  background: rgba(0,90,160,.7);
+  color: white;
+  border-radius: 9px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.copy-btn:hover {
+  background: rgba(0,160,255,.9);
+}
+
+.nav-bottom {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.nav-bottom a {
+  flex: 1;
+  text-align: center;
+  text-decoration: none;
+  color: white;
+  font-weight: bold;
+  padding: 13px;
+  border-radius: 14px;
+  background: rgba(0,90,160,.5);
+  border: 1px solid rgba(122,252,255,.35);
+  transition: .25s ease;
+}
+
+.nav-bottom a:hover {
+  color: var(--lime);
+  box-shadow: 0 0 22px rgba(122,252,255,.35);
+}
+
+@media (max-width: 640px) {
+  .page {
+    width: 94%;
+    padding-top: 72px;
+  }
+
+  .hero {
+    text-align: left;
+  }
+
+  h1 {
+    font-size: 1.75rem;
+    line-height: 1.25;
+  }
+
+  .subtitle {
+    font-size: .98rem;
+  }
+
+  .lesson {
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .lesson h2 {
+    font-size: 1.25rem;
+  }
+
+  .lesson-img {
+    border-radius: 12px;
+    margin: 14px auto;
+  }
+
+  .pin-collapse-head {
+    font-size: .92rem;
+    padding: 13px;
+  }
+
+  .pin-table {
+    font-size: .76rem;
+    min-width: 760px;
+  }
+
+  .pin-table th,
+  .pin-table td {
+    padding: 7px;
+  }
+
+  .nav-bottom {
+    flex-direction: column;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="backdrop" aria-hidden="true">
+  <div class="gradient"></div>
+  <canvas id="fx"></canvas>
+</div>
+
+<a href="tailieu-kythuat.html" class="home" title="Quay lại tài liệu kỹ thuật">🏠</a>
+
+
+<!-- ===== NỘI DUNG===== -->
+<main class="page">
+
+  <!-- ===== HERO ===== -->
+  <section class="hero">
+    <div class="label">BÀI GIẢNG LẬP TRÌNH ROBOT MÊ CUNG</div>
+
+    <h1>Bài 2. Điều khiển LED</h1>
+
+    <p class="subtitle">
+      Bài học giúp học viên làm quen với điều khiển thiết bị đầu ra thông qua LED vòng WS2812,
+      dùng để hiển thị trạng thái hoạt động của robot.
+    </p>
+  </section>
+
+  <!-- ===== 1 ===== -->
+  <section class="lesson">
+    <h2>1. Mục tiêu bài học</h2>
+    <ul>
+      <li>Hiểu khái niệm OUTPUT</li>
+      <li>Biết điều khiển LED vòng WS2812</li>
+      <li>Hiểu cách hiển thị màu RGB</li>
+      <li>Sử dụng LED để báo trạng thái robot</li>
+    </ul>
+  </section>
+  <!-- ===== 2 ===== -->
+  <section class="lesson">
+    <h2>2. Lý thuyết</h2>
+    <h3>2.1. LED thường</h3>
+    <p>
+      LED thường chỉ có 2 trạng thái: bật hoặc tắt.
+      Arduino điều khiển bằng HIGH (bật) và LOW (tắt).
+    </p>
+    <h3>2.2. LED WS2812 là gì?</h3>
+    <p>
+      WS2812 là LED RGB thông minh, mỗi LED có thể hiển thị màu riêng.
+      Chỉ cần 1 chân tín hiệu để điều khiển toàn bộ dãy LED.
+    </p>
+    <h3>2.3. Màu RGB</h3>
+    <ul>
+      <li>Đỏ: (255, 0, 0)</li>
+      <li>Xanh lá: (0, 255, 0)</li>
+      <li>Xanh dương: (0, 0, 255)</li>
+      <li>Trắng: (255, 255, 255)</li>
+    </ul>
+    <div class="note">
+      Mỗi màu là tổ hợp của 3 thành phần: Red - Green - Blue
+    </div>
+  </section>
+  <!-- ===== 3 ===== -->
+ <section class="lesson">
+  <h2>3. Sơ đồ kết nối chân</h2>
+  <p>
+    LED vòng WS2812 được kết nối với Arduino Mega như sau:
+  </p>
+  <ul>
+    <li>DIN → D13</li>
+    <li>VCC → 5V</li>
+    <li>GND → GND</li></ul>
+  <div class="image-wrap">
+    <img src="DATA/Bai2_Neopixel.webp" class="lesson-img">
+  </div>
+
+  <div class="warning">
+    Lưu ý:
+    <ul>
+      <li>Phải nối chung GND giữa Arduino và LED</li>
+      <li>Cấp nguồn đủ 5V để LED hoạt động ổn định</li>
+      <li>Nếu sử dụng nhiều LED, Nối chân DIN với chân DOUT của LED trước</li>
+    </ul>
+  </div>
+</section>
+  <!-- ===== 4 ===== -->
+  <section class="lesson">
+    <h2>4. Nguyên lý hoạt động</h2>
+    <p>
+      Arduino gửi dữ liệu màu đến LED thông qua chân DATA.
+      Mỗi LED nhận dữ liệu và hiển thị màu tương ứng.
+    </p>
+    <div class="note">
+      Luồng hoạt động: Arduino → DATA → LED WS2812 → Hiển thị
+    </div>
+  </section>
+  <!-- ===== 5 ===== -->
+<section class="lesson">
+  <h2>5. Code ví dụ</h2>
+<div class="code-collapse">
+  <button class="code-collapse-head" onclick="toggleCode(this)">
+    <span>💻 Code cơ bản: bật LED 1 màu</span>
+    <span class="arrow">▶</span>
+  </button>
+
+  <div class="code-collapse-body">
+    <div class="code-box">
+      <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+
+<pre><code class="language-cpp">
+#include &lt;Adafruit_NeoPixel.h&gt;
+
+#define LED_PIN 13
+#define NUM_LEDS 16
+
+Adafruit_NeoPixel ring(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
+
+void setup() {
+  ring.begin();
+  ring.show();
+}
+
+void loop() {
+
+  // bật toàn bộ LED màu đỏ
+  for (int i = 0; i < NUM_LEDS; i++) {
+    ring.setPixelColor(i, ring.Color(255, 0, 0));
+  }
+
+  ring.show();
+
+}
+</code></pre>
+
+    </div>
+  </div>
+</div>
+
+  <div class="code-collapse">
+    <button class="code-collapse-head" onclick="toggleCode(this)">
+      <span>💻 Code hiệu ứng LED chạy đổi màu</span>
+      <span class="arrow">▶</span>
+    </button>
+    <div class="code-collapse-body">
+      <div class="code-box">
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+
+<pre><code class="language-cpp">
+#include &lt;Adafruit_NeoPixel.h&gt;
+
+#define LED_PIN 13
+#define NUM_LEDS 16
+
+Adafruit_NeoPixel ring(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
+
+int speedDelay = 40;
+int colorShift = 0;
+
+// ===== Tạo màu rainbow =====
+uint32_t wheel(byte pos) {
+  pos = 255 - pos;
+
+  if (pos < 85) {
+    return ring.Color(255 - pos * 3, 0, pos * 3);
+  }
+  if (pos < 170) {
+    pos -= 85;
+    return ring.Color(0, pos * 3, 255 - pos * 3);
+  }
+  pos -= 170;
+  return ring.Color(pos * 3, 255 - pos * 3, 0);
+}
+
+// ===== Fade đuôi =====
+void fadeAll(byte amount) {
+  for (int i = 0; i < NUM_LEDS; i++) {
+    uint32_t c = ring.getPixelColor(i);
+
+    uint8_t r = (c >> 16) & 0xFF;
+    uint8_t g = (c >> 8) & 0xFF;
+    uint8_t b = c & 0xFF;
+
+    r = (r * amount) / 255;
+    g = (g * amount) / 255;
+    b = (b * amount) / 255;
+
+    ring.setPixelColor(i, r, g, b);
+  }
+}
+
+void setup() {
+  ring.begin();
+  ring.show();
+}
+
+void loop() {
+
+  for (int i = 0; i < NUM_LEDS; i++) {
+
+    fadeAll(180);
+
+    int colorIndex = (i * 16 + colorShift) % 256;
+
+    ring.setPixelColor(i, wheel(colorIndex));
+
+    ring.show();
+    delay(speedDelay);
+  }
+
+  colorShift++;
+}
+</code></pre>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    Hiệu ứng: LED chạy vòng + đổi màu.
+  </div>
+
+</section>
+  <!-- ===== 6 ===== -->
+  <section class="lesson">
+    <h2>6. Bài tập thực hành</h2>
+
+    <ul>
+      <li>Làm LED chạy từng bóng một</li>
+      <li>Tạo hiệu ứng LED quay vòng</li>
+      <li>Tạo các trạng thái Robot với quy ước màu:
+        <ul>
+          <li>Xanh lá → sẵn sàng</li>
+          <li>Đỏ → lỗi</li>
+          <li>Xanh dương → đang chạy</li>
+        </ul>
+      </li>
+    </ul>
+
+  </section>
+
+  </section>
+
+  <div class="nav-bottom">
+    <a href="bai1.html">← Bài trước</a>
+    <a href="bai3.html">Bài tiếp theo →</a>
+  </div>
+
+</main>
+<!-- ===== NỘI DUNG===== -->
+<script>
+function togglePinTable(button) {
+  const box = button.closest(".pin-collapse");
+  box.classList.toggle("open");
+}
+
+function copyCode(button) {
+  const code = button.parentElement.querySelector("code").innerText;
+  navigator.clipboard.writeText(code);
+
+  button.innerText = "Đã copy";
+  setTimeout(() => {
+    button.innerText = "Copy";
+  }, 1200);
+}
+
+(function(){
+  const c = document.getElementById('fx');
+  const ctx = c.getContext('2d');
+  let w, h, dpr;
+  const N = 70;
+  const pts = [];
+
+  function resize(){
+    dpr = window.devicePixelRatio || 1;
+    w = c.width = innerWidth * dpr;
+    h = c.height = innerHeight * dpr;
+    c.style.width = innerWidth + 'px';
+    c.style.height = innerHeight + 'px';
+  }
+
+  function init(){
+    pts.length = 0;
+    for(let i = 0; i < N; i++){
+      pts.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        vx: (Math.random() - .5) * 0.12 * dpr,
+        vy: (Math.random() - .5) * 0.12 * dpr,
+        r: (Math.random() * 1.6 + 0.6) * dpr
+      });
+    }
+  }
+
+  function step(){
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = 'rgba(255,255,255,.7)';
+
+    for(const p of pts){
+      p.x += p.vx;
+      p.y += p.vy;
+
+      if(p.x < 0 || p.x > w) p.vx *= -1;
+      if(p.y < 0 || p.y > h) p.vy *= -1;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    requestAnimationFrame(step);
+  }
+
+  addEventListener('resize', () => {
+    resize();
+    init();
+  });
+
+  resize();
+  init();
+  step();
+})();
+
+hljs.highlightAll();
+function toggleCode(btn){
+  const box = btn.closest(".code-collapse");
+  box.classList.toggle("open");
+
+  const text = btn.querySelector("span");
+  text.innerText = box.classList.contains("open")
+    ? "🔽 Ẩn code"
+    : "💻 Xem code ví dụ";
+}
+</script>
+
+</body>
+</html>
