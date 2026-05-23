@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Bài 1 - Giới thiệu phần cứng Robot</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+
+<style>
+:root {
+  --bg1: #0b1020;
+  --bg2: #0f0525;
+  --neon: #7afcff;
+  --lime: #b6ff00;
+  --gold: #ffd700;
+  --text: #f5f8ff;
+  --card: rgba(16,24,48,.52);
+}
+.btn {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 12px 20px;
+
+  font-size: 1rem;
+  font-weight: bold;
+
+  background: linear-gradient(135deg, #00c6ff, #0072ff);
+  color: white;
+
+  border-radius: 10px;
+  text-decoration: none;
+
+  box-shadow: 0 4px 18px rgba(0, 170, 255, 0.5);
+  transition: all 0.25s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(0, 200, 255, 0.8);
+}
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 10% 10%, #121a3a, transparent 45%),
+    radial-gradient(circle at 90% 90%, #1a0b32, transparent 50%),
+    linear-gradient(135deg, var(--bg1), var(--bg2));
+  min-height: 100vh;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.gradient {
+  position: absolute;
+  inset: -25vmax;
+  background: conic-gradient(from 0deg at 50% 50%, #00111a, #101040, #2a004a, #00111a);
+  filter: blur(80px) saturate(150%);
+  animation: spin 24s linear infinite;
+  opacity: .55;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg) scale(1.05); }
+}
+
+canvas#fx {
+  position: absolute;
+  inset: 0;
+  opacity: .5;
+}
+
+.home {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.12);
+  color: var(--neon);
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  border: 2px solid rgba(122,252,255,.6);
+  box-shadow: 0 0 18px rgba(122,252,255,.35);
+  z-index: 10;
+  transition: .25s ease;
+}
+
+.home:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 28px rgba(122,252,255,.8);
+}
+
+.page {
+  position: relative;
+  z-index: 1;
+  width: min(1120px, 94%);
+  margin: 0 auto;
+  padding: 82px 0 60px;
+}
+
+.hero {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.hero .label {
+  display: inline-block;
+  padding: 7px 15px;
+  border: 1px solid rgba(122,252,255,.6);
+  border-radius: 999px;
+  color: var(--neon);
+  font-weight: bold;
+  letter-spacing: 1px;
+  background: rgba(0,20,60,.35);
+}
+
+h1 {
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  margin: 18px 0 10px;
+  color: white;
+  text-shadow: 0 0 24px rgba(122,252,255,.35);
+}
+
+.subtitle {
+  max-width: 840px;
+  margin: 0 auto;
+  color: rgba(245,248,255,.82);
+  font-size: 1.05rem;
+  line-height: 1.75;
+}
+
+.lesson {
+  background: var(--card);
+  border: 1px solid rgba(122,252,255,.18);
+  border-radius: 24px;
+  padding: clamp(18px, 3vw, 30px);
+  margin-bottom: 24px;
+  box-shadow: 0 14px 38px rgba(0,0,0,.42);
+  backdrop-filter: blur(12px);
+}
+
+.lesson h2 {
+  color: var(--gold);
+  margin-top: 0;
+  font-size: clamp(1.35rem, 1.3vw + 1rem, 1.85rem);
+}
+
+.lesson h3 {
+  color: var(--neon);
+  margin-top: 24px;
+  font-size: 1.18rem;
+}
+
+.lesson p,
+.lesson li {
+  font-size: clamp(0.98rem, 0.35vw + 0.9rem, 1.08rem);
+  line-height: 1.8;
+  color: rgba(245,248,255,.88);
+}
+
+.note {
+  border-left: 4px solid var(--lime);
+  background: rgba(182,255,0,.08);
+  padding: 12px 15px;
+  border-radius: 12px;
+  margin: 14px 0;
+}
+
+.warning {
+  border-left: 4px solid #ff7a00;
+  background: rgba(255,122,0,.1);
+  padding: 12px 15px;
+  border-radius: 12px;
+  margin: 14px 0;
+}
+
+.image-wrap {
+  width: 100%;
+  overflow-x: auto;
+  padding: 8px 0;
+}
+
+.lesson-img {
+  display: block;
+  width: 100%;
+  max-width: 980px;
+  height: auto;
+  margin: 20px auto;
+  border-radius: 18px;
+  background: white;
+  box-shadow: 0 14px 38px rgba(0,0,0,.42);
+  object-fit: contain;
+}
+
+/* ===== COLLAPSE PIN TABLE ===== */
+.pin-collapse {
+  margin-top: 20px;
+  border: 1px solid rgba(122,252,255,.22);
+  border-radius: 18px;
+  background: rgba(0,0,0,.24);
+  overflow: hidden;
+}
+
+.pin-collapse-head {
+  width: 100%;
+  border: none;
+  background: rgba(0,170,255,.14);
+  color: white;
+  padding: 15px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.pin-collapse-head:hover {
+  background: rgba(0,170,255,.24);
+}
+
+.pin-collapse-arrow {
+  color: var(--gold);
+  transition: transform .25s ease;
+}
+
+.pin-collapse.open .pin-collapse-arrow {
+  transform: rotate(90deg);
+}
+
+.pin-collapse-body {
+  display: none;
+  padding: 14px;
+  border-top: 1px solid rgba(122,252,255,.16);
+  overflow-x: auto;
+}
+
+.pin-collapse.open .pin-collapse-body {
+  display: block;
+}
+
+.pin-table {
+  width: 100%;
+  min-width: 820px;
+  border-collapse: collapse;
+  font-size: .84rem;
+  background: rgba(0,0,0,.18);
+}
+
+.pin-table th,
+.pin-table td {
+  border: 1px solid rgba(255,255,255,.12);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+  line-height: 1.45;
+}
+
+.pin-table th {
+  color: var(--lime);
+  background: rgba(0,170,255,.16);
+  font-size: .86rem;
+}
+
+.pin-table td:nth-child(3) {
+  color: var(--neon);
+  font-weight: bold;
+  font-family: Consolas, Monaco, monospace;
+}
+
+/* ===== CODE BOX ===== */
+/* ===== CODE COLLAPSE ===== */
+.code-collapse {
+  margin: 18px 0;
+  border: 1px solid rgba(122,252,255,.2);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.code-collapse-head {
+  width: 100%;
+  background: rgba(0,170,255,.12);
+  color: white;
+  padding: 14px;
+  border: none;
+  cursor: pointer;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  font-weight: bold;
+}
+
+.code-collapse-head:hover {
+  background: rgba(0,170,255,.25);
+}
+
+.code-collapse .arrow {
+  transition: 0.3s;
+  color: var(--gold);
+}
+
+.code-collapse.open .arrow {
+  transform: rotate(90deg);
+}
+
+.code-collapse-body {
+  display: none;
+}
+
+.code-collapse.open .code-collapse-body {
+  display: block;
+}
+
+.code-box {
+  position: relative;
+  background: #282c34;
+  border: 1px solid rgba(122,252,255,.22);
+  border-radius: 16px;
+  margin: 16px 0;
+  overflow: hidden;
+  box-shadow: inset 0 0 18px rgba(0,234,255,.06);
+}
+
+.code-title {
+  padding: 10px 14px;
+  background: rgba(255,255,255,.05);
+  color: var(--lime);
+  font-weight: bold;
+  border-bottom: 1px solid rgba(122,252,255,.18);
+}
+
+.code-box pre {
+  margin: 0;
+  padding: 18px;
+  overflow-x: auto;
+}
+
+.code-box code {
+  font-family: Consolas, Monaco, "Courier New", monospace;
+  font-size: .92rem;
+  line-height: 1.55;
+}
+
+.copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  border: 1px solid rgba(122,252,255,.45);
+  background: rgba(0,90,160,.7);
+  color: white;
+  border-radius: 9px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.copy-btn:hover {
+  background: rgba(0,160,255,.9);
+}
+
+.nav-bottom {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.nav-bottom a {
+  flex: 1;
+  text-align: center;
+  text-decoration: none;
+  color: white;
+  font-weight: bold;
+  padding: 13px;
+  border-radius: 14px;
+  background: rgba(0,90,160,.5);
+  border: 1px solid rgba(122,252,255,.35);
+  transition: .25s ease;
+}
+
+.nav-bottom a:hover {
+  color: var(--lime);
+  box-shadow: 0 0 22px rgba(122,252,255,.35);
+}
+
+@media (max-width: 640px) {
+  .page {
+    width: 94%;
+    padding-top: 72px;
+  }
+
+  .hero {
+    text-align: left;
+  }
+
+  h1 {
+    font-size: 1.75rem;
+    line-height: 1.25;
+  }
+
+  .subtitle {
+    font-size: .98rem;
+  }
+
+  .lesson {
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .lesson h2 {
+    font-size: 1.25rem;
+  }
+
+  .lesson-img {
+    border-radius: 12px;
+    margin: 14px auto;
+  }
+
+  .pin-collapse-head {
+    font-size: .92rem;
+    padding: 13px;
+  }
+
+  .pin-table {
+    font-size: .76rem;
+    min-width: 760px;
+  }
+
+  .pin-table th,
+  .pin-table td {
+    padding: 7px;
+  }
+
+  .nav-bottom {
+    flex-direction: column;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="backdrop" aria-hidden="true">
+  <div class="gradient"></div>
+  <canvas id="fx"></canvas>
+</div>
+
+<a href="tailieu-kythuat.html" class="home" title="Quay lại tài liệu kỹ thuật">🏠</a>
+
+<main class="page">
+
+  <section class="hero">
+    <div class="label">BÀI GIẢNG LẬP TRÌNH ROBOT MÊ CUNG</div>
+
+    <h1>Bài 1. Giới thiệu phần cứng Robot</h1>
+
+    <p class="subtitle">
+      Bài học giúp học viên nắm được cấu trúc tổng thể của robot, chức năng của từng mô-đun phần cứng,
+      bộ điều khiển trung tâm Arduino Mega 2560 Pro và sơ đồ kết nối chân sử dụng trong robot thi đấu.
+    </p>
+    
+  </section>
+
+  <section class="lesson">
+    <h2>1. Cấu trúc phần cứng Robot thi đấu</h2>
+
+    <p>
+      Robot thi đấu là một hệ thống robot tự hành được thiết kế để thực hiện các nhiệm vụ như di chuyển trong mê cung,
+      bám line, tránh vật cản, nhận dạng màu sắc và xử lý nhiệm vụ trên sân thi đấu.
+    </p>
+
+    <div class="image-wrap">
+      <img src="Data/Bai1_Robot.webp" alt="Cấu trúc phần cứng Robot thi đấu" class="lesson-img">
+    </div>
+
+    <h3>Các mô-đun chính trên robot</h3>
+
+    <ul>
+      <li><strong>Mạch điều khiển trung tâm:</strong> Arduino Mega 2560 Pro.</li>
+      <li><strong>Cảm biến dò line 5 kênh:</strong> phát hiện vạch dẫn đường.</li>
+      <li><strong>Cảm biến siêu âm:</strong> đo khoảng cách trái, trước, phải.</li>
+      <li><strong>Cảm biến màu sắc:</strong> nhận biết màu vật thể.</li>
+      <li><strong>IMU:</strong> hỗ trợ xác định góc quay và trạng thái chuyển động.</li>
+      <li><strong>Động cơ trái/phải:</strong> tạo chuyển động vi sai hai bánh.</li>
+      <li><strong>Servo:</strong> thực hiện thao tác gạt hoặc đẩy vật.</li>
+      <li><strong>OLED, Bluetooth, LED:</strong> hiển thị, giao tiếp, báo trạng thái.</li>
+    </ul>
+  </section>
+
+  <section class="lesson">
+    <h2>2. MCU Arduino Mega 2560 Pro</h2>
+
+    <p>
+      Arduino Mega 2560 Pro là bộ điều khiển trung tâm của robot. Mạch sử dụng vi điều khiển ATmega2560,
+      có số lượng chân vào/ra lớn, phù hợp với hệ robot cần kết nối nhiều cảm biến, động cơ và mô-đun giao tiếp cùng lúc.
+    </p>
+
+    <div class="image-wrap">
+      <img src="Data/Bai1_Mega2560.webp" alt="Arduino Mega 2560 Pro" class="lesson-img">
+    </div>
+
+    <h3>Đặc điểm chính</h3>
+
+    <ul>
+      <li>Nhiều chân digital để điều khiển động cơ, servo, LED và cảm biến số.</li>
+      <li>Nhiều chân analog để đọc cảm biến line và cảm biến tiệm cận.</li>
+      <li>Có chân ngắt ngoài, thuận lợi khi đọc encoder tốc độ cao.</li>
+      <li>Hỗ trợ I2C cho OLED và IMU.</li>
+      <li>Hỗ trợ Serial1 để kết nối Bluetooth HC-06.</li>
+    </ul>
+
+    <div class="warning">
+      <strong>Lưu ý:</strong> Khi lập trình trên Arduino IDE, chọn board <strong>Arduino Mega or Mega 2560</strong>.
+    </div>
+  </section>
+
+  <section class="lesson">
+    <h2>3. Sơ đồ kết nối chân trên Robot thi đấu</h2>
+
+    <p>
+      Hình dưới đây là sơ đồ kết nối tổng thể giữa Arduino Mega 2560 Pro và các mô-đun phần cứng trên robot.
+    </p>
+
+    <div class="image-wrap">
+      <img src="Data/Bai1_Pinout.png" alt="Sơ đồ kết nối chân Robot thi đấu" class="lesson-img">
+    </div>
+
+    <div class="pin-collapse">
+      <button class="pin-collapse-head" onclick="togglePinTable(this)">
+        <span>📌 Bảng kết nối chi tiết và chức năng các chân</span>
+        <span class="pin-collapse-arrow">▶</span>
+      </button>
+
+      <div class="pin-collapse-body">
+        <table class="pin-table">
+          <tr>
+            <th>TT</th>
+            <th>Thiết bị</th>
+            <th>Chân kết nối</th>
+            <th>Chức năng / phân tích</th>
+          </tr>
+
+          <tr>
+            <td>1</td>
+            <td>Cảm biến dò đường</td>
+            <td>A1, A2, A3, A4, A5</td>
+            <td>Gồm 5 kênh cảm biến dùng để nhận biết vạch dẫn đường. Các chân analog cho phép đọc mức phản xạ của từng mắt cảm biến.</td>
+          </tr>
+
+          <tr>
+            <td>2</td>
+            <td>Động cơ trái</td>
+            <td>D5, D9</td>
+            <td>Hai chân điều khiển chiều quay và tốc độ của động cơ trái.</td>
+          </tr>
+
+          <tr>
+            <td>3</td>
+            <td>Encoder động cơ trái</td>
+            <td>D2, D12</td>
+            <td>Dùng để đọc xung phản hồi từ động cơ trái.</td>
+          </tr>
+
+          <tr>
+            <td>4</td>
+            <td>Động cơ phải</td>
+            <td>D6, D10</td>
+            <td>Hai chân điều khiển chiều quay và tốc độ của động cơ phải.</td>
+          </tr>
+
+          <tr>
+            <td>5</td>
+            <td>Encoder động cơ phải</td>
+            <td>D3, D14</td>
+            <td>Dùng để đọc xung phản hồi từ động cơ phải.</td>
+          </tr>
+
+          <tr>
+            <td>6</td>
+            <td>Cảm biến siêu âm HC-SR04</td>
+            <td>Trig D4; Echo D7, D8, D11</td>
+            <td>D4 phát xung Trigger chung. D7, D8, D11 nhận phản hồi từ cảm biến trái, trước và phải.</td>
+          </tr>
+
+          <tr>
+            <td>7</td>
+            <td>Cảm biến màu TCS3200/TCS230</td>
+            <td>D24=S1, D25=S0, D26=LED, D27=S3, D28=S2, D29=OUT</td>
+            <td>S0/S1 chọn tần số đầu ra; S2/S3 chọn bộ lọc màu; OUT là tín hiệu xung cần đo; LED bật/tắt đèn chiếu sáng.</td>
+          </tr>
+
+          <tr>
+            <td>8</td>
+            <td>IMU MPU6050</td>
+            <td>I2C: SDA=20, SCL=21</td>
+            <td>Dùng để đo gia tốc và vận tốc góc, hỗ trợ giữ hướng đi thẳng và quay góc chính xác hơn.</td>
+          </tr>
+
+          <tr>
+            <td>9</td>
+            <td>Màn hình OLED</td>
+            <td>I2C: SDA=20, SCL=21</td>
+            <td>Dùng để hiển thị trạng thái robot, giá trị cảm biến, chế độ chạy và thông tin debug.</td>
+          </tr>
+
+          <tr>
+            <td>10</td>
+            <td>Cảm biến tiệm cận hồng ngoại</td>
+            <td>A6</td>
+            <td>Dùng để phát hiện vật thể ở khoảng cách gần.</td>
+          </tr>
+
+          <tr>
+            <td>11</td>
+            <td>Bluetooth HC-06</td>
+            <td>Serial1</td>
+            <td>Dùng để giao tiếp không dây.</td>
+          </tr>
+
+          <tr>
+            <td>12</td>
+            <td>LED WS2812</td>
+            <td>D13</td>
+            <td>Dùng báo trạng thái robot như sẵn sàng, đang chạy, lỗi cảm biến, hoàn thành nhiệm vụ.</td>
+          </tr>
+
+          <tr>
+            <td>13</td>
+            <td>RC Servo</td>
+            <td>D15</td>
+            <td>Dùng điều khiển cơ cấu gạt hoặc đẩy vật trong vùng nhiệm vụ.</td>
+          </tr>
+
+          <tr>
+            <td>14</td>
+            <td>Nút nhấn</td>
+            <td>A0</td>
+            <td>Dùng để khởi động robot, chọn chế độ chạy hoặc xác nhận trước khi thi đấu.</td>
+          </tr>
+
+          <tr>
+            <td>15</td>
+            <td>Nguồn hệ thống</td>
+            <td>Pin 12V</td>
+            <td>Cấp nguồn chính cho robot. Cần bảo đảm nguồn ổn định để tránh reset vi điều khiển khi động cơ hoạt động.</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="lesson">
+    <h2>4. Khai báo chân trong Arduino IDE</h2>
+
+    <p>
+      Sau khi nắm được sơ đồ kết nối chân, bước đầu tiên khi lập trình là khai báo các chân
+      sử dụng trong chương trình Arduino. Việc khai báo rõ ràng giúp chương trình dễ đọc,
+      dễ debug và tránh nhầm lẫn khi sử dụng nhiều thiết bị.
+    </p>
+
+
+<div class="code-collapse">
+  <button class="code-collapse-head" onclick="toggleCode(this)">
+    <span>💻 Xem ví dụ khai báo chân Arduino IDE</span>
+    <span class="code-collapse-arrow">▶</span>
+  </button>
+
+  <div class="code-collapse-body">
+    <div class="code-box">
+      <div class="code-title">Khai báo chân Arduino IDE</div>
+      <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre><code class="language-cpp">// ===== LINE SENSOR =====
+#define LINE_1 A1
+#define LINE_2 A2
+#define LINE_3 A3
+#define LINE_4 A4
+#define LINE_5 A5
+
+// ===== MOTOR LEFT =====
+#define MOTOR_L_IN1 5
+#define MOTOR_L_IN2 9
+#define ENCODER_L_A 2
+#define ENCODER_L_B 12
+
+// ===== MOTOR RIGHT =====
+#define MOTOR_R_IN1 6
+#define MOTOR_R_IN2 10
+#define ENCODER_R_A 3
+#define ENCODER_R_B 14
+
+// ===== ULTRASONIC =====
+#define TRIG_PIN 4
+#define ECHO_LEFT 7
+#define ECHO_FRONT 8
+#define ECHO_RIGHT 11
+
+// ===== COLOR SENSOR =====
+#define COLOR_S1 24
+#define COLOR_S0 25
+#define COLOR_LED 26
+#define COLOR_S3 27
+#define COLOR_S2 28
+#define COLOR_OUT 29
+
+// ===== I2C =====
+// SDA = 20
+// SCL = 21
+
+// ===== OTHER =====
+#define IR_SENSOR A6
+#define SERVO_PIN 15
+#define LED_RING 13
+#define BUTTON_PIN A0
+</code></pre>
+    </div>
+  </div>
+</div>
+
+<div class="code-collapse">
+  <button class="code-collapse-head" onclick="toggleCode(this)">
+    <span>💻 Xem ví dụ thiết lập chế độ chân</span>
+    <span class="code-collapse-arrow">▶</span>
+  </button>
+
+  <div class="code-collapse-body">
+    <div class="code-box">
+      <div class="code-title">Thiết lập chế độ chân (setup)</div>
+      <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre><code class="language-cpp">void setup() {
+
+  // ===== MOTOR =====
+  pinMode(MOTOR_L_IN1, OUTPUT);
+  pinMode(MOTOR_L_IN2, OUTPUT);
+  pinMode(MOTOR_R_IN1, OUTPUT);
+  pinMode(MOTOR_R_IN2, OUTPUT);
+
+  // ===== ENCODER =====
+  pinMode(ENCODER_L_A, INPUT);
+  pinMode(ENCODER_L_B, INPUT);
+  pinMode(ENCODER_R_A, INPUT);
+  pinMode(ENCODER_R_B, INPUT);
+
+  // ===== ULTRASONIC =====
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_LEFT, INPUT);
+  pinMode(ECHO_FRONT, INPUT);
+  pinMode(ECHO_RIGHT, INPUT);
+
+  // ===== COLOR SENSOR =====
+  pinMode(COLOR_S0, OUTPUT);
+  pinMode(COLOR_S1, OUTPUT);
+  pinMode(COLOR_S2, OUTPUT);
+  pinMode(COLOR_S3, OUTPUT);
+  pinMode(COLOR_OUT, INPUT);
+  pinMode(COLOR_LED, OUTPUT);
+
+  // ===== LINE SENSOR =====
+  pinMode(LINE_1, INPUT);
+  pinMode(LINE_2, INPUT);
+  pinMode(LINE_3, INPUT);
+  pinMode(LINE_4, INPUT);
+  pinMode(LINE_5, INPUT);
+
+  // ===== OTHER =====
+  pinMode(IR_SENSOR, INPUT);
+  pinMode(SERVO_PIN, OUTPUT);
+  pinMode(LED_RING, OUTPUT);
+
+  // Nút nhấn dùng điện trở kéo lên nội
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+}
+</code></pre>
+    </div>
+  </div>
+</div>
+  </section>
+
+  <section class="lesson">
+  <h2>5. Tài liệu tự học lập trình Arduino</h2>
+
+      <p>
+    Để học tốt các bài tiếp theo, học viên nên tự học các kiến thức cơ bản về Arduino Mega 2560.
+    Tài liệu này cung cấp các nội dung nền tảng như: Điều khiển LED, nút nhấn, cảm biến, hiển thị, động cơ và giao tiếp.
+    </p>
+
+  <a href="https://drive.google.com/file/d/1v_anbsNelw7z1vRINPfkyiZ2Z77KYAkj/view?usp=sharing" target="_blank" class="btn">
+  🚀 01. Lập trình Arduino Mega 2560 cơ bản
+  </a>
+  <ul>
+    <li>Tổng quan Arduino Mega 2560</li>
+    <li>Hướng dẫn sử dụng Wokwi để lập trình và mô phỏng online </li>
+    <li>Bài 1–3: LED và nút nhấn</li>
+    <li>Bài 4–5: Cảm biến cơ bản</li>
+    <li>Bài 6–11: Lập trình hiển thị cơ bản</li>
+    <li>Bài 12-13: Điều khiển động cơ Servo</li>
+    <li>Bài 14: Trao đổi dữ liệu qua UART</li>
+  </ul>
+  <a href="https://drive.google.com/file/d/1cFqzVp861X9ZwnPBJVDKEnazrMuF6L9C/view?usp=sharing" target="_blank" class="btn">
+  📘 02. Sổ tay lập trình Arduino
+  </a>
+</section>
+
+  <div class="nav-bottom">
+    <a href="tailieu-kythuat.html">← Danh sách bài học</a>
+    <a href="bai2.html">Bài tiếp theo →</a>
+  </div>
+
+</main>
+
+<script>
+function togglePinTable(button) {
+  const box = button.closest(".pin-collapse");
+  box.classList.toggle("open");
+}
+
+function copyCode(button) {
+  const code = button.parentElement.querySelector("code").innerText;
+  navigator.clipboard.writeText(code);
+
+  button.innerText = "Đã copy";
+  setTimeout(() => {
+    button.innerText = "Copy";
+  }, 1200);
+}
+
+(function(){
+  const c = document.getElementById('fx');
+  const ctx = c.getContext('2d');
+  let w, h, dpr;
+  const N = 70;
+  const pts = [];
+
+  function resize(){
+    dpr = window.devicePixelRatio || 1;
+    w = c.width = innerWidth * dpr;
+    h = c.height = innerHeight * dpr;
+    c.style.width = innerWidth + 'px';
+    c.style.height = innerHeight + 'px';
+  }
+
+  function init(){
+    pts.length = 0;
+    for(let i = 0; i < N; i++){
+      pts.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        vx: (Math.random() - .5) * 0.12 * dpr,
+        vy: (Math.random() - .5) * 0.12 * dpr,
+        r: (Math.random() * 1.6 + 0.6) * dpr
+      });
+    }
+  }
+
+  function step(){
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = 'rgba(255,255,255,.7)';
+
+    for(const p of pts){
+      p.x += p.vx;
+      p.y += p.vy;
+
+      if(p.x < 0 || p.x > w) p.vx *= -1;
+      if(p.y < 0 || p.y > h) p.vy *= -1;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    requestAnimationFrame(step);
+  }
+
+  addEventListener('resize', () => {
+    resize();
+    init();
+  });
+
+  resize();
+  init();
+  step();
+})();
+
+hljs.highlightAll();
+function toggleCode(btn){
+  const box = btn.closest(".code-collapse");
+  box.classList.toggle("open");
+
+  const text = btn.querySelector("span");
+  text.innerText = box.classList.contains("open")
+    ? "🔽 Ẩn code"
+    : "💻 Xem code ví dụ";
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Tài liệu kỹ thuật - Robot mê cung 2026</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: radial-gradient(circle at top, #123b7a, #061b45);
+  color: white;
+}
+
+/* Nút home */
+.home {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  text-decoration: none;
+  color: white;
+  z-index: 10;
+}
+
+.home:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+/* Header */
+.header {
+  text-align: center;
+  padding: 60px 20px 20px;
+}
+
+.header h1 {
+  font-size: 32px;
+  margin: 0;
+}
+
+.header p {
+  opacity: 0.85;
+}
+
+/* Grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px,1fr));
+  gap: 20px;
+  padding: 30px;
+}
+
+/* Card */
+.card {
+  background: rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 20px;
+  text-decoration: none;
+  color: white;
+  transition: 0.25s;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  background: rgba(0,255,255,0.15);
+  box-shadow: 0 0 20px rgba(0,255,255,0.4);
+}
+
+.card h2 {
+  margin: 10px 0;
+  font-size: 18px;
+}
+
+.card p {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.num {
+  font-size: 24px;
+  font-weight: bold;
+  color: #00ffff;
+}
+
+</style>
+</head>
+
+<body>
+
+<a href="index_2.html" class="home">🏠</a>
+
+<div class="header">
+  <h1>TÀI LIỆU KỸ THUẬT</h1>
+  <p>BÀI GIẢNG LẬP TRÌNH ROBOT MÊ CUNG</p>
+</div>
+
+<div class="grid">
+
+  <a class="card" href="bai1.html">
+    <div class="num">BÀI 1</div>
+    <h2>Giới thiệu phần cứng Robot thi đấu</h2>
+  </a>
+
+  <a class="card" href="bai2.html">
+    <div class="num">BÀI 2</div>
+    <h2>Điều khiển động cơ DC</h2>
+  </a>
+
+  <a class="card" href="bai3.html">
+    <div class="num">BÀI 3</div>
+    <h2>Encoder và điều khiển tốc độ</h2>
+  </a>
+
+  <a class="card" href="bai4.html">
+    <div class="num">BÀI 4</div>
+    <h2>Cảm biến dò line</h2>
+  </a>
+
+  <a class="card" href="bai5.html">
+    <div class="num">BÀI 5</div>
+    <h2>Cảm biến siêu âm</h2>
+  </a>
+
+  <a class="card" href="bai6.html">
+    <div class="num">BÀI 6</div>
+    <h2>Cảm biến màu và servo</h2>
+  </a>
+
+  <a class="card" href="bai7.html">
+    <div class="num">BÀI 7</div>
+    <h2>IMU và giữ hướng</h2>
+  </a>
+
+  <a class="card" href="bai8.html">
+    <div class="num">BÀI 8</div>
+    <h2>Giải mê cung và FSM</h2>
+  </a>
+
+    <a class="card" href="bai9.html">
+    <div class="num">BÀI 9</div>
+    <h2>Giải mê cung và FSM</h2>
+  </a>
+
+    <a class="card" href="bai10.html">
+    <div class="num">BÀI 10</div>
+    <h2>Giải mê cung và FSM</h2>
+  </a>
+
+
+</div>
+
+</body>
+</html>
