@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cuộc thi Robot mê cung 2026</title>
+
+<style>
+body {
+  margin: 0;
+  background: radial-gradient(circle at top, #123b7a, #061b45);
+  min-height: 100vh;
+  font-family: Arial, Helvetica, sans-serif;
+  overflow: hidden;
+}
+
+/* ===== DESKTOP MENU ===== */
+.quick-menu {
+  position: fixed;
+  right: clamp(28px, 3vw, 60px);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  opacity: 0;
+  pointer-events: none;
+  animation: showMenu .6s ease forwards;
+  animation-delay: 3s;
+}
+
+.quick-menu a {
+  min-width: 180px;
+  padding: 12px 16px;
+  text-decoration: none;
+  color: white;
+  font-weight: 600;
+  font-size: 13px;
+  border-radius: 12px;
+  background: rgba(0,40,90,.65);
+  border: 1px solid rgba(0,234,255,.45);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 22px rgba(0,0,0,.28), inset 0 0 8px rgba(0,234,255,.08);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: .2s ease;
+}
+
+.quick-menu a:hover {
+  transform: translateX(-5px);
+  background: rgba(0,140,255,.85);
+  box-shadow: 0 10px 26px rgba(0,0,0,.35), 0 0 18px rgba(0,234,255,.5);
+}
+
+.quick-menu .icon {
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
+}
+
+@keyframes showMenu {
+  to {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+/* ===== MOBILE MENU ===== */
+.menu-toggle {
+  display: none;
+}
+
+.mobile-menu {
+  display: none;
+}
+
+/* ===== INTRO HUD QUÂN SỰ ===== */
+.intro {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(0,170,255,.30), transparent 32%),
+    radial-gradient(circle at 80% 75%, rgba(0,255,180,.18), transparent 34%),
+    radial-gradient(circle at center, #09265c, #020814 82%);
+  animation: introOut 3s ease forwards;
+}
+
+.intro::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(2px 2px at 15% 25%, rgba(255,255,255,.9), transparent),
+    radial-gradient(1px 1px at 35% 60%, rgba(255,255,255,.8), transparent),
+    radial-gradient(2px 2px at 70% 35%, rgba(255,255,255,.9), transparent),
+    radial-gradient(1px 1px at 85% 75%, rgba(255,255,255,.8), transparent),
+    linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px);
+  background-size: auto, auto, auto, auto, 100% 6px;
+  opacity: .55;
+  animation: twinkle 2.5s infinite alternate;
+}
+
+.intro::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("Logo Khoa HKVT_VIETNAM.webp") center no-repeat;
+  background-size: clamp(190px, 58vmin, 560px);
+  opacity: .20;
+  filter: blur(.6px);
+  pointer-events: none;
+}
+
+.hud-frame {
+  position: absolute;
+  width: min(92vw, 1100px);
+  height: min(75vh, 700px);
+  border: 1px solid rgba(0,234,255,.55);
+  box-shadow: 0 0 22px rgba(0,234,255,.25), inset 0 0 28px rgba(0,234,255,.12);
+  clip-path: polygon(4% 0, 96% 0, 100% 10%, 100% 90%, 96% 100%, 4% 100%, 0 90%, 0 10%);
+  z-index: 1;
+}
+
+.hud-frame::before,
+.hud-frame::after {
+  content: "";
+  position: absolute;
+  width: 72px;
+  height: 72px;
+  border-color: #00eaff;
+  border-style: solid;
+  opacity: .9;
+}
+
+.hud-frame::before {
+  left: 18px;
+  top: 18px;
+  border-width: 3px 0 0 3px;
+}
+
+.hud-frame::after {
+  right: 18px;
+  bottom: 18px;
+  border-width: 0 3px 3px 0;
+}
+
+.hud-scan {
+  position: absolute;
+  width: min(92vw, 1100px);
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #00eaff, transparent);
+  box-shadow: 0 0 18px #00eaff;
+  z-index: 2;
+  animation: hudScan 1.8s linear infinite;
+}
+
+.hud-radar {
+  position: absolute;
+  width: 145px;
+  height: 145px;
+  right: calc(50% - min(46vw, 550px) + 36px);
+  bottom: calc(50% - min(37.5vh, 350px) + 28px);
+  border: 1px solid rgba(0,234,255,.65);
+  border-radius: 50%;
+  z-index: 2;
+  box-shadow: inset 0 0 20px rgba(0,234,255,.18);
+}
+
+.hud-radar::before {
+  content: "";
+  position: absolute;
+  inset: 16px;
+  border: 1px solid rgba(0,234,255,.35);
+  border-radius: 50%;
+}
+
+.hud-radar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, rgba(0,234,255,.45), transparent 55deg, transparent);
+  animation: radarSpin 1.5s linear infinite;
+}
+
+.intro-box {
+  position: relative;
+  z-index: 3;
+  text-align: center;
+  color: white;
+  padding: 24px;
+}
+
+.intro-box .status {
+  display: inline-block;
+  margin-bottom: 16px;
+  padding: 6px 14px;
+  border: 1px solid rgba(0,234,255,.7);
+  border-radius: 999px;
+  color: #00eaff;
+  font-size: clamp(12px, 1.5vw, 16px);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  background: rgba(0,20,60,.45);
+  box-shadow: 0 0 14px rgba(0,234,255,.35);
+}
+
+.intro-box h1 {
+  margin: 0;
+  font-size: clamp(36px, 6vw, 76px);
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  color: #fff;
+  text-shadow: 0 0 8px #fff, 0 0 20px #00eaff, 0 0 38px #008cff;
+  animation: targetGlow 1.2s infinite alternate;
+}
+
+.intro-box p {
+  margin-top: 16px;
+  font-size: clamp(17px, 2.2vw, 30px);
+  letter-spacing: 4px;
+  font-weight: bold;
+  color: #ffd700;
+  text-shadow: 0 0 14px rgba(255,215,0,.85);
+}
+
+@keyframes twinkle {
+  from { opacity: .35; }
+  to { opacity: .75; }
+}
+
+@keyframes introOut {
+  0%, 65% { opacity: 1; }
+  100% { opacity: 0; visibility: hidden; }
+}
+
+@keyframes hudScan {
+  0% { transform: translateY(-38vh); opacity: 0; }
+  15% { opacity: 1; }
+  100% { transform: translateY(38vh); opacity: 0; }
+}
+
+@keyframes radarSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes targetGlow {
+  from {
+    text-shadow: 0 0 8px #fff, 0 0 18px #00eaff, 0 0 32px #008cff;
+  }
+  to {
+    text-shadow: 0 0 12px #fff, 0 0 26px #ffd700, 0 0 48px #ff7a00;
+  }
+}
+
+/* ===== PAGE 2 ===== */
+.page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-left: clamp(48px, 5vw, 96px);
+  padding-right: clamp(130px, 14vw, 210px);
+  animation: posterIn 2.5s ease forwards;
+}
+
+@keyframes posterIn {
+  0%, 60% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.container {
+  position: relative;
+  height: min(88vh, 58vw);
+  aspect-ratio: 1536 / 1024;
+  overflow: hidden;
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.55);
+  transform: translateX(-0.8vw);
+}
+
+.container::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background: conic-gradient(from 0deg, transparent 0deg, transparent 300deg, rgba(0,234,255,.35) 340deg, transparent 360deg);
+  animation: posterRadar 4s linear infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+@keyframes posterRadar {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.poster {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.btn {
+  position: absolute;
+  z-index: 3;
+  border: 3px dashed gold;
+  border-radius: 12px;
+  background: rgba(255,215,0,0.15);
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(255,215,0,0.7); }
+  70% { box-shadow: 0 0 0 15px rgba(255,215,0,0); }
+}
+
+.doc {
+  left: 72.5%;
+  top: 70.2%;
+  width: 13.6%;
+  height: 20.6%;
+  animation: pulse 2s infinite;
+}
+
+.register {
+  left: 86.2%;
+  top: 70.2%;
+  width: 12.8%;
+  height: 20.6%;
+  animation: pulse 2s infinite;
+  animation-delay: 1s;
+}
+
+/* ===== MOBILE ACTIONS ===== */
+.mobile-actions {
+  display: none;
+}
+
+@keyframes attentionShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-2px); }
+  40% { transform: translateX(2px); }
+}
+
+@keyframes showButtons {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+
+  body {
+    overflow: hidden;
+    min-height: 100svh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .intro {
+    animation: introOut 1.6s ease forwards;
+  }
+
+  .intro::after {
+    background-size: clamp(180px, 55vmin, 360px);
+    opacity: .22;
+  }
+
+  .hud-frame {
+    width: 88vw;
+    height: 260px;
+  }
+
+  .hud-scan {
+    width: 88vw;
+  }
+
+  .hud-radar {
+    width: 82px;
+    height: 82px;
+    right: 8vw;
+    bottom: calc(50% - 130px + 12px);
+    opacity: .85;
+  }
+
+  .intro-box h1 {
+    letter-spacing: 2px;
+  }
+
+  .intro-box p {
+    letter-spacing: 2px;
+  }
+
+  .page {
+    animation: posterIn 1.85s ease forwards;
+    width: 100vw;
+    height: 100svh;
+    padding: 0;
+  }
+
+  .container {
+    width: 100vw;
+    height: auto;
+    aspect-ratio: 1536 / 1024;
+    border-radius: 0;
+    transform: none;
+  }
+
+  .poster {
+    width: 100%;
+    height: auto;
+  }
+
+  .btn {
+    display: none;
+  }
+
+  .quick-menu {
+    display: none;
+  }
+
+  .menu-toggle {
+    display: flex;
+    position: fixed;
+    top: 10px;
+    right: 12px;
+    z-index: 40;
+    width: 44px;
+    height: 44px;
+    background: rgba(0,40,90,.82);
+    border: 1px solid rgba(0,234,255,.6);
+    border-radius: 12px;
+    color: white;
+    font-size: 23px;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 22px rgba(0,0,0,.42);
+    cursor: pointer;
+  }
+
+  .menu-toggle.active {
+    background: rgba(0,140,255,.85);
+    box-shadow: 0 0 22px rgba(0,234,255,.55);
+  }
+
+  .mobile-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 35;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 70px 16px 18px;
+    background: linear-gradient(to bottom, rgba(0,10,40,.96), rgba(0,20,60,.88));
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(0,234,255,.32);
+    box-shadow: 0 12px 34px rgba(0,0,0,.45);
+    transform: translateY(-110%);
+    transition: .32s ease;
+  }
+
+  .mobile-menu.show {
+    transform: translateY(0);
+  }
+
+  .mobile-menu a {
+    text-decoration: none;
+    color: white;
+    font-weight: 700;
+    padding: 13px 14px;
+    border-radius: 14px;
+    background: rgba(0,70,150,.55);
+    border: 1px solid rgba(0,234,255,.38);
+    box-shadow: inset 0 0 10px rgba(0,234,255,.07);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .mobile-actions {
+    position: fixed;
+    bottom: calc(14px + env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    width: 92%;
+    max-width: 420px;
+    padding: 6px;
+    border-radius: 20px;
+    background: rgba(0,0,0,.45);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 10px 30px rgba(0,0,0,.5);
+    opacity: 0;
+    pointer-events: auto;
+    animation: showButtons .6s ease forwards;
+    animation-delay: 1.7s;
+    z-index: 30;
+  }
+
+  .mobile-actions a {
+    flex: 1;
+    text-decoration: none;
+    color: white;
+    font-weight: 700;
+    padding: 12px 10px;
+    border-radius: 14px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 6px 16px rgba(0,0,0,.4);
+  }
+
+  .mobile-actions span {
+    font-size: 18px;
+  }
+
+  .doc-btn {
+    background: linear-gradient(135deg, #0066ff, #00aaff);
+  }
+
+  .reg-btn {
+    background: linear-gradient(135deg, #ff3d3d, #ff7a00);
+    animation: attentionShake 4s infinite;
+  }
+}
+
+/* ===== MOBILE XOAY NGANG ===== */
+@media (max-width: 768px) and (orientation: landscape) {
+
+  .intro::after {
+    background-size: clamp(140px, 45vmin, 260px);
+    opacity: .18;
+  }
+
+  .hud-frame {
+    width: 72vw;
+    height: 72vh;
+  }
+
+  .hud-scan {
+    width: 72vw;
+  }
+
+  .hud-radar {
+    width: 68px;
+    height: 68px;
+    right: 12vw;
+    bottom: 10vh;
+  }
+
+  .intro-box h1 {
+    font-size: clamp(24px, 6vh, 44px);
+  }
+
+  .intro-box p {
+    font-size: clamp(14px, 3.5vh, 22px);
+    margin-top: 8px;
+  }
+
+  .intro-box .status {
+    font-size: 11px;
+    margin-bottom: 8px;
+    padding: 5px 10px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="quick-menu">
+  <a href="#"><span class="icon">🏠</span> Trang chủ</a>
+  <a href="#"><span class="icon">📢</span> Thông báo</a>
+  <a href="https://drive.google.com/file/d/1GDow_MACvpng2_aSyfpqXLZHvnGWM7_K/view" target="_blank"><span class="icon">📄</span> Tài liệu kỹ thuật</a>
+  <a href="#"><span class="icon">🎥</span> Video hướng dẫn</a>
+  <a href="#"><span class="icon">🖼️</span> Thư viện</a>
+  <a href="#"><span class="icon">💬</span> Trợ giúp</a>
+</div>
+
+<div class="menu-toggle" id="menuToggle" onclick="toggleMenu()">☰</div>
+
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#">🏠 Trang chủ</a>
+  <a href="#">📢 Thông báo</a>
+  <a href="https://drive.google.com/file/d/1GDow_MACvpng2_aSyfpqXLZHvnGWM7_K/view" target="_blank">📄 Tài liệu kỹ thuật</a>
+  <a href="#">🎥 Video hướng dẫn</a>
+  <a href="#">🖼️ Thư viện</a>
+  <a href="#">💬 Trợ giúp</a>
+</div>
+
+<div class="intro">
+  <div class="hud-frame"></div>
+  <div class="hud-scan"></div>
+  <div class="hud-radar"></div>
+
+  <div class="intro-box">
+    <div class="status">KHOA HÀNG KHÔNG VŨ TRỤ</div>
+    <h1>Robot Mê Cung</h1>
+    <p>Công nghệ • Bản lĩnh • Sáng tạo</p>
+  </div>
+</div>
+
+<div class="page">
+  <div class="container">
+    <img src="Poster.webp" class="poster">
+
+    <a class="btn doc" href="https://drive.google.com/file/d/1GDow_MACvpng2_aSyfpqXLZHvnGWM7_K/view" target="_blank"></a>
+    <a class="btn register" href="https://forms.gle/KQKUknf6ktijzLQ27" target="_blank"></a>
+  </div>
+</div>
+
+<div class="mobile-actions">
+  <a href="https://drive.google.com/file/d/1GDow_MACvpng2_aSyfpqXLZHvnGWM7_K/view" target="_blank" class="doc-btn">
+    <span>📄</span> Kế hoạch
+  </a>
+  <a href="https://forms.gle/KQKUknf6ktijzLQ27" target="_blank" class="reg-btn">
+    <span>📝</span> Đăng ký
+  </a>
+</div>
+
+<script>
+function toggleMenu() {
+  const menu = document.getElementById("mobileMenu");
+  const btn = document.getElementById("menuToggle");
+
+  menu.classList.toggle("show");
+  btn.classList.toggle("active");
+
+  btn.textContent = menu.classList.contains("show") ? "✕" : "☰";
+}
+
+document.addEventListener("click", function(e) {
+  const menu = document.getElementById("mobileMenu");
+  const btn = document.getElementById("menuToggle");
+
+  if (!menu.contains(e.target) && !btn.contains(e.target)) {
+    menu.classList.remove("show");
+    btn.classList.remove("active");
+    btn.textContent = "☰";
+  }
+});
+</script>
+
+</body>
+</html>
