@@ -473,171 +473,350 @@ h1 {
 <!-- ===== NỘI DUNG===== -->
 <main class="page">
 
-  <!-- ===== HERO ===== -->
   <section class="hero">
     <div class="label">BÀI GIẢNG LẬP TRÌNH ROBOT MÊ CUNG</div>
 
-    <h1>Bài 2. Điều khiển LED</h1>
+    <h1>Bài 2. Điều khiển các loại LED</h1>
 
     <p class="subtitle">
-      Bài học giúp học viên làm quen với điều khiển thiết bị đầu ra thông qua LED vòng WS2812,
-      dùng để hiển thị trạng thái hoạt động của robot.
+      Bài học giúp học viên hiểu các loại LED phổ biến, cách đấu nối và lập trình điều khiển LED
+      từ LED thường đến LED NeoPixel vòng 16 LED trên robot.
     </p>
   </section>
 
-  <!-- ===== 1 ===== -->
   <section class="lesson">
     <h2>1. Mục tiêu bài học</h2>
     <ul>
-      <li>Hiểu khái niệm OUTPUT</li>
-      <li>Biết điều khiển LED vòng WS2812</li>
-      <li>Hiểu cách hiển thị màu RGB</li>
-      <li>Sử dụng LED để báo trạng thái robot</li>
+      <li>Hiểu nguyên lý hoạt động của LED thường, LED RGB, LED NeoPixel và LED NeoPixel Ring.</li>
+      <li>Biết cách đấu nối từng loại LED với Arduino Mega 2560.</li>
+      <li>Biết sử dụng <code>pinMode()</code>, <code>digitalWrite()</code>, <code>analogWrite()</code>.</li>
+      <li>Biết điều khiển LED vòng WS2812 gồm 16 LED trên robot.</li>
+      <li>Ứng dụng LED để báo trạng thái robot: sẵn sàng, đang chạy, lỗi.</li>
     </ul>
   </section>
-  <!-- ===== 2 ===== -->
-  <section class="lesson">
-    <h2>2. Lý thuyết</h2>
-    <h3>2.1. LED thường</h3>
-    <p>
-      LED thường chỉ có 2 trạng thái: bật hoặc tắt.
-      Arduino điều khiển bằng HIGH (bật) và LOW (tắt).
-    </p>
-    <h3>2.2. LED WS2812 là gì?</h3>
-    <p>
-      WS2812 là LED RGB thông minh, mỗi LED có thể hiển thị màu riêng.
-      Chỉ cần 1 chân tín hiệu để điều khiển toàn bộ dãy LED.
-    </p>
-    <h3>2.3. Màu RGB</h3>
-    <ul>
-      <li>Đỏ: (255, 0, 0)</li>
-      <li>Xanh lá: (0, 255, 0)</li>
-      <li>Xanh dương: (0, 0, 255)</li>
-      <li>Trắng: (255, 255, 255)</li>
-    </ul>
-    <div class="note">
-      Mỗi màu là tổ hợp của 3 thành phần: Red - Green - Blue
-    </div>
-  </section>
-  <!-- ===== 3 ===== -->
- <section class="lesson">
-  <h2>3. Sơ đồ kết nối chân</h2>
-  <p>
-    LED vòng WS2812 được kết nối với Arduino Mega như sau:
-  </p>
-  <ul>
-    <li>DIN → D13</li>
-    <li>VCC → 5V</li>
-    <li>GND → GND</li></ul>
-  <div class="image-wrap">
-    <img src="DATA/Bai2_Neopixel.webp" class="lesson-img">
-  </div>
 
-  <div class="warning">
-    Lưu ý:
-    <ul>
-      <li>Phải nối chung GND giữa Arduino và LED</li>
-      <li>Cấp nguồn đủ 5V để LED hoạt động ổn định</li>
-      <li>Nếu sử dụng nhiều LED, Nối chân DIN với chân DOUT của LED trước</li>
-    </ul>
-  </div>
-</section>
-  <!-- ===== 4 ===== -->
   <section class="lesson">
-    <h2>4. Nguyên lý hoạt động</h2>
-    <p>
-      Arduino gửi dữ liệu màu đến LED thông qua chân DATA.
-      Mỗi LED nhận dữ liệu và hiển thị màu tương ứng.
-    </p>
-    <div class="note">
-      Luồng hoạt động: Arduino → DATA → LED WS2812 → Hiển thị
-    </div>
-  </section>
-  <!-- ===== 5 ===== -->
-<section class="lesson">
-  <h2>5. Code ví dụ</h2>
-<div class="code-collapse">
-  <button class="code-collapse-head" onclick="toggleCode(this)">
-    <span>💻 Code cơ bản: bật LED 1 màu</span>
-    <span class="arrow">▶</span>
-  </button>
+    <h2>2. Tổng quan các loại LED</h2>
 
-  <div class="code-collapse-body">
+    <p>
+      Trong robot và các hệ thống nhúng, LED thường được dùng để hiển thị trạng thái hoạt động,
+      báo lỗi, báo chế độ chạy hoặc tạo hiệu ứng trực quan khi robot vận hành.
+    </p>
+
+    <div class="image-wrap">
+      <img src="Data/Bai2.LED.webp" class="lesson-img" alt="Các loại LED dùng với Arduino Mega">
+    </div>
+    <div class="note">
+  Mô phỏng Wokwi:
+  <br>
+  <a href="https://wokwi.com/projects/464865136755969025" 
+     target="_blank" 
+     class="lesson-link">
+     https://wokwi.com/projects/464865136755969025
+  </a>
+</div>
+  </section>
+
+  <section class="lesson">
+    <h2>3. LED thường</h2>
+
+    <h3>3.1. Nguyên lý</h3>
+    <p>
+      LED thường là loại LED đơn sắc, chỉ có hai trạng thái cơ bản: sáng hoặc tắt.
+      Khi Arduino xuất mức HIGH ra chân điều khiển, LED sáng. Khi xuất mức LOW, LED tắt.
+    </p>
+
+    <h3>3.2. Đấu dây</h3>
+    <ul>
+      <li>Chân dương LED → điện trở 220Ω → chân D8 Arduino.</li>
+      <li>Chân âm LED → GND.</li>
+    </ul>
+
+    <div class="warning">
+      LED thường cần mắc nối tiếp với điện trở hạn dòng để tránh làm hỏng LED hoặc chân Arduino.
+    </div>
+
+    <h3>3.3. Lệnh điều khiển</h3>
+
     <div class="code-box">
-      <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre><code class="language-cpp">pinMode(8, OUTPUT);        // Đặt chân D8 ở chế độ xuất tín hiệu
+digitalWrite(8, HIGH);     // Xuất mức 5V → LED sáng
+digitalWrite(8, LOW);      // Xuất mức 0V → LED tắt</code></pre>
+    </div>
 
-<pre><code class="language-cpp">
-#include &lt;Adafruit_NeoPixel.h&gt;
+    <h3>3.4. Code ví dụ</h3>
 
-#define LED_PIN 13
-#define NUM_LEDS 16
+    <div class="code-collapse">
+      <button class="code-collapse-head" onclick="toggleCode(this)">
+        <span>💻 Code LED thường nhấp nháy</span>
+        <span class="arrow">▶</span>
+      </button>
+
+      <div class="code-collapse-body">
+        <div class="code-box">
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre><code class="language-cpp">#define LED_PIN 8          // LED thường nối với chân D8
+
+void setup() {
+  pinMode(LED_PIN, OUTPUT);        // Đặt chân D8 là OUTPUT
+}
+
+void loop() {
+  digitalWrite(LED_PIN, HIGH);     // Bật LED
+  delay(1000);                     // Chờ 1 giây
+
+  digitalWrite(LED_PIN, LOW);      // Tắt LED
+  delay(1000);                     // Chờ 1 giây
+}</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lesson">
+    <h2>4. LED RGB</h2>
+
+    <h3>4.1. Nguyên lý</h3>
+    <p>
+      LED RGB gồm ba LED nhỏ bên trong: đỏ, xanh lá và xanh dương.
+      Bằng cách thay đổi độ sáng của từng màu, ta có thể tạo ra nhiều màu khác nhau.
+    </p>
+
+    <h3>4.2. Đấu dây</h3>
+    <ul>
+      <li>Chân R → chân PWM D7.</li>
+      <li>Chân G → chân PWM D6.</li>
+      <li>Chân B → chân PWM D5.</li>
+      <li>Chân chung → GND hoặc 5V tùy loại LED RGB.</li>
+    </ul>
+
+    <div class="note">
+      Các chân PWM trên Arduino Mega 2560: <strong>2 → 13 và 44 → 46</strong>.
+    </div>
+
+    <h3>4.3. Lệnh điều khiển</h3>
+
+    <div class="code-box">
+<pre><code class="language-cpp">pinMode(7, OUTPUT);        // Đặt chân D7 điều khiển màu đỏ
+pinMode(6, OUTPUT);        // Đặt chân D6 điều khiển màu xanh lá
+pinMode(5, OUTPUT);        // Đặt chân D5 điều khiển màu xanh dương
+
+analogWrite(7, 255);       // Đỏ sáng mạnh nhất
+analogWrite(6, 0);         // Tắt xanh lá
+analogWrite(5, 0);         // Tắt xanh dương</code></pre>
+    </div>
+
+    <h3>4.4. Code ví dụ</h3>
+
+    <div class="code-collapse">
+      <button class="code-collapse-head" onclick="toggleCode(this)">
+        <span>💻 Code LED RGB đổi màu</span>
+        <span class="arrow">▶</span>
+      </button>
+
+      <div class="code-collapse-body">
+        <div class="code-box">
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre><code class="language-cpp">int R = 7;     // Chân PWM điều khiển LED đỏ
+int G = 6;     // Chân PWM điều khiển LED xanh lá
+int B = 5;     // Chân PWM điều khiển LED xanh dương
+
+void setup() {
+  pinMode(R, OUTPUT);      // Đặt chân R là OUTPUT
+  pinMode(G, OUTPUT);      // Đặt chân G là OUTPUT
+  pinMode(B, OUTPUT);      // Đặt chân B là OUTPUT
+}
+
+void loop() {
+  analogWrite(R, 255);     // Đỏ sáng mạnh nhất
+  analogWrite(G, 0);       // Tắt xanh lá
+  analogWrite(B, 0);       // Tắt xanh dương
+  delay(1000);
+
+  analogWrite(R, 0);       // Tắt đỏ
+  analogWrite(G, 255);     // Xanh lá sáng mạnh nhất
+  analogWrite(B, 0);       // Tắt xanh dương
+  delay(1000);
+
+  analogWrite(R, 0);       // Tắt đỏ
+  analogWrite(G, 0);       // Tắt xanh lá
+  analogWrite(B, 255);     // Xanh dương sáng mạnh nhất
+  delay(1000);
+}</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lesson">
+    <h2>5. LED NeoPixel đơn</h2>
+
+    <h3>5.1. Nguyên lý</h3>
+    <p>
+      LED NeoPixel là LED RGB thông minh, thường dùng chip WS2812.
+      Khác với LED RGB thường, NeoPixel chỉ cần một chân DATA để điều khiển màu.
+      Nếu nối nhiều NeoPixel nối tiếp nhau, chỉ cần một chân DATA duy nhất để điều khiển toàn bộ chuỗi LED.
+      Chân DOUT của LED trước sẽ nối vào chân DIN của LED sau.
+    </p>
+
+    <h3>5.2. Đấu dây</h3>
+    <ul>
+      <li>DATA → D19.</li>
+      <li>VCC → 5V.</li>
+      <li>GND → GND.</li>
+    </ul>
+
+    <h3>5.3. Lệnh điều khiển</h3>
+
+    <div class="code-box">
+<pre><code class="language-cpp">led.setPixelColor(0, led.Color(255, 0, 0));   // Gán màu đỏ cho LED số 0
+led.show();                                   // Cập nhật màu ra LED thật</code></pre>
+    </div>
+
+    <h3>5.4. Code ví dụ</h3>
+
+    <div class="code-collapse">
+      <button class="code-collapse-head" onclick="toggleCode(this)">
+        <span>💻 Code LED NeoPixel đơn</span>
+        <span class="arrow">▶</span>
+      </button>
+
+      <div class="code-collapse-body">
+        <div class="code-box">
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre><code class="language-cpp">#include &lt;Adafruit_NeoPixel.h&gt;
+
+#define LED_PIN 19       // Chân DATA của LED NeoPixel đơn nối D19
+#define NUM_LEDS 1       // Số lượng LED NeoPixel đơn
+
+Adafruit_NeoPixel led(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
+
+void setup() {
+  led.begin();           // Khởi tạo LED NeoPixel
+  led.show();            // Tắt LED ban đầu
+}
+
+void loop() {
+  led.setPixelColor(0, led.Color(255, 0, 0));  // LED số 0 màu đỏ
+  led.show();                                  // Cập nhật LED
+  delay(1000);
+
+  led.setPixelColor(0, led.Color(0, 255, 0));  // LED số 0 màu xanh lá
+  led.show();                                  // Cập nhật LED
+  delay(1000);
+
+  led.setPixelColor(0, led.Color(0, 0, 255));  // LED số 0 màu xanh dương
+  led.show();                                  // Cập nhật LED
+  delay(1000);
+}</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lesson">
+    <h2>6. LED NeoPixel Ring trên robot</h2>
+
+    <h3>6.1. Nguyên lý</h3>
+    <p>
+      LED NeoPixel Ring là vòng gồm nhiều LED WS2812 nối tiếp nhau.
+      Robot sử dụng vòng LED gồm <strong>16 LED</strong>. Mỗi LED có thể điều khiển màu độc lập.
+      Nếu nối nhiều NeoPixel Ring nối tiếp nhau, chân DOUT của LED trước sẽ nối vào chân DIN của LED sau.
+    </p>
+
+    <h3>6.2. Đấu dây</h3>
+    <ul>
+      <li>DATA → D13.</li>
+      <li>VCC → 5V.</li>
+      <li>GND → GND.</li>
+    </ul>
+
+    <div class="warning">
+      Cần nối chung GND giữa Arduino và LED Ring. Nếu không nối chung GND, LED có thể không hoạt động đúng.
+    </div>
+
+    <h3>6.3. Lệnh điều khiển</h3>
+
+    <div class="code-box">
+<pre><code class="language-cpp">ring.setPixelColor(i, ring.Color(0, 0, 255)); // Gán màu xanh dương cho LED thứ i
+ring.show();                                  // Cập nhật toàn bộ vòng LED</code></pre>
+    </div>
+
+    <h3>6.4. Code ví dụ cơ bản</h3>
+
+    <div class="code-collapse">
+      <button class="code-collapse-head" onclick="toggleCode(this)">
+        <span>💻 Code bật toàn bộ LED Ring màu xanh</span>
+        <span class="arrow">▶</span>
+      </button>
+
+      <div class="code-collapse-body">
+        <div class="code-box">
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre><code class="language-cpp">#include &lt;Adafruit_NeoPixel.h&gt;
+
+#define LED_PIN 13       // Chân DATA của LED Ring nối D13
+#define NUM_LEDS 16      // LED Ring trên robot có 16 LED
 
 Adafruit_NeoPixel ring(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
 
 void setup() {
-  ring.begin();
-  ring.show();
+  ring.begin();          // Khởi tạo LED Ring
+  ring.show();           // Tắt toàn bộ LED ban đầu
 }
 
 void loop() {
-
-  // bật toàn bộ LED màu đỏ
-  for (int i = 0; i < NUM_LEDS; i++) {
-    ring.setPixelColor(i, ring.Color(255, 0, 0));
+  for (int i = 0; i &lt; NUM_LEDS; i++) {
+    ring.setPixelColor(i, ring.Color(0, 0, 255)); // LED thứ i màu xanh dương
   }
 
-  ring.show();
-
-}
-</code></pre>
-
+  ring.show();           // Cập nhật màu ra LED Ring
+}</code></pre>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
+    <div class="code-collapse">
+      <button class="code-collapse-head" onclick="toggleCode(this)">
+        <span>💻 Code LED Ring chạy đổi màu</span>
+        <span class="arrow">▶</span>
+      </button>
 
-  <div class="code-collapse">
-    <button class="code-collapse-head" onclick="toggleCode(this)">
-      <span>💻 Code hiệu ứng LED chạy đổi màu</span>
-      <span class="arrow">▶</span>
-    </button>
-    <div class="code-collapse-body">
-      <div class="code-box">
-        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-
-<pre><code class="language-cpp">
-#include &lt;Adafruit_NeoPixel.h&gt;
+      <div class="code-collapse-body">
+        <div class="code-box">
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre><code class="language-cpp">#include &lt;Adafruit_NeoPixel.h&gt;
 
 #define LED_PIN 13
 #define NUM_LEDS 16
 
 Adafruit_NeoPixel ring(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
 
-int speedDelay = 40;
-int colorShift = 0;
+int speedDelay = 40;    // Thời gian trễ, càng nhỏ chạy càng nhanh
+int colorShift = 0;     // Biến dịch màu
 
-// ===== Tạo màu rainbow =====
 uint32_t wheel(byte pos) {
   pos = 255 - pos;
 
-  if (pos < 85) {
+  if (pos &lt; 85) {
     return ring.Color(255 - pos * 3, 0, pos * 3);
   }
-  if (pos < 170) {
+
+  if (pos &lt; 170) {
     pos -= 85;
     return ring.Color(0, pos * 3, 255 - pos * 3);
   }
+
   pos -= 170;
   return ring.Color(pos * 3, 255 - pos * 3, 0);
 }
 
-// ===== Fade đuôi =====
 void fadeAll(byte amount) {
-  for (int i = 0; i < NUM_LEDS; i++) {
+  for (int i = 0; i &lt; NUM_LEDS; i++) {
     uint32_t c = ring.getPixelColor(i);
 
-    uint8_t r = (c >> 16) & 0xFF;
-    uint8_t g = (c >> 8) & 0xFF;
-    uint8_t b = c & 0xFF;
+    uint8_t r = (c &gt;&gt; 16) &amp; 0xFF;
+    uint8_t g = (c &gt;&gt; 8) &amp; 0xFF;
+    uint8_t b = c &amp; 0xFF;
 
     r = (r * amount) / 255;
     g = (g * amount) / 255;
@@ -648,55 +827,174 @@ void fadeAll(byte amount) {
 }
 
 void setup() {
-  ring.begin();
+  ring.begin();          // Khởi tạo LED Ring
+  ring.show();           // Tắt LED ban đầu
+}
+
+void loop() {
+  for (int i = 0; i &lt; NUM_LEDS; i++) {
+    fadeAll(180);        // Làm mờ các LED cũ để tạo đuôi sáng
+
+    int colorIndex = (i * 16 + colorShift) % 256;
+
+    ring.setPixelColor(i, wheel(colorIndex)); // Gán màu đổi dần cho LED thứ i
+    ring.show();                              // Cập nhật LED Ring
+
+    delay(speedDelay);
+  }
+
+  colorShift++;          // Dịch màu sau mỗi vòng chạy
+}</code></pre>
+        </div>
+      </div>
+    </div>
+<div class="code-collapse">
+  <button class="code-collapse-head" onclick="toggleCode(this)">
+    <span>💻 Code tổng hợp các loại LED </span>
+    <span class="arrow">▶</span>
+  </button>
+
+  <div class="code-collapse-body">
+    <div class="code-box">
+      <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+
+<pre><code class="language-cpp">
+#include &lt;Adafruit_NeoPixel.h&gt;
+
+// ===== LED thường =====
+#define LED_THUONG 8   // D8
+
+// ===== LED RGB =====
+#define R 7   // đỏ
+#define G 6   // xanh lá
+#define B 5   // xanh dương
+
+// ===== NeoPixel đơn =====
+#define LED_SINGLE_PIN 19
+#define NUM_SINGLE 1
+
+Adafruit_NeoPixel ledSingle(NUM_SINGLE, LED_SINGLE_PIN, NEO_GRB + NEO_KHZ800);
+
+// ===== NeoPixel vòng =====
+#define LED_RING_PIN 13
+#define NUM_RING 16
+
+Adafruit_NeoPixel ring(NUM_RING, LED_RING_PIN, NEO_GRB + NEO_KHZ800);
+
+
+// ===== HÀM PHỤ =====
+void setRingColor(int r, int g, int b) {
+  for (int i = 0; i < NUM_RING; i++) {
+    ring.setPixelColor(i, ring.Color(r, g, b));
+  }
+  ring.show();
+}
+
+void setup() {
+
+  // LED thường
+  pinMode(LED_THUONG, OUTPUT);   // D8 OUTPUT
+
+  // LED RGB
+  pinMode(R, OUTPUT);   // D7 đỏ
+  pinMode(G, OUTPUT);   // D6 xanh lá
+  pinMode(B, OUTPUT);   // D5 xanh dương
+
+  // NeoPixel
+  ledSingle.begin();    // LED đơn
+  ledSingle.show();
+
+  ring.begin();         // LED vòng
   ring.show();
 }
 
 void loop() {
 
-  for (int i = 0; i < NUM_LEDS; i++) {
+  // ===== TEST LED THƯỜNG =====
+  digitalWrite(LED_THUONG, HIGH);  // Bật LED thường
+  delay(500);
+  digitalWrite(LED_THUONG, LOW);   // Tắt LED thường
 
-    fadeAll(180);
 
-    int colorIndex = (i * 16 + colorShift) % 256;
+  // ===== TEST LED RGB =====
+  analogWrite(R, 255);  // Đỏ
+  analogWrite(G, 0);
+  analogWrite(B, 0);
+  delay(500);
 
-    ring.setPixelColor(i, wheel(colorIndex));
+  analogWrite(R, 0);
+  analogWrite(G, 255);  // Xanh lá
+  analogWrite(B, 0);
+  delay(500);
 
-    ring.show();
-    delay(speedDelay);
-  }
+  analogWrite(R, 0);
+  analogWrite(G, 0);
+  analogWrite(B, 255);  // Xanh dương
+  delay(500);
 
-  colorShift++;
+
+  // ===== TEST NEOPIXEL ĐƠN =====
+  ledSingle.setPixelColor(0, ledSingle.Color(255, 255, 0)); // Vàng
+  ledSingle.show();
+  delay(500);
+
+
+  // ===== TEST LED VÒNG =====
+  setRingColor(0, 0, 255);  // Xanh dương
+  delay(500);
+
+  setRingColor(255, 0, 0);  // Đỏ
+  delay(500);
+
 }
 </code></pre>
 
-      </div>
     </div>
   </div>
+</div>
 
-  <div class="note">
-    Hiệu ứng: LED chạy vòng + đổi màu.
-  </div>
-
-</section>
-  <!-- ===== 6 ===== -->
-  <section class="lesson">
-    <h2>6. Bài tập thực hành</h2>
-
+    <h3>6.5. Ứng dụng trong robot</h3>
     <ul>
-      <li>Làm LED chạy từng bóng một</li>
-      <li>Tạo hiệu ứng LED quay vòng</li>
-      <li>Tạo các trạng thái Robot với quy ước màu:
-        <ul>
-          <li>Xanh lá → sẵn sàng</li>
-          <li>Đỏ → lỗi</li>
-          <li>Xanh dương → đang chạy</li>
-        </ul>
-      </li>
+      <li><strong>Xanh lá:</strong> robot sẵn sàng.</li>
+      <li><strong>Xanh dương:</strong> robot đang chạy.</li>
+      <li><strong>Đỏ:</strong> robot gặp lỗi hoặc cần kiểm tra.</li>
+      <li><strong>Hiệu ứng chạy vòng:</strong> robot đang xử lý hoặc đang chờ lệnh.</li>
     </ul>
-
   </section>
 
+  <section class="lesson">
+    <h2>7. Bài tập thực hành</h2>
+    <ul>
+      <li>Thay đổi thời gian nhấp nháy của LED thường.</li>
+      <li>Tạo màu vàng bằng LED RGB.</li>
+      <li>Điều khiển NeoPixel đơn lần lượt hiển thị đỏ, xanh lá, xanh dương.</li>
+      <li>Làm LED Ring sáng từng LED từ vị trí 0 đến 15.</li>
+      <li>Thiết kế 3 màu trạng thái cho robot: sẵn sàng, đang chạy, lỗi.</li>
+    </ul>
+  </section>
+
+  <section class="lesson">
+    <h2>8. Lỗi thường gặp</h2>
+
+    <div class="warning">
+      <strong>Lỗi 1:</strong> LED thường không sáng do đấu ngược cực hoặc thiếu điện trở.
+    </div>
+
+    <div class="warning">
+      <strong>Lỗi 2:</strong> LED RGB không đổi độ sáng do nối vào chân không hỗ trợ PWM.
+    </div>
+
+    <div class="warning">
+      <strong>Lỗi 3:</strong> NeoPixel không chạy do thiếu thư viện <strong>Adafruit NeoPixel</strong>.
+    </div>
+
+    <div class="warning">
+      <strong>Lỗi 4:</strong> LED Ring sai màu do chọn sai chuẩn màu <code>NEO_GRB</code>.
+    </div>
+
+    <div class="warning">
+      <strong>Lỗi 5:</strong> LED Ring chập chờn do nguồn yếu hoặc chưa nối chung GND.
+    </div>
   </section>
 
   <div class="nav-bottom">
