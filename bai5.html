@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Bài 5. Điều khiển động cơ RC servo</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+
+<style>
+:root {
+  --bg1: #0b1020;
+  --bg2: #0f0525;
+  --neon: #7afcff;
+  --lime: #b6ff00;
+  --gold: #ffd700;
+  --text: #f5f8ff;
+  --card: rgba(16,24,48,.52);
+}
+.btn {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 12px 20px;
+
+  font-size: 1rem;
+  font-weight: bold;
+
+  background: linear-gradient(135deg, #00c6ff, #0072ff);
+  color: white;
+
+  border-radius: 10px;
+  text-decoration: none;
+
+  box-shadow: 0 4px 18px rgba(0, 170, 255, 0.5);
+  transition: all 0.25s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(0, 200, 255, 0.8);
+}
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 10% 10%, #121a3a, transparent 45%),
+    radial-gradient(circle at 90% 90%, #1a0b32, transparent 50%),
+    linear-gradient(135deg, var(--bg1), var(--bg2));
+  min-height: 100vh;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.gradient {
+  position: absolute;
+  inset: -25vmax;
+  background: conic-gradient(from 0deg at 50% 50%, #00111a, #101040, #2a004a, #00111a);
+  filter: blur(80px) saturate(150%);
+  animation: spin 24s linear infinite;
+  opacity: .55;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg) scale(1.05); }
+}
+
+canvas#fx {
+  position: absolute;
+  inset: 0;
+  opacity: .5;
+}
+
+.home {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.12);
+  color: var(--neon);
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  border: 2px solid rgba(122,252,255,.6);
+  box-shadow: 0 0 18px rgba(122,252,255,.35);
+  z-index: 10;
+  transition: .25s ease;
+}
+
+.home:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 28px rgba(122,252,255,.8);
+}
+
+.page {
+  position: relative;
+  z-index: 1;
+  width: min(1120px, 94%);
+  margin: 0 auto;
+  padding: 82px 0 60px;
+}
+
+.hero {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.hero .label {
+  display: inline-block;
+  padding: 7px 15px;
+  border: 1px solid rgba(122,252,255,.6);
+  border-radius: 999px;
+  color: var(--neon);
+  font-weight: bold;
+  letter-spacing: 1px;
+  background: rgba(0,20,60,.35);
+}
+
+h1 {
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  margin: 18px 0 10px;
+  color: white;
+  text-shadow: 0 0 24px rgba(122,252,255,.35);
+}
+
+.subtitle {
+  max-width: 840px;
+  margin: 0 auto;
+  color: rgba(245,248,255,.82);
+  font-size: 1.05rem;
+  line-height: 1.75;
+}
+
+.lesson {
+  background: var(--card);
+  border: 1px solid rgba(122,252,255,.18);
+  border-radius: 24px;
+  padding: clamp(18px, 3vw, 30px);
+  margin-bottom: 24px;
+  box-shadow: 0 14px 38px rgba(0,0,0,.42);
+  backdrop-filter: blur(12px);
+}
+
+.lesson h2 {
+  color: var(--gold);
+  margin-top: 0;
+  font-size: clamp(1.35rem, 1.3vw + 1rem, 1.85rem);
+}
+
+.lesson h3 {
+  color: var(--neon);
+  margin-top: 24px;
+  font-size: 1.18rem;
+}
+
+.lesson p,
+.lesson li {
+  font-size: clamp(0.98rem, 0.35vw + 0.9rem, 1.08rem);
+  line-height: 1.8;
+  color: rgba(245,248,255,.88);
+}
+
+.note {
+  border-left: 4px solid var(--lime);
+  background: rgba(182,255,0,.08);
+  padding: 12px 15px;
+  border-radius: 12px;
+  margin: 14px 0;
+}
+
+.warning {
+  border-left: 4px solid #ff7a00;
+  background: rgba(255,122,0,.1);
+  padding: 12px 15px;
+  border-radius: 12px;
+  margin: 14px 0;
+}
+
+.image-wrap {
+  width: 100%;
+  overflow-x: auto;
+  padding: 8px 0;
+}
+
+.lesson-img {
+  display: block;
+  width: 100%;
+  max-width: 980px;
+  height: auto;
+  margin: 20px auto;
+  border-radius: 18px;
+  background: white;
+  box-shadow: 0 14px 38px rgba(0,0,0,.42);
+  object-fit: contain;
+}
+
+/* ===== COLLAPSE PIN TABLE ===== */
+.pin-collapse {
+  margin-top: 20px;
+  border: 1px solid rgba(122,252,255,.22);
+  border-radius: 18px;
+  background: rgba(0,0,0,.24);
+  overflow: hidden;
+}
+
+.pin-collapse-head {
+  width: 100%;
+  border: none;
+  background: rgba(0,170,255,.14);
+  color: white;
+  padding: 15px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.pin-collapse-head:hover {
+  background: rgba(0,170,255,.24);
+}
+
+.pin-collapse-arrow {
+  color: var(--gold);
+  transition: transform .25s ease;
+}
+
+.pin-collapse.open .pin-collapse-arrow {
+  transform: rotate(90deg);
+}
+
+.pin-collapse-body {
+  display: none;
+  padding: 14px;
+  border-top: 1px solid rgba(122,252,255,.16);
+  overflow-x: auto;
+}
+
+.pin-collapse.open .pin-collapse-body {
+  display: block;
+}
+
+.pin-table {
+  width: 100%;
+  min-width: 820px;
+  border-collapse: collapse;
+  font-size: .84rem;
+  background: rgba(0,0,0,.18);
+}
+
+.pin-table th,
+.pin-table td {
+  border: 1px solid rgba(255,255,255,.12);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+  line-height: 1.45;
+}
+
+.pin-table th {
+  color: var(--lime);
+  background: rgba(0,170,255,.16);
+  font-size: .86rem;
+}
+
+.pin-table td:nth-child(3) {
+  color: var(--neon);
+  font-weight: bold;
+  font-family: Consolas, Monaco, monospace;
+}
+
+/* ===== CODE BOX ===== */
+/* ===== CODE COLLAPSE ===== */
+.code-collapse {
+  margin: 18px 0;
+  border: 1px solid rgba(122,252,255,.2);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.code-collapse-head {
+  width: 100%;
+  background: rgba(0,170,255,.12);
+  color: white;
+  padding: 14px;
+  border: none;
+  cursor: pointer;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  font-weight: bold;
+}
+
+.code-collapse-head:hover {
+  background: rgba(0,170,255,.25);
+}
+
+.code-collapse .arrow {
+  transition: 0.3s;
+  color: var(--gold);
+}
+
+.code-collapse.open .arrow {
+  transform: rotate(90deg);
+}
+
+.code-collapse-body {
+  display: none;
+}
+
+.code-collapse.open .code-collapse-body {
+  display: block;
+}
+
+.code-box {
+  position: relative;
+  background: #282c34;
+  border: 1px solid rgba(122,252,255,.22);
+  border-radius: 16px;
+  margin: 16px 0;
+  overflow: hidden;
+  box-shadow: inset 0 0 18px rgba(0,234,255,.06);
+}
+
+.code-title {
+  padding: 10px 14px;
+  background: rgba(255,255,255,.05);
+  color: var(--lime);
+  font-weight: bold;
+  border-bottom: 1px solid rgba(122,252,255,.18);
+}
+
+.code-box pre {
+  margin: 0;
+  padding: 18px;
+  overflow-x: auto;
+}
+
+.code-box code {
+  font-family: Consolas, Monaco, "Courier New", monospace;
+  font-size: .92rem;
+  line-height: 1.55;
+}
+
+.copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  border: 1px solid rgba(122,252,255,.45);
+  background: rgba(0,90,160,.7);
+  color: white;
+  border-radius: 9px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.copy-btn:hover {
+  background: rgba(0,160,255,.9);
+}
+
+.nav-bottom {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.nav-bottom a {
+  flex: 1;
+  text-align: center;
+  text-decoration: none;
+  color: white;
+  font-weight: bold;
+  padding: 13px;
+  border-radius: 14px;
+  background: rgba(0,90,160,.5);
+  border: 1px solid rgba(122,252,255,.35);
+  transition: .25s ease;
+}
+
+.nav-bottom a:hover {
+  color: var(--lime);
+  box-shadow: 0 0 22px rgba(122,252,255,.35);
+}
+
+@media (max-width: 640px) {
+  .page {
+    width: 94%;
+    padding-top: 72px;
+  }
+
+  .hero {
+    text-align: left;
+  }
+
+  h1 {
+    font-size: 1.75rem;
+    line-height: 1.25;
+  }
+
+  .subtitle {
+    font-size: .98rem;
+  }
+
+  .lesson {
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .lesson h2 {
+    font-size: 1.25rem;
+  }
+
+  .lesson-img {
+    border-radius: 12px;
+    margin: 14px auto;
+  }
+
+  .pin-collapse-head {
+    font-size: .92rem;
+    padding: 13px;
+  }
+
+  .pin-table {
+    font-size: .76rem;
+    min-width: 760px;
+  }
+
+  .pin-table th,
+  .pin-table td {
+    padding: 7px;
+  }
+
+  .nav-bottom {
+    flex-direction: column;
+  }
+}
+.img-caption {
+  margin-top: 6px;
+  font-size: 14px;
+  color: #bbb;
+  font-style: italic;
+  text-align: center;
+}
+</style>
+</head>
+
+<body>
+
+<div class="backdrop" aria-hidden="true">
+  <div class="gradient"></div>
+  <canvas id="fx"></canvas>
+</div>
+
+<a href="tailieu-kythuat.html" class="home" title="Quay lại tài liệu kỹ thuật">🏠</a>
+
+<!-- ===== NỘI DUNG===== -->
+<main class="page">
+
+  <!-- ===== HERO ===== -->
+  <section class="hero">
+    <div class="label">BÀI GIẢNG LẬP TRÌNH ROBOT MÊ CUNG</div>
+
+    <h1>Bài 5. Điều khiển động cơ RC Servo</h1>
+
+    <p class="subtitle">
+      Bài học giúp học viên hiểu nguyên lý hoạt động của servo và cách điều khiển góc quay
+      bằng Arduino để ứng dụng trong robot.
+    </p>
+  </section>
+
+  <!-- ===== 1 ===== -->
+  <section class="lesson">
+    <h2>1. Mục tiêu bài học</h2>
+    <ul>
+      <li>Hiểu nguyên lý hoạt động của RC Servo</li>
+      <li>Biết cách đấu nối servo với Arduino</li>
+      <li>Điều khiển góc quay từ 0° đến 180°</li>
+      <li>Ứng dụng servo trong robot</li>
+    </ul>
+  </section>
+
+  <!-- ===== 2 ===== -->
+  <section class="lesson">
+    <h2>2. Giới thiệu RC Servo</h2>
+
+    <p>
+      RC Servo là loại động cơ đặc biệt có thể điều khiển chính xác góc quay.
+      Servo thường được sử dụng trong robot để điều khiển cơ cấu như gạt, đẩy hoặc quay cảm biến.
+    </p>
+
+    <div class="image-wrap">
+      <img src="Data/Bai5.Servo.webp" class="lesson-img" alt="RC Servo">
+      <div class="img-caption">
+        Hình 2.1. Động cơ RC Servo thường dùng trong robot.
+      </div>
+    </div>
+
+    <h3>2.1. Cấu tạo dây servo</h3>
+
+    <ul>
+      <li><strong>Đỏ:</strong> VCC (5V)</li>
+      <li><strong>Nâu/Đen:</strong> GND</li>
+      <li><strong>Vàng/Cam:</strong> Tín hiệu điều khiển</li>
+    </ul>
+
+    <div class="note">
+      Servo nhận tín hiệu PWM từ Arduino để điều khiển góc quay.
+    </div>
+  </section>
+
+  <!-- ===== 3 ===== -->
+  <section class="lesson">
+    <h2>3. Đấu nối Servo với Arduino</h2>
+
+    <ul>
+      <li>Dây đỏ → 5V</li>
+      <li>Dây đen → GND</li>
+      <li>Dây vàng → chân D15</li>
+    </ul>
+
+    <div class="image-wrap">
+      <img src="Data/Bai5.Servo_wiring.webp" class="lesson-img" alt="Sơ đồ nối Servo">
+      <div class="img-caption">
+        Hình 3.1. Sơ đồ kết nối servo với Arduino Mega 2560.
+      </div>
+    </div>
+    <div class="note">
+  Mô phỏng Wokwi:
+  <br>
+  <a href="https://wokwi.com/projects/464898298273999873" 
+     target="_blank" 
+     class="lesson-link">
+     https://wokwi.com/projects/464898298273999873
+  </a>
+</div>
+    <div class="warning">
+      Không cấp nguồn servo từ chân Arduino nếu servo lớn → nên dùng nguồn ngoài.
+    </div>
+  </section>
+
+  <!-- ===== 4 ===== -->
+  <section class="lesson">
+    <h2>4. Thư viện điều khiển Servo</h2>
+
+    <p>
+      Arduino cung cấp thư viện <code>Servo.h</code> để điều khiển servo dễ dàng.
+    </p>
+
+    <div class="code-box">
+<pre><code class="language-cpp">#include &lt;Servo.h&gt;</code></pre>
+    </div>
+
+    <div class="code-box">
+<pre><code class="language-cpp">servo.attach(15);   // Gắn servo vào chân D15
+servo.write(90);    // Quay đến góc 90 độ</code></pre>
+    </div>
+  </section>
+
+  <!-- ===== 5 ===== -->
+  <section class="lesson">
+    <h2>5. Code điều khiển servo cơ bản</h2>
+
+    <div class="code-collapse">
+      <button class="code-collapse-head" onclick="toggleCode(this)">
+        <span>💻 Code quay servo 0° → 90° → 180°</span>
+        <span class="arrow">▶</span>
+      </button>
+
+      <div class="code-collapse-body">
+        <div class="code-box">
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+
+<pre><code class="language-cpp">
+#include &lt;Servo.h&gt;
+
+Servo myServo;
+
+void setup() {
+  myServo.attach(15);   // Gắn servo vào chân D15
+}
+
+void loop() {
+
+  myServo.write(0);     // Quay về 0 độ
+  delay(1000);
+
+  myServo.write(90);    // Quay 90 độ
+  delay(1000);
+
+  myServo.write(180);   // Quay 180 độ
+  delay(1000);
+}
+</code></pre>
+
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ===== 6 ===== -->
+  <section class="lesson">
+    <h2>6. Điều khiển servo bằng nút nhấn</h2>
+
+    <p>
+      Kết hợp kiến thức bài trước, ta có thể dùng nút nhấn để điều khiển góc quay của servo.
+    </p>
+
+    <div class="code-collapse">
+      <button class="code-collapse-head" onclick="toggleCode(this)">
+        <span>💻 Điều khiển servo bằng nút nhấn</span>
+        <span class="arrow">▶</span>
+      </button>
+
+      <div class="code-collapse-body">
+        <div class="code-box">
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+
+<pre><code class="language-cpp">
+#include &lt;Servo.h&gt;
+#define BUTTON_PIN A0   // Đổi sang A0
+Servo myServo;
+int angle = 0;
+
+void setup() {
+  myServo.attach(15);   // Servo chân D15
+  Serial.begin(9600);   // Debug ngưỡng
+}
+void loop() {
+  int value = analogRead(BUTTON_PIN); // Đọc A0
+  Serial.println(value); // In ra để kiểm tra
+  // ===== NHẤN NÚT =====
+  if (value > 100) {   // Ngưỡng nút (tùy chỉnh theo mạch)
+    angle += 45;       // Tăng góc
+    if (angle > 180) angle = 0;
+    myServo.write(angle);
+    delay(300);        // chống dội
+  }
+}
+</code></pre>
+
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ===== 7 ===== -->
+  <section class="lesson">
+    <h2>7. Ứng dụng trong robot</h2>
+
+    <ul>
+      <li>Gạt vật thể trong sân thi đấu</li>
+      <li>Quay cảm biến siêu âm</li>
+      <li>Điều khiển cơ cấu nâng/hạ</li>
+    </ul>
+
+    <div class="note">
+      Servo thường dùng cho chuyển động chính xác, không dùng để di chuyển robot.
+    </div>
+  </section>
+
+  <!-- ===== 8 ===== -->
+  <section class="lesson">
+    <h2>8. Bài tập thực hành</h2>
+
+    <ul>
+      <li>Viết chương trình quay servo qua 3 góc 0° – 90° – 180°</li>
+      <li>Dùng nút nhấn để điều khiển servo</li>
+      <li>Viết chương trình quay servo liên tục qua lại</li>
+    </ul>
+  </section>
+
+  <!-- ===== 9 ===== -->
+  <section class="lesson">
+    <h2>9. Lỗi thường gặp</h2>
+
+    <div class="warning">
+      Servo rung → nguồn không đủ hoặc dây nối lỏng
+    </div>
+
+    <div class="warning">
+      Servo không quay → sai chân hoặc chưa attach()
+    </div>
+
+    <div class="warning">
+      Servo quay sai góc → cấp tín hiệu PWM không đúng
+    </div>
+
+  </section>
+
+  <div class="nav-bottom">
+    <a href="bai4.html">← Bài trước</a>
+    <a href="bai6.html">Bài tiếp theo →</a>
+  </div>
+
+</main>
+<!-- ===== NỘI DUNG===== -->
+<script>
+function togglePinTable(button) {
+  const box = button.closest(".pin-collapse");
+  box.classList.toggle("open");
+}
+
+function copyCode(button) {
+  const code = button.parentElement.querySelector("code").innerText;
+  navigator.clipboard.writeText(code);
+
+  button.innerText = "Đã copy";
+  setTimeout(() => {
+    button.innerText = "Copy";
+  }, 1200);
+}
+
+(function(){
+  const c = document.getElementById('fx');
+  const ctx = c.getContext('2d');
+  let w, h, dpr;
+  const N = 70;
+  const pts = [];
+
+  function resize(){
+    dpr = window.devicePixelRatio || 1;
+    w = c.width = innerWidth * dpr;
+    h = c.height = innerHeight * dpr;
+    c.style.width = innerWidth + 'px';
+    c.style.height = innerHeight + 'px';
+  }
+
+  function init(){
+    pts.length = 0;
+    for(let i = 0; i < N; i++){
+      pts.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        vx: (Math.random() - .5) * 0.12 * dpr,
+        vy: (Math.random() - .5) * 0.12 * dpr,
+        r: (Math.random() * 1.6 + 0.6) * dpr
+      });
+    }
+  }
+
+  function step(){
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = 'rgba(255,255,255,.7)';
+
+    for(const p of pts){
+      p.x += p.vx;
+      p.y += p.vy;
+
+      if(p.x < 0 || p.x > w) p.vx *= -1;
+      if(p.y < 0 || p.y > h) p.vy *= -1;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    requestAnimationFrame(step);
+  }
+
+  addEventListener('resize', () => {
+    resize();
+    init();
+  });
+
+  resize();
+  init();
+  step();
+})();
+
+hljs.highlightAll();
+function toggleCode(btn){
+  const box = btn.closest(".code-collapse");
+  box.classList.toggle("open");
+
+  const text = btn.querySelector("span");
+  text.innerText = box.classList.contains("open")
+    ? "🔽 Ẩn code"
+    : "💻 Xem code ví dụ";
+}
+</script>
+
+</body>
+</html>
