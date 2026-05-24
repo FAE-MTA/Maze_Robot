@@ -457,6 +457,13 @@ h1 {
     flex-direction: column;
   }
 }
+.img-caption {
+  margin-top: 6px;
+  font-size: 14px;
+  color: #bbb;
+  font-style: italic;
+  text-align: center;
+}
 </style>
 </head>
 
@@ -492,7 +499,7 @@ h1 {
     </p>
 
     <div class="image-wrap">
-      <img src="DATA/Bai1_Robot.webp" alt="Cấu trúc phần cứng Robot thi đấu" class="lesson-img">
+      <img src="Data/Bai1_Robot.webp" alt="Cấu trúc phần cứng Robot thi đấu" class="lesson-img">
     </div>
 
     <h3>Các mô-đun chính trên robot</h3>
@@ -518,7 +525,7 @@ h1 {
     </p>
 
     <div class="image-wrap">
-      <img src="DATA/Bai1_Mega2560.webp" alt="Arduino Mega 2560 Pro" class="lesson-img">
+      <img src="Data/Bai1_Mega2560.webp" alt="Arduino Mega 2560 Pro" class="lesson-img">
     </div>
 
     <h3>Đặc điểm chính</h3>
@@ -544,7 +551,7 @@ h1 {
     </p>
 
     <div class="image-wrap">
-      <img src="DATA/Bai1_Pinout.png" alt="Sơ đồ kết nối chân Robot thi đấu" class="lesson-img">
+      <img src="Data/Bai1_Pinout.png" alt="Sơ đồ kết nối chân Robot thi đấu" class="lesson-img">
     </div>
 
     <div class="pin-collapse">
@@ -820,6 +827,74 @@ h1 {
   <a href="https://drive.google.com/file/d/1cFqzVp861X9ZwnPBJVDKEnazrMuF6L9C/view?usp=sharing" target="_blank" class="btn">
   📘 02. Sổ tay lập trình Arduino
   </a>
+</section>
+<section class="lesson">
+  <h2>6. Một số công cụ mô phỏng online</h2>
+
+  <p>
+    Trong quá trình học và phát triển robot, việc sử dụng các công cụ mô phỏng online
+    giúp học viên dễ dàng thử nghiệm chương trình mà không cần phần cứng thực tế.
+    Hai công cụ phổ biến là <strong>Wokwi</strong> và <strong>Tinkercad</strong>.
+  </p>
+
+  <!-- ===== WOKWI ===== -->
+  <h3>6.1. Wokwi</h3>
+
+  <p>
+    Wokwi là nền tảng mô phỏng Arduino online mạnh mẽ, hỗ trợ nhiều loại linh kiện như LED,
+    cảm biến, động cơ, màn hình OLED và đặc biệt là các module hiện đại như NeoPixel, I2C.
+    https://wokwi.com/
+  </p>
+
+  <ul>
+    <li>Không cần cài đặt, chạy trực tiếp trên trình duyệt.</li>
+    <li>Hỗ trợ tốt các project phức tạp (robot, IoT).</li>
+    <li>Có thể chia sẻ project bằng link.</li>
+    <li>Phù hợp cho việc học nâng cao và thử nghiệm nhanh.</li>
+  </ul>
+
+  <div class="image-wrap">
+    <img src="DATA/Bai1.Wokwi.png" class="lesson-img" alt="Mô phỏng Wokwi">
+    <div class="img-caption">
+      Hình 6.1. Giao diện mô phỏng Arduino trên nền tảng Wokwi.
+    </div>
+  </div>
+
+  <!-- ===== TINKERCAD ===== -->
+  <h3>6.2. Tinkercad</h3>
+
+  <p>
+    Tinkercad là nền tảng mô phỏng của Autodesk, phù hợp cho người mới bắt đầu học Arduino
+    với giao diện đơn giản và dễ sử dụng.
+    https://www.tinkercad.com/
+  </p>
+
+  <ul>
+    <li>Giao diện trực quan, dễ học.</li>
+    <li>Phù hợp với các bài cơ bản như LED, nút nhấn, cảm biến đơn giản.</li>
+    <li>Tích hợp sẵn môi trường code Arduino.</li>
+    <li>Hỗ trợ mô phỏng mạch điện trực quan.</li>
+  </ul>
+
+  <div class="image-wrap">
+    <img src="DATA/Bai1.Tinkercad.png" class="lesson-img" alt="Mô phỏng Tinkercad">
+    <div class="img-caption">
+      Hình 6.2. Giao diện mô phỏng Arduino trên nền tảng Tinkercad.
+    </div>
+  </div>
+
+  <div class="warning">
+    Tinkercad yêu cầu đăng nhập tài khoản để sử dụng đầy đủ chức năng mô phỏng.
+  </div>
+
+  <!-- ===== SO SÁNH ===== -->
+  <h3>6.3. So sánh nhanh</h3>
+
+  <ul>
+    <li><strong>Wokwi:</strong> mạnh, hỗ trợ nhiều module, phù hợp project robot, tuy nhiên có thể gặp lỗi khi xử lý tín hiệu ADC.</li>
+    <li><strong>Tinkercad:</strong> dễ dùng, phù hợp học cơ bản.</li>
+  </ul>
+
 </section>
 
   <div class="nav-bottom">
