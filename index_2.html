@@ -17,7 +17,7 @@ body {
 /* ===== DESKTOP MENU ===== */
 .quick-menu {
   position: fixed;
-  right: clamp(28px, 3vw, 60px);
+  right: clamp(28px, 3vw, 30px);
   top: 50%;
   transform: translateY(-50%);
   z-index: 20;
@@ -26,12 +26,12 @@ body {
   gap: 12px;
   opacity: 0;
   pointer-events: none;
-  animation: showMenu .1s ease forwards;
-  animation-delay: 0.8s;
+  animation: showMenu .6s ease forwards;
+  animation-delay: .25s;
 }
 
 .quick-menu a {
-  min-width: 180px;
+  min-width: 130px;
   padding: 12px 16px;
   text-decoration: none;
   color: white;
@@ -268,12 +268,12 @@ body {
   align-items: center;
   padding-left: clamp(48px, 5vw, 96px);
   padding-right: clamp(130px, 14vw, 210px);
-  animation: posterIn 1s ease forwards;
+  animation: posterIn .55s ease forwards;
 }
 
 @keyframes posterIn {
-  0%, 60% { opacity: 0; }
-  100% { opacity: 1; }
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .container {
@@ -283,7 +283,7 @@ body {
   overflow: hidden;
   border-radius: 14px;
   box-shadow: 0 20px 60px rgba(0,0,0,.55);
-  transform: translateX(-0.8vw);
+  transform: translateX(4vw);
 }
 
 .container::before {
@@ -337,6 +337,289 @@ body {
   height: 20.6%;
   animation: pulse 2s infinite;
   animation-delay: 1s;
+}
+
+
+
+/* ===== TEAMS HUD - DANH SÁCH ĐỘI ĐĂNG KÝ ===== */
+.teams-hud {
+  position: fixed;
+  left: clamp(14px, 1.8vw, 28px);
+  top: 50%;
+  transform: translateY(-50%);
+  width: clamp(150px, 11vw, 190px);
+  max-height: min(72vh, 620px);
+  z-index: 24;
+  color: white;
+  border: 1px solid rgba(0,234,255,.52);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(0,62,126,.76), rgba(0,24,62,.78)),
+    radial-gradient(circle at 30% 0%, rgba(0,234,255,.18), transparent 45%);
+  backdrop-filter: blur(14px);
+  box-shadow:
+    0 0 26px rgba(0,234,255,.26),
+    inset 0 0 18px rgba(0,234,255,.10);
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  animation: showTeamsHud .6s ease forwards;
+  animation-delay: .3s;
+}
+
+@keyframes showTeamsHud {
+  to { opacity: 1; pointer-events: auto; }
+}
+
+.teams-hud::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+  background-size: 18px 18px;
+  opacity: .25;
+  pointer-events: none;
+}
+
+.teams-hud-head {
+  position: relative;
+  padding: 13px 10px 10px;
+  text-align: center;
+  border-bottom: 1px solid rgba(0,234,255,.22);
+}
+
+.teams-count {
+  display: inline-flex;
+  width: 58px;
+  height: 58px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin-bottom: 8px;
+  font-size: 25px;
+  font-weight: 900;
+  color: #ffd700;
+  background: rgba(0,25,70,.72);
+  border: 2px solid rgba(255,215,0,.75);
+  box-shadow: 0 0 18px rgba(255,215,0,.38), inset 0 0 14px rgba(0,234,255,.16);
+}
+
+.teams-label {
+  font-size: 12px;
+  line-height: 1.25;
+  font-weight: 900;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+}
+
+.teams-label span {
+  display: block;
+  color: #00eaff;
+}
+
+.teams-marquee {
+  position: relative;
+  height: 275px;
+  overflow: hidden;
+  padding: 8px 8px 0;
+}
+
+.teams-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  animation: teamsScroll 20s linear infinite;
+}
+
+.teams-marquee:hover .teams-list {
+  animation-play-state: paused;
+}
+
+@keyframes teamsScroll {
+  from { transform: translateY(0); }
+  to { transform: translateY(-50%); }
+}
+
+.teams-list li {
+  position: relative;
+  margin: 0 0 8px;
+  padding: 8px 8px 8px 26px;
+  min-height: 34px;
+  border-radius: 10px;
+  background: rgba(255,255,255,.075);
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow: inset 0 0 8px rgba(0,234,255,.045);
+  font-size: 12px;
+  line-height: 1.25;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.teams-list li::before {
+  content: "▶";
+  position: absolute;
+  left: 9px;
+  top: 8px;
+  color: #ffd700;
+  font-size: 10px;
+}
+
+.teams-more {
+  position: relative;
+  width: calc(100% - 16px);
+  margin: 8px;
+  padding: 9px 8px;
+  border: 1px solid rgba(0,234,255,.45);
+  border-radius: 11px;
+  color: white;
+  background: rgba(0,115,200,.42);
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 12px;
+  transition: .22s ease;
+}
+
+.teams-more:hover {
+  background: rgba(0,145,255,.70);
+  box-shadow: 0 0 18px rgba(0,234,255,.38);
+}
+
+.teams-status {
+  position: relative;
+  padding: 9px 10px 12px;
+  color: rgba(255,255,255,.72);
+  font-size: 10.5px;
+  text-align: center;
+}
+
+.teams-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,5,22,.72);
+  backdrop-filter: blur(8px);
+  padding: 18px;
+}
+
+.teams-modal.show {
+  display: flex;
+}
+
+.teams-modal-card {
+  width: min(680px, 94vw);
+  max-height: min(78vh, 720px);
+  overflow: hidden;
+  border-radius: 22px;
+  border: 1px solid rgba(0,234,255,.55);
+  background: linear-gradient(180deg, rgba(4,39,91,.96), rgba(2,14,44,.96));
+  box-shadow: 0 24px 80px rgba(0,0,0,.62), 0 0 34px rgba(0,234,255,.24);
+}
+
+.teams-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+  border-bottom: 1px solid rgba(0,234,255,.22);
+}
+
+.teams-modal-head h2 {
+  margin: 0;
+  color: #ffd700;
+  font-size: clamp(18px, 2.2vw, 24px);
+  letter-spacing: .5px;
+}
+
+.teams-close {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,234,255,.45);
+  background: rgba(255,255,255,.08);
+  color: white;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.teams-modal-body {
+  padding: 16px 18px 20px;
+  overflow-y: auto;
+  max-height: calc(min(78vh, 720px) - 72px);
+}
+
+.teams-full-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.teams-full-list li {
+  padding: 11px 12px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.075);
+  border-left: 3px solid #00eaff;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+@media (max-width: 1180px) {
+  .teams-hud {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .teams-hud {
+    display: block;
+    left: 10px;
+    top: auto;
+    bottom: calc(76px + env(safe-area-inset-bottom));
+    transform: none;
+    width: 118px;
+    max-height: 190px;
+    border-radius: 14px;
+    animation-delay: .3s;
+  }
+
+  .teams-hud-head {
+    padding: 8px 7px 6px;
+  }
+
+  .teams-count {
+    width: 42px;
+    height: 42px;
+    font-size: 19px;
+    margin-bottom: 5px;
+  }
+
+  .teams-label {
+    font-size: 9.5px;
+  }
+
+  .teams-marquee {
+    display: none;
+  }
+
+  .teams-more {
+    margin: 7px;
+    width: calc(100% - 14px);
+    padding: 7px 5px;
+    font-size: 10.5px;
+  }
+
+  .teams-status {
+    display: none;
+  }
 }
 
 /* ===== MOBILE ACTIONS ===== */
@@ -407,7 +690,7 @@ body {
   }
 
   .page {
-    animation: posterIn 1.85s ease forwards;
+    animation: posterIn .45s ease forwards;
     width: 100vw;
     height: 100svh;
     padding: 0;
@@ -512,7 +795,7 @@ body {
     opacity: 0;
     pointer-events: auto;
     animation: showButtons .6s ease forwards;
-    animation-delay: 1.7s;
+    animation-delay: .35s;
     z-index: 30;
   }
 
@@ -598,6 +881,39 @@ body {
   <a href="#"><span class="icon">💬</span> Trợ giúp</a>
 </div>
 
+
+
+<!-- ===== DANH SÁCH ĐỘI ĐÃ ĐĂNG KÝ ===== -->
+<aside class="teams-hud" aria-label="Danh sách đội đã đăng ký">
+  <div class="teams-hud-head">
+    <div class="teams-count" id="teamCount">0</div>
+    <div class="teams-label">Đội thi <span>đã đăng ký</span></div>
+  </div>
+
+  <div class="teams-marquee">
+    <ul class="teams-list" id="teamsList">
+      <li>Đang tải dữ liệu...</li>
+    </ul>
+  </div>
+
+  <button class="teams-more" type="button" onclick="openTeamsModal()">Xem tất cả</button>
+  <div class="teams-status" id="teamsStatus">Đồng bộ từ Google Sheets</div>
+</aside>
+
+<div class="teams-modal" id="teamsModal" onclick="closeTeamsModal(event)">
+  <div class="teams-modal-card" onclick="event.stopPropagation()">
+    <div class="teams-modal-head">
+      <h2>DANH SÁCH ĐỘI ĐÃ ĐĂNG KÝ</h2>
+      <button class="teams-close" type="button" onclick="closeTeamsModal()">×</button>
+    </div>
+    <div class="teams-modal-body">
+      <ul class="teams-full-list" id="teamsFullList">
+        <li>Đang tải dữ liệu...</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
 <div class="menu-toggle" id="menuToggle" onclick="toggleMenu()">☰</div>
 
 <div class="mobile-menu" id="mobileMenu">
@@ -628,6 +944,111 @@ body {
 </div>
 
 <script>
+
+const SHEET_ID = "1iHNzV6On81SreQgSBtam6we194gWlfGCwKPSDhpUvMA";
+const SHEET_GID = "2006515965";
+const TEAMS_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${SHEET_GID}`;
+let currentTeams = [];
+
+function escapeHTML(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function parseCSVLine(line) {
+  const result = [];
+  let current = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    const next = line[i + 1];
+
+    if (char === '"' && inQuotes && next === '"') {
+      current += '"';
+      i++;
+    } else if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === ',' && !inQuotes) {
+      result.push(current);
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+
+  result.push(current);
+  return result;
+}
+
+function renderTeams(teamNames) {
+  const countBox = document.getElementById("teamCount");
+  const list = document.getElementById("teamsList");
+  const fullList = document.getElementById("teamsFullList");
+  const status = document.getElementById("teamsStatus");
+
+  countBox.textContent = teamNames.length;
+
+  if (teamNames.length === 0) {
+    list.innerHTML = "<li>Chưa có đội đăng ký</li>";
+    fullList.innerHTML = "<li>Chưa có đội đăng ký</li>";
+    status.textContent = "Chưa có dữ liệu";
+    return;
+  }
+
+  const shortNames = teamNames.length > 1 ? [...teamNames, ...teamNames] : teamNames;
+  list.innerHTML = shortNames
+    .map(name => `<li title="${escapeHTML(name)}">${escapeHTML(name)}</li>`)
+    .join("");
+
+  fullList.innerHTML = teamNames
+    .map((name, index) => `<li>${index + 1}. ${escapeHTML(name)}</li>`)
+    .join("");
+
+  const now = new Date();
+  status.textContent = `Cập nhật ${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+}
+
+async function loadTeams() {
+  try {
+    const response = await fetch(`${TEAMS_CSV_URL}&t=${Date.now()}`, { cache: "no-store" });
+    if (!response.ok) throw new Error("Không truy cập được Google Sheets");
+    const csvText = await response.text();
+    const rows = csvText.trim().split(/\r?\n/);
+
+    currentTeams = rows
+      .slice(1)
+      .map(row => {
+        const cols = parseCSVLine(row);
+        return (cols[1] || "").trim();
+      })
+      .filter(name => name !== "");
+
+    renderTeams(currentTeams);
+  } catch (error) {
+    document.getElementById("teamsList").innerHTML = "<li>Không tải được dữ liệu</li>";
+    document.getElementById("teamsFullList").innerHTML = "<li>Không tải được dữ liệu</li>";
+    document.getElementById("teamsStatus").textContent = "Lỗi kết nối";
+  }
+}
+
+function openTeamsModal() {
+  document.getElementById("teamsModal").classList.add("show");
+}
+
+function closeTeamsModal(event) {
+  if (!event || event.target.id === "teamsModal") {
+    document.getElementById("teamsModal").classList.remove("show");
+  }
+}
+
+loadTeams();
+setInterval(loadTeams, 60000);
+
 function toggleMenu() {
   const menu = document.getElementById("mobileMenu");
   const btn = document.getElementById("menuToggle");
