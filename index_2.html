@@ -18,7 +18,7 @@ body {
 .quick-menu {
   position: fixed;
   right: clamp(28px, 3vw, 30px);
-  top: 50%;
+  top: 28%;
   transform: translateY(-50%);
   z-index: 20;
   display: flex;
@@ -27,7 +27,7 @@ body {
   opacity: 0;
   pointer-events: none;
   animation: showMenu .6s ease forwards;
-  animation-delay: .25s;
+  animation-delay: .2s;
 }
 
 .quick-menu a {
@@ -268,7 +268,7 @@ body {
   align-items: center;
   padding-left: clamp(48px, 5vw, 96px);
   padding-right: clamp(130px, 14vw, 210px);
-  animation: posterIn .55s ease forwards;
+  animation: posterIn .5s ease forwards;
 }
 
 @keyframes posterIn {
@@ -364,7 +364,7 @@ body {
   opacity: 0;
   pointer-events: none;
   animation: showTeamsHud .6s ease forwards;
-  animation-delay: .3s;
+  animation-delay: .2s;
 }
 
 @keyframes showTeamsHud {
@@ -596,7 +596,7 @@ body {
   opacity: 0;
   pointer-events: none;
   animation: showCountdownHud .6s ease forwards;
-  animation-delay: .35s;
+  animation-delay: .25s;
 }
 
 @keyframes showCountdownHud {
@@ -712,7 +712,7 @@ body {
     width: 118px;
     max-height: 165px;
     border-radius: 14px;
-    animation-delay: .3s;
+    animation-delay: .2s;
   }
 
   .teams-hud-head {
@@ -753,7 +753,7 @@ body {
     width: 118px;
     max-height: 165px;
     border-radius: 14px;
-    animation-delay: .35s;
+    animation-delay: .25s;
   }
 
   .countdown-head {
@@ -784,6 +784,157 @@ body {
     font-size: 8.5px;
   }
 }
+
+
+/* ===== ROBOT AI ASSISTANT - GIAO DIỆN CHỜ KẾT NỐI API ===== */
+.ai-float {
+  position: fixed;
+  right: 22px;
+  bottom: 24px;
+  z-index: 95;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 2px solid rgba(0,234,255,.75);
+  background:
+    radial-gradient(circle at 35% 25%, rgba(255,255,255,.42), transparent 26%),
+    linear-gradient(135deg,#0066ff,#00eaff);
+  color: white;
+  font-size: 30px;
+  cursor: pointer;
+  box-shadow: 0 0 26px rgba(0,234,255,.58), 0 10px 28px rgba(0,0,0,.42);
+  transition: .25s ease;
+}
+.ai-float:hover { transform: scale(1.08) rotate(-4deg); }
+.ai-float::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,234,255,.35);
+  animation: aiPulse 2s infinite;
+}
+@keyframes aiPulse {
+  0% { transform: scale(.92); opacity: .75; }
+  100% { transform: scale(1.25); opacity: 0; }
+}
+.ai-chat {
+  position: fixed;
+  right: 22px;
+  bottom: 100px;
+  z-index: 96;
+  width: 350px;
+  max-width: calc(100vw - 32px);
+  height: 460px;
+  display: none;
+  flex-direction: column;
+  border-radius: 22px;
+  overflow: hidden;
+  border: 1px solid rgba(0,234,255,.58);
+  background:
+    linear-gradient(180deg, rgba(4,39,91,.97), rgba(2,14,44,.97)),
+    radial-gradient(circle at top left, rgba(0,234,255,.16), transparent 45%);
+  color: white;
+  box-shadow: 0 24px 80px rgba(0,0,0,.62), 0 0 34px rgba(0,234,255,.28);
+}
+.ai-chat.show { display: flex; }
+.ai-chat-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(0,234,255,.24);
+  background: rgba(0,40,90,.45);
+}
+.ai-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-weight: 900;
+  color: #ffd700;
+  line-height: 1.2;
+}
+.ai-title small {
+  color: #00eaff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .5px;
+}
+.ai-close {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  border: 1px solid rgba(0,234,255,.42);
+  background: rgba(255,255,255,.08);
+  color: white;
+  font-size: 22px;
+  cursor: pointer;
+}
+.ai-body { flex: 1; padding: 14px; overflow-y: auto; }
+.ai-msg {
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.48;
+}
+.ai-msg.bot { background: rgba(0,234,255,.12); border-left: 3px solid #00eaff; }
+.ai-msg.user { margin-left: 34px; background: rgba(255,215,0,.14); border-right: 3px solid #ffd700; }
+.ai-suggest { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 14px 10px; }
+.ai-suggest button {
+  border: 1px solid rgba(0,234,255,.35);
+  border-radius: 999px;
+  padding: 7px 10px;
+  background: rgba(0,115,200,.32);
+  color: white;
+  font-size: 12px;
+  cursor: pointer;
+}
+.ai-suggest button:hover { background: rgba(0,145,255,.62); }
+.ai-input {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid rgba(0,234,255,.2);
+  background: rgba(0,20,60,.35);
+}
+.ai-input input {
+  flex: 1;
+  border: none;
+  outline: none;
+  border-radius: 12px;
+  padding: 11px 12px;
+  font-size: 14px;
+}
+.ai-input button {
+  border: none;
+  border-radius: 12px;
+  padding: 0 15px;
+  background: linear-gradient(135deg,#ffb300,#ffd700);
+  color: #102040;
+  font-weight: 900;
+  cursor: pointer;
+}
+@media (max-width: 768px) {
+  .ai-float {
+    width: 56px;
+    height: 56px;
+    right: 14px;
+    bottom: 95px;
+    font-size: 26px;
+  }
+  .ai-chat {
+    left: 10px;
+    right: 10px;
+    bottom: 155px;
+    width: auto;
+    height: 380px;
+  }
+  .ai-msg { font-size: 13px; }
+  .ai-suggest { display: none; }
+}
+
 
 /* ===== MOBILE ACTIONS ===== */
 .mobile-actions {
@@ -958,7 +1109,7 @@ body {
     opacity: 0;
     pointer-events: auto;
     animation: showButtons .6s ease forwards;
-    animation-delay: .35s;
+    animation-delay: .2s;
     z-index: 30;
   }
 
@@ -1030,6 +1181,167 @@ body {
     padding: 5px 10px;
   }
 }
+
+/* ===== ROBOT AI ASSISTANT - ICON ẢNH ChatAI.webp===== */
+.ai-float{
+  position: fixed;
+  right: 22px;
+  bottom: 90px;
+  z-index: 95;
+  width: 86px;
+  height: 86px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  box-shadow: none;
+  transition: .25s ease;
+}
+
+.ai-float::after{
+  display: none;
+}
+
+.ai-float:hover{
+  transform: scale(1.08);
+}
+
+.ai-float img{
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  animation: aiIconGlow 2.6s infinite ease-in-out;
+  filter:
+    drop-shadow(0 0 12px rgba(0,234,255,.75))
+    drop-shadow(0 0 24px rgba(0,234,255,.45));
+}
+
+@keyframes aiIconGlow{
+  0%,100%{ transform: scale(1); }
+  50%{ transform: scale(1.07); }
+}
+
+.ai-chat{
+  bottom: 185px;
+}
+
+.ai-title-row{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-title-row img{
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 8px rgba(0,234,255,.75));
+}
+
+@media (max-width: 768px){
+  .ai-float{
+    width: 66px;
+    height: 66px;
+    right: 12px;
+    bottom: 96px;
+  }
+
+  .ai-chat{
+    left: 10px;
+    right: 10px;
+    bottom: 165px;
+    width: auto;
+    height: 380px;
+  }
+}
+
+
+/* ===== AI HALO WHITE EFFECT - FINAL OVERRIDE ===== */
+.ai-float{
+  right: 22px;
+  bottom: 90px;
+  width: 86px;
+  height: 86px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.ai-float::after{
+  display:none !important;
+}
+
+.ai-float::before{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:94px;
+  height:94px;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  border:2px solid rgba(255,255,255,.95);
+  box-shadow:
+    0 0 10px rgba(255,255,255,.95),
+    0 0 24px rgba(255,255,255,.85),
+    0 0 48px rgba(255,255,255,.62),
+    0 0 78px rgba(0,234,255,.48);
+  animation: aiHaloWhite 2.5s infinite ease-in-out;
+  z-index:-1;
+  pointer-events:none;
+}
+
+.ai-float img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  filter:
+    drop-shadow(0 0 10px rgba(255,255,255,.95))
+    drop-shadow(0 0 20px rgba(255,255,255,.75))
+    drop-shadow(0 0 36px rgba(255,255,255,.55))
+    drop-shadow(0 0 52px rgba(0,234,255,.45));
+}
+
+@keyframes aiHaloWhite{
+  0%,100%{
+    transform:translate(-50%,-50%) scale(1);
+    opacity:.72;
+  }
+  50%{
+    transform:translate(-50%,-50%) scale(1.16);
+    opacity:1;
+  }
+}
+
+.ai-chat{
+  bottom:185px;
+}
+
+@media (max-width:768px){
+  .ai-float{
+    width:66px;
+    height:66px;
+    right:12px;
+    bottom:96px;
+  }
+
+  .ai-float::before{
+    width:74px;
+    height:74px;
+  }
+
+  .ai-chat{
+    left:10px;
+    right:10px;
+    bottom:165px;
+    width:auto;
+    height:380px;
+  }
+}
+
 </style>
 </head>
 
@@ -1131,6 +1443,42 @@ body {
     <span>📝</span> Đăng ký
   </a>
 </div>
+
+
+<!-- ===== ROBOT AI ASSISTANT ===== -->
+<button class="ai-float" type="button" onclick="toggleAIChat()" aria-label="Mở trợ lý AI">
+  <img src="DATA/ChatAI.webp" alt="AI Assistant">
+</button>
+
+<div class="ai-chat" id="aiChat" aria-label="Trợ lý Robot mê cung">
+  <div class="ai-chat-head">
+    <div class="ai-title">
+      <span class="ai-title-row"><img src="DATA/ChatAI.webp" alt=""> Trợ lý Robot mê cung</span>
+      <small>Đang chờ kết nối AI</small>
+    </div>
+    <button class="ai-close" type="button" onclick="toggleAIChat()">×</button>
+  </div>
+
+  <div class="ai-body" id="aiBody">
+    <div class="ai-msg bot">
+      Xin chào! Tôi là trợ lý Robot mê cung. Tôi có thể hỗ trợ về cuộc thi, đăng ký, tài liệu kỹ thuật, lịch thi và các nội dung liên quan.
+      <br><br>
+      🚧 Tính năng AI đang được hoàn thiện. Hiện tại đây là giao diện chờ kết nối API.
+    </div>
+  </div>
+
+  <div class="ai-suggest">
+    <button type="button" onclick="askAISuggestion('Hạn đăng ký là khi nào?')">Hạn đăng ký</button>
+    <button type="button" onclick="askAISuggestion('Tài liệu kỹ thuật ở đâu?')">Tài liệu</button>
+    <button type="button" onclick="askAISuggestion('Robot có được thay đổi phần cứng không?')">Luật thi</button>
+  </div>
+
+  <div class="ai-input">
+    <input id="aiQuestion" placeholder="Nhập câu hỏi..." onkeydown="if(event.key==='Enter') sendAIQuestion()">
+    <button type="button" onclick="sendAIQuestion()">Gửi</button>
+  </div>
+</div>
+
 
 <script>
 
@@ -1306,6 +1654,37 @@ document.addEventListener("click", function(e) {
     btn.textContent = "☰";
   }
 });
+
+function toggleAIChat() {
+  const chat = document.getElementById("aiChat");
+  chat.classList.toggle("show");
+}
+
+function askAISuggestion(question) {
+  const input = document.getElementById("aiQuestion");
+  input.value = question;
+  sendAIQuestion();
+}
+
+function sendAIQuestion() {
+  const input = document.getElementById("aiQuestion");
+  const body = document.getElementById("aiBody");
+  const question = input.value.trim();
+
+  if (!question) return;
+
+  body.innerHTML += `<div class="ai-msg user">${escapeHTML(question)}</div>`;
+  input.value = "";
+
+  body.innerHTML += `
+    <div class="ai-msg bot">
+      🚧 Tính năng AI đang được hoàn thiện. Hiện tại, bạn có thể tham khảo mục Tài liệu kỹ thuật, Kế hoạch cuộc thi hoặc liên hệ Ban Tổ chức để được hỗ trợ.
+    </div>
+  `;
+
+  body.scrollTop = body.scrollHeight;
+}
+
 </script>
 
 </body>
