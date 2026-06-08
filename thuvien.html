@@ -1,68 +1,109 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Thư viện - Robot mê cung 2026</title>
-
 <style>
-body{
-  margin:0;
-  font-family:Arial,Helvetica,sans-serif;
-  background:#061b45;
-  color:white;
-}
-
-.home{
-  position:fixed;
-  top:15px;
-  left:15px;
-  width:50px;
-  height:50px;
-  border-radius:50%;
-  background:rgba(255,255,255,.15);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  text-decoration:none;
-  color:white;
-  font-size:22px;
-}
-
-.header{
-  text-align:center;
-  padding:50px 20px 0;
-}
-
-.content{
-  min-height:60vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  flex-direction:column;
-}
-
-.content h2{
-  color:#00ffff;
-}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#061b45;color:white;}
+.home{position:fixed;top:15px;left:15px;width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;text-decoration:none;color:white;font-size:22px;z-index:10;}
+.home:hover{background:rgba(255,255,255,.3);}
+.header{text-align:center;padding:50px 20px 15px;}
+.header h1{margin:0;font-size:32px;}
+.header p{opacity:.85;}
+.status{text-align:center;color:#00ffff;margin:10px 0 20px;font-weight:bold;}
+.folder-tabs{width:min(1200px,94vw);margin:0 auto 18px;display:flex;flex-wrap:wrap;gap:10px;justify-content:center;}
+.folder-tabs button{border:1px solid rgba(0,255,255,.35);background:rgba(255,255,255,.08);color:white;padding:10px 14px;border-radius:999px;cursor:pointer;font-weight:bold;transition:.25s;}
+.folder-tabs button.active,.folder-tabs button:hover{background:rgba(0,255,255,.18);box-shadow:0 0 18px rgba(0,255,255,.28);}
+.gallery{width:min(1200px,94vw);margin:0 auto 35px;display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;}
+.photo-card{border-radius:14px;overflow:hidden;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);box-shadow:0 8px 24px rgba(0,0,0,.35);cursor:pointer;transition:.25s;}
+.photo-card:hover{transform:translateY(-4px);box-shadow:0 0 22px rgba(0,255,255,.35);}
+.photo-card img{width:100%;height:150px;object-fit:cover;display:block;}
+.photo-card div{padding:9px;font-size:13px;opacity:.86;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.86);z-index:100;display:none;align-items:center;justify-content:center;padding:20px;}
+.lightbox.show{display:flex;}
+.lightbox img{max-width:94vw;max-height:86vh;border-radius:12px;box-shadow:0 0 40px rgba(0,255,255,.32);}
+.lightbox-close{position:fixed;top:18px;right:22px;color:white;font-size:38px;cursor:pointer;}
+.drive-link{text-align:center;margin:18px 0 30px;}
+.drive-link a{color:#00ffff;text-decoration:none;font-weight:bold;}
+@media(max-width:768px){.header{padding-top:70px}.header h1{font-size:28px}.gallery{grid-template-columns:repeat(auto-fill,minmax(145px,1fr))}.photo-card img{height:120px}}
 </style>
 </head>
-
 <body>
-
 <a href="index_2.html" class="home">🏠</a>
-
 <div class="header">
   <h1>THƯ VIỆN</h1>
+  <p>HÌNH ẢNH VÀ TƯ LIỆU CUỘC THI ROBOT MÊ CUNG</p>
 </div>
-
-<div class="content">
-  <h2>NỘI DUNG ĐANG ĐƯỢC CẬP NHẬT</h2>
-  <p>Hình ảnh và tư liệu cuộc thi sẽ được cập nhật tại đây.</p>
+<div class="status" id="status">Đang tải thư viện ảnh...</div>
+<div class="folder-tabs" id="folderTabs"></div>
+<div class="gallery" id="gallery"></div>
+<div class="drive-link">
+  <a href="https://drive.google.com/drive/folders/1XXtk1xbZdlSUuDJSbzGicqWPCsm3cZi0?usp=sharing" target="_blank">Mở thư viện ảnh trên Google Drive</a>
 </div>
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <span class="lightbox-close">×</span>
+  <img id="lightboxImg" src="">
+</div>
+<script>
+const GALLERY_API_URL = "https://script.google.com/macros/s/AKfycbyRHuec7KmrPaWA1t_PaLhiJJ0HkERj2fwbCcojs88ojwdwPNvwpNytwqBrXltmYsnK/exec";
+let galleryData = {};
+const preferredOrder = ["Kết quả 2025","Phát động","Tập huấn","Vòng loại","Chung kết","Trao giải"];
 
+function sortFolders(folders){
+  return folders.sort((a,b)=>{
+    const ia=preferredOrder.indexOf(a), ib=preferredOrder.indexOf(b);
+    if(ia!==-1 || ib!==-1) return (ia===-1?999:ia)-(ib===-1?999:ib);
+    return a.localeCompare(b,"vi");
+  });
+}
+
+async function loadGallery(){
+  const status=document.getElementById("status");
+  if(GALLERY_API_URL.includes("THAY_BANG_LINK")){
+    status.innerHTML="Chưa cấu hình Google Apps Script Web App URL.";
+    return;
+  }
+  try{
+    const response=await fetch(GALLERY_API_URL);
+    galleryData=await response.json();
+    const folders=sortFolders(Object.keys(galleryData));
+    if(folders.length===0){status.textContent="Thư viện chưa có ảnh.";return;}
+    renderTabs(folders);
+    selectFolder(folders[0]);
+    status.textContent="";
+  }catch(error){status.textContent="Không tải được thư viện ảnh.";}
+}
+
+function renderTabs(folders){
+  document.getElementById("folderTabs").innerHTML=folders.map(folder=>`
+    <button onclick="selectFolder('${folder.replace(/'/g,"\\'")}')" id="tab-${safeId(folder)}">${folder}</button>
+  `).join("");
+}
+
+function selectFolder(folder){
+  document.querySelectorAll(".folder-tabs button").forEach(btn=>btn.classList.remove("active"));
+  const active=document.getElementById("tab-"+safeId(folder));
+  if(active) active.classList.add("active");
+  const photos=galleryData[folder]||[];
+  const gallery=document.getElementById("gallery");
+  if(photos.length===0){gallery.innerHTML="<p>Thư mục này chưa có ảnh.</p>";return;}
+  gallery.innerHTML=photos.map(photo=>`
+    <div class="photo-card" onclick="openLightbox('${photo.id}')">
+      <img src="https://drive.google.com/thumbnail?id=${photo.id}&sz=w800" alt="${escapeHTML(photo.name)}">
+      <div>${escapeHTML(photo.name)}</div>
+    </div>
+  `).join("");
+}
+
+function openLightbox(id){
+  document.getElementById("lightboxImg").src=`https://drive.google.com/thumbnail?id=${id}&sz=w2000`;
+  document.getElementById("lightbox").classList.add("show");
+}
+function closeLightbox(){document.getElementById("lightbox").classList.remove("show");document.getElementById("lightboxImg").src="";}
+function safeId(text){return text.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9]/g,"_");}
+function escapeHTML(value){return String(value).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");}
+loadGallery();
+</script>
 </body>
 </html>
-
