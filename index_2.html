@@ -1342,6 +1342,149 @@ body {
   }
 }
 
+
+/* ===== MOBILE TOP ICON MENU - FINAL OVERRIDE ===== */
+@media (max-width: 768px) {
+  .menu-toggle {
+    display: none !important;
+  }
+
+  .mobile-menu {
+    position: fixed !important;
+    top: 8px !important;
+    left: 50% !important;
+    right: auto !important;
+    z-index: 42 !important;
+
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+
+    width: auto !important;
+    max-width: calc(100vw - 16px) !important;
+    padding: 6px !important;
+
+    background: rgba(0, 18, 52, .46) !important;
+    border: 1px solid rgba(0,234,255,.34) !important;
+    border-radius: 16px !important;
+    backdrop-filter: blur(12px) !important;
+
+    box-shadow:
+      0 10px 26px rgba(0,0,0,.38),
+      inset 0 0 12px rgba(0,234,255,.08) !important;
+
+    transform: translateX(-50%) !important;
+    transition: none !important;
+  }
+
+  .mobile-menu.show {
+    transform: translateX(-50%) !important;
+  }
+
+  .mobile-menu a {
+    width: 75px !important;
+    height: 36px !important;
+    min-width: 60px !important;
+
+    padding: 0 !important;
+    margin: 0 !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    border-radius: 12px !important;
+
+    background: rgba(0,70,150,.58) !important;
+    border: 1px solid rgba(0,234,255,.42) !important;
+
+    box-shadow:
+      0 6px 14px rgba(0,0,0,.28),
+      inset 0 0 8px rgba(0,234,255,.08) !important;
+
+    text-decoration: none !important;
+    color: white !important;
+    overflow: hidden !important;
+  }
+
+  .mobile-menu a:hover,
+  .mobile-menu a:active {
+    background: rgba(0,145,255,.78) !important;
+    box-shadow:
+      0 0 18px rgba(0,234,255,.45),
+      inset 0 0 10px rgba(255,255,255,.08) !important;
+  }
+
+  .mobile-menu .icon {
+    width: auto !important;
+    font-size: 18px !important;
+    line-height: 1 !important;
+    text-align: center !important;
+  }
+
+  .mobile-menu .label {
+    display: none !important;
+  }
+
+  /* Dịch cụm đội thi và đếm ngược xuống để tránh đụng menu ngang */
+  .teams-hud {
+    top: 62px !important;
+    bottom: auto !important;
+    height: 165px !important;
+    max-height: 165px !important;
+  }
+
+  .countdown-hud {
+    top: 62px !important;
+    bottom: auto !important;
+  }
+
+  /* Dịch poster xuống một chút cho cân đối với thanh menu trên */
+  .page {
+    align-items: flex-start !important;
+    padding-top: 240px !important;
+    box-sizing: border-box !important;
+  }
+
+  .container {
+    width: 100vw !important;
+    height: auto !important;
+    aspect-ratio: 1536 / 1024 !important;
+    border-radius: 0 !important;
+    transform: none !important;
+  }
+}
+
+/* Màn hình rất hẹp: thu icon để đủ hàng ngang */
+@media (max-width: 380px) {
+  .mobile-menu {
+    top: 7px !important;
+    gap: 4px !important;
+    padding: 5px !important;
+  }
+
+  .mobile-menu a {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+  }
+
+  .mobile-menu .icon {
+    font-size: 16px !important;
+  }
+
+  .teams-hud,
+  .countdown-hud {
+    top: 56px !important;
+  }
+
+  .page {
+    padding-top: 110px !important;
+  }
+}
+
 </style>
 </head>
 
@@ -1418,12 +1561,12 @@ body {
 <div class="menu-toggle" id="menuToggle" onclick="toggleMenu()">☰</div>
 
 <div class="mobile-menu" id="mobileMenu">
-  <a href="#">🏠 Trang chủ</a>
-  <a href="#">📢 Thông báo</a>
-  <a href="tailieu-kythuat.html"><span class="icon">📄</span> Tài liệu kỹ thuật</a>
-  <a href="#">🎥 Video hướng dẫn</a>
-  <a href="#">🖼️ Thư viện</a>
-  <a href="#">💬 Trợ giúp</a>
+  <a href="index_2.html" title="Trang chủ" aria-label="Trang chủ"><span class="icon">🏠</span><span class="label">Trang chủ</span></a>
+  <a href="#" title="Thông báo" aria-label="Thông báo"><span class="icon">📢</span><span class="label">Thông báo</span></a>
+  <a href="tailieu-kythuat.html" title="Tài liệu kỹ thuật" aria-label="Tài liệu kỹ thuật"><span class="icon">📄</span><span class="label">Tài liệu kỹ thuật</span></a>
+  <a href="#" title="Video hướng dẫn" aria-label="Video hướng dẫn"><span class="icon">🎥</span><span class="label">Video hướng dẫn</span></a>
+  <a href="#" title="Thư viện" aria-label="Thư viện"><span class="icon">🖼️</span><span class="label">Thư viện</span></a>
+  <a href="#" title="Trợ giúp" aria-label="Trợ giúp"><span class="icon">💬</span><span class="label">Trợ giúp</span></a>
 </div>
 
 <div class="page">
