@@ -1562,7 +1562,7 @@ body {
     </div>
   </div>
 
-  <div class="countdown-status" id="countdownStatus">Hạn đăng ký: 20/06/2026</div>
+  <div class="countdown-status" id="countdownStatus">Hạn đăng ký: 28/06/2026</div>
 </aside>
 
 <div class="teams-modal" id="teamsModal" onclick="closeTeamsModal(event)">
@@ -1750,7 +1750,7 @@ setInterval(loadTeams, 60000);
 
 
 
-const REGISTRATION_DEADLINE = new Date("2026-06-20T23:59:59+07:00");
+const REGISTRATION_DEADLINE = new Date("2026-06-28T23:59:59+07:00");
 
 function updateRegistrationCountdown() {
   const hud = document.getElementById("countdownHud");
@@ -1789,7 +1789,7 @@ function updateRegistrationCountdown() {
     status.textContent = "Sắp hết hạn đăng ký";
   } else {
     hud.classList.remove("urgent");
-    status.textContent = "Hạn đăng ký: 20/06/2026";
+    status.textContent = "Hạn đăng ký: 28/06/2026";
   }
 }
 
