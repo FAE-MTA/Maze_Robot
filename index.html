@@ -1506,6 +1506,52 @@ body {
   }
 }
 
+
+/* ===== NÚT ĐĂNG KÝ MƯỢN ROBOT ===== */
+.borrow-menu-btn{
+  margin-top: 8px;
+  color: #ffffff !important;
+  font-weight: 900 !important;
+  background:
+    linear-gradient(135deg, rgba(0,190,255,.42), rgba(0,75,180,.78)) !important;
+  border: 2px solid rgba(0,234,255,.95) !important;
+  box-shadow:
+    0 0 12px rgba(0,234,255,.78),
+    0 0 28px rgba(0,234,255,.35),
+    inset 0 0 10px rgba(255,255,255,.08) !important;
+  animation: borrowMenuGlow 1.9s ease-in-out infinite;
+}
+
+.borrow-menu-btn:hover{
+  transform: translateX(-5px) scale(1.03) !important;
+  background:
+    linear-gradient(135deg, rgba(0,220,255,.62), rgba(0,105,220,.92)) !important;
+}
+
+@keyframes borrowMenuGlow{
+  0%,100%{
+    box-shadow:
+      0 0 9px rgba(0,234,255,.55),
+      0 0 20px rgba(0,234,255,.22);
+  }
+  50%{
+    box-shadow:
+      0 0 16px rgba(0,234,255,1),
+      0 0 36px rgba(0,234,255,.58);
+  }
+}
+
+@media (max-width:768px){
+  .mobile-menu a.borrow-menu-btn{
+    background:
+      linear-gradient(135deg, rgba(0,190,255,.72), rgba(0,85,200,.94)) !important;
+    border: 2px solid rgba(255,215,0,.9) !important;
+    box-shadow:
+      0 0 12px rgba(255,215,0,.5),
+      0 0 22px rgba(0,234,255,.5) !important;
+  }
+}
+
 </style>
 </head>
 
@@ -1517,6 +1563,7 @@ body {
   <a href="video.html"><span class="icon">🎥</span> Video hướng dẫn</a>
   <a href="thuvien.html"><span class="icon">🖼️</span> Thư viện</a>
   <a href="forum.html"><span class="icon">💬</span> Forum</a>
+  <a href="muonrobot.html" class="borrow-menu-btn"><span class="icon">🤖</span>Đăng ký mượn Robot</a>
 </div>
 
 
@@ -1586,6 +1633,7 @@ body {
   <a href="video.html" title="Video hướng dẫn" aria-label="Video hướng dẫn"><span class="icon">🎥</span><span class="label">Video hướng dẫn</span></a>
   <a href="thuvien.html" title="Thư viện" aria-label="Thư viện"><span class="icon">🖼️</span><span class="label">Thư viện</span></a>
   <a href="forum.html" title="Forum" aria-label="Forum"><span class="icon">💬</span><span class="label">Forum</span></a>
+  <a href="muonrobot.html" class="borrow-menu-btn" title="Đăng ký mượn Robot" aria-label="Đăng ký mượn Robot"><span class="icon">🤖</span><span class="label">Đăng ký mượn Robot</span></a>
 </div>
 
 <div class="intro">
