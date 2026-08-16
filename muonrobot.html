@@ -445,7 +445,7 @@ body{
 
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbzPEwE-NxMp79X14mHqekPT01X5OWIhtCjVZYnlMrRdjB3NrT6_-p9t2tfvQHrBIR7f/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbw5hAhnDwG2dKZXoBJP-jbWD0zb3N2OQ89pO-umCJoVgBxMvKXJzZ03oF51z7osN6Er/exec";
 
 let selected = null;
 let teams = [];
@@ -693,6 +693,16 @@ function escapeAttr(value){
 }
 
 loadData();
+
+  // Tự đồng bộ trạng thái từ Google Sheets mỗi 20 giây.
+  setInterval(() => {
+    if (!document.hidden) loadData();
+  }, 20000);
+
+  // Khi quay lại tab/trang, tải lại dữ liệu ngay.
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) loadData();
+  });
 </script>
 
 
