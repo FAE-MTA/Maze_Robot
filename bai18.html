@@ -496,7 +496,9 @@ h1 {
     <li>Cài thêm: Adafruit GFX, SSD1306, NeoPixel, VL53L0X, BusIO và Servo.</li>
     <li>Khởi động lại Arduino IDE, chọn <strong>Arduino Mega or Mega 2560</strong>.</li>
     <li>Mở chương trình và nhấn Verify trước khi Upload.</li>
-  </ol><div class="warning">Nếu IDE báo “Robot.h: No such file or directory”, kiểm tra không bị lồng hai thư mục giống nhau: đường dẫn đúng phải là <strong>libraries/RobotMega2560Mini/src/Robot.h</strong>.</div></section>
+  </ol>
+  <div class="note"><strong>📦 Tải thư viện:</strong> <a href="THU_VIEN_ROBOT/RobotMega2560Mini.zip" download style="color:#7afcff;font-weight:bold;">⬇ Tải RobotMega2560Mini.zip</a><br>Sau khi tải, trong Arduino IDE chọn <strong>Sketch → Include Library → Add .ZIP Library...</strong> và chọn tệp vừa tải.</div>
+  <div class="warning">Nếu IDE báo “Robot.h: No such file or directory”, kiểm tra không bị lồng hai thư mục giống nhau: đường dẫn đúng phải là <strong>libraries/RobotMega2560Mini/src/Robot.h</strong>.</div></section>
   <section class="lesson"><h2>4. Cấu trúc và các nhóm hàm</h2>
     <div class="pin-collapse open"><button class="pin-collapse-head" onclick="togglePinTable(this)"><span>📚 Cấu trúc thư viện</span><span class="arrow">⌄</span></button><div class="pin-collapse-body"><div class="pin-table-wrap"><table class="pin-table"><thead><tr><th>Tệp/nhóm</th><th>Nội dung</th><th>Ví dụ hàm</th></tr></thead><tbody>
       <tr><td>RobotConfig.h</td><td>Cấu hình chân và giá trị mặc định</td><td>D5/D9, D6/D10, D4/D7...</td></tr>
@@ -516,7 +518,7 @@ h1 {
     <li>Luôn có điều kiện dừng an toàn và hiển thị OLED/Serial.</li>
     <li>Các thông số PWM, ngưỡng và thời gian vẫn phải hiệu chỉnh trên robot thật.</li>
   </ol><div class="note"><strong>Ví dụ:</strong> bài chỉ dùng OLED và động cơ thì cần oledBatDau() và dongCoBatDau(); không cần khởi tạo laser hoặc cảm biến màu.</div></section>
-  <section class="lesson"><h2>6. Chương trình làm quen</h2><p>Chương trình nhận lệnh T/L/A/D/S từ Serial Monitor, qua đó minh họa cách gọi hàm động cơ và OLED mà không cần viết lại phần điều khiển chân.</p><div class="note"><a href="CODE_BAI_18_25_THU_VIEN_VA_NANG_CAO/Bai_18_Gioi_thieu_thu_vien_Robot/Bai_18_Gioi_thieu_thu_vien_Robot.ino" download style="color:#7afcff;font-weight:bold;">Tải chương trình Bài 18 (.ino)</a></div>
+  <section class="lesson"><h2>6. Chương trình làm quen</h2><p>Chương trình nhận lệnh T/L/A/D/S từ Serial Monitor, qua đó minh họa cách gọi hàm động cơ và OLED mà không cần viết lại phần điều khiển chân.</p><div class="note"><a href="CODE_BAI_18_24_THU_VIEN_VA_NANG_CAO/Bai_18_Gioi_thieu_thu_vien_Robot/Bai_18_Gioi_thieu_thu_vien_Robot.ino" download style="color:#7afcff;font-weight:bold;">Tải chương trình Bài 18 (.ino)</a></div>
     <div class="code-collapse"><button class="code-collapse-head" onclick="toggleCode(this)"><span>💻 Xem code ví dụ</span><span class="arrow">⌄</span></button><div class="code-collapse-body"><div class="code-box"><div class="code-title">Bai_18_Gioi_thieu_thu_vien_Robot.ino</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-cpp">#include &lt;Robot.h&gt;
 
 // BÀI 18: LÀM QUEN VỚI THƯ VIỆN ROBOTMEGA2560MINI
@@ -605,7 +607,7 @@ void loop() {
     <div class="warning"><strong>Thiếu Adafruit/Servo:</strong> cài đủ thư viện phụ thuộc bằng Library Manager.</div>
     <div class="warning"><strong>Robot chạy sai chiều:</strong> không sửa chân trực tiếp trong bài; kiểm tra RobotConfig.h và cờ MOTOR2_INVERT.</div>
   </section>
-  <section class="lesson"><h2>9. Kết luận</h2><p>Sau bài này, sinh viên có thể đọc giao diện Robot.h, cài thư viện đúng cách và dùng các hàm đã hoàn thiện để xây dựng Bài 19–25.</p></section>
+  <section class="lesson"><h2>9. Kết luận</h2><p>Sau bài này, sinh viên có thể đọc giao diện Robot.h, cài thư viện đúng cách và dùng các hàm đã hoàn thiện để xây dựng Bài 19–24.</p></section>
   <nav class="nav-bottom" aria-label="Điều hướng bài học"><a href="bai17.html">← Bài 17</a><a href="tailieu-kythuat.html">Danh sách bài học</a><a href="bai19.html">Bài 19 →</a></nav>
 </main>
 <!-- ===== NỘI DUNG===== -->

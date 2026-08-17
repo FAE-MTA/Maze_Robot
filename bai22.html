@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Bài 22. Bám line PID và tránh hai vật cản</title>
+<title>Bài 22. Nhận dạng và đẩy khối màu</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -480,71 +480,81 @@ h1 {
 <main class="page">
   <section class="hero">
     <div class="label">BÀI HỌC NÂNG CAO · ĐÃ HOÀN THIỆN</div>
-    <h1>Bài 22. Bám line PID và tránh hai vật cản</h1>
+    <h1>Bài 22. Nhận dạng và đẩy khối màu</h1>
     <p class="subtitle">Bài học liên thông sử dụng cấu hình robot mới nhất và thư viện hàm dùng chung.</p>
   </section>
-  <section class="lesson"><h2>1. Mục tiêu bài học</h2><ul><li>Bám line bằng PID trong điều kiện bình thường.</li><li>Đi vòng vật cản và tìm lại vạch có timeout.</li><li>Kết thúc khu vực sau khi vượt thành công vật cản thứ hai.</li></ul><div class="note"><strong>Điều kiện học trước:</strong> Bài 8, 10, 16 và 21.</div></section>
-  <section class="lesson"><h2>2. Chuẩn bị</h2><p><strong>Phần cứng:</strong> Năm cảm biến line A1–A5, HC-SR04 phía trước, hai động cơ và OLED.</p><p><strong>Phần mềm:</strong> Arduino IDE, board Arduino Mega or Mega 2560, Serial Monitor 115200 baud.</p><div class="warning">Trước khi biên dịch, chép thư mục <strong>THU_VIEN_ROBOT/RobotMega2560Mini</strong> vào <strong>Documents/Arduino/libraries</strong>, sau đó khởi động lại Arduino IDE. Kê hai bánh khỏi mặt đất ở lần thử đầu tiên.</div></section>
-  <section class="lesson"><h2>3. Nguyên lý và thuật toán</h2><ol><li>Đọc siêu âm định kỳ trong khi hàm PID điều khiển hai bánh.</li><li>Khi vật cản gần hơn 22 cm, robot lùi rồi đi quỹ đạo chữ nhật vòng sang phải.</li><li>Robot quay chậm tìm lại line; chỉ tăng bộ đếm nếu đã tìm lại được line.</li><li>Sau vật cản thứ hai, robot dừng và báo hết khu vực line.</li></ol><div class="pin-collapse open"><button class="pin-collapse-head" onclick="togglePinTable(this)"><span>⚙️ Thông số cần hiệu chỉnh</span><span class="arrow">⌄</span></button><div class="pin-collapse-body"><div class="pin-table-wrap"><table class="pin-table"><thead><tr><th>Thông số</th><th>Giá trị ban đầu</th><th>Ý nghĩa</th></tr></thead><tbody><tr><td>NGUONG_VAT_CAN_CM</td><td>22 cm</td><td>Bắt đầu đi vòng</td></tr><tr><td>PWM_BAM_LINE</td><td>115</td><td>Tốc độ bám vạch</td></tr><tr><td>KP/KI/KD</td><td>0.45/0.02/0.003</td><td>Thông số PID ban đầu</td></tr><tr><td>SO_VAT_CAN_DE_KET_THUC</td><td>2</td><td>Điều kiện chuyển khu vực</td></tr></tbody></table></div></div></div></section>
-  <section class="lesson"><h2>4. Chương trình hoàn chỉnh</h2><div class="note">Chương trình sử dụng thư viện chung <strong>RobotMega2560Mini</strong>. <a href="CODE_BAI_18_25_THU_VIEN_VA_NANG_CAO/Bai_22_Line_PID_tranh_2_vat_can/Bai_22_Line_PID_tranh_2_vat_can.ino" download style="color:#7afcff;font-weight:bold;">Tải file .ino</a></div><div class="code-collapse"><button class="code-collapse-head" onclick="toggleCode(this)"><span>💻 Xem code ví dụ</span><span class="arrow">⌄</span></button><div class="code-collapse-body"><div class="code-box"><div class="code-title">Bai_22_Line_PID_tranh_2_vat_can.ino</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-cpp">#include &lt;Robot.h&gt;
+  <section class="lesson"><h2>1. Mục tiêu bài học</h2><ul><li>Tìm và tiếp cận khối ở tốc độ thấp.</li><li>Lấy trung bình nhiều phép đo màu.</li><li>Chỉ đẩy khối có màu yêu cầu và bỏ qua khối khác.</li></ul><div class="note"><strong>Điều kiện học trước:</strong> Bài 6, 8 và 11.</div></section>
+  <section class="lesson"><h2>2. Chuẩn bị</h2><p><strong>Phần cứng:</strong> TCS3200 D24–D29, HC-SR04 phía trước, hai động cơ và OLED.</p><p><strong>Phần mềm:</strong> Arduino IDE, board Arduino Mega or Mega 2560, Serial Monitor 115200 baud.</p><div class="warning">Trước khi biên dịch, chép thư mục <strong>THU_VIEN_ROBOT/RobotMega2560Mini</strong> vào <strong>Documents/Arduino/libraries</strong>, sau đó khởi động lại Arduino IDE. Kê hai bánh khỏi mặt đất ở lần thử đầu tiên.</div></section>
+  <section class="lesson"><h2>3. Nguyên lý và thuật toán</h2><ol><li>Quay chậm cho đến khi siêu âm thấy khối trong 60 cm.</li><li>Tiếp cận đến khi cảm biến màu cách bề mặt khoảng 1–2 cm.</li><li>Đọc hai mẫu R/G/B/C, nhận dạng màu và so sánh với MAU_YEU_CAU.</li><li>Đúng màu thì đẩy; sai màu thì lùi, quay và tìm khối tiếp theo.</li></ol><div class="pin-collapse open"><button class="pin-collapse-head" onclick="togglePinTable(this)"><span>⚙️ Thông số cần hiệu chỉnh</span><span class="arrow">⌄</span></button><div class="pin-collapse-body"><div class="pin-table-wrap"><table class="pin-table"><thead><tr><th>Thông số</th><th>Giá trị ban đầu</th><th>Ý nghĩa</th></tr></thead><tbody><tr><td>MAU_YEU_CAU</td><td>MAU_XANH_DUONG</td><td>Có thể đổi đỏ hoặc xanh lá</td></tr><tr><td>Khoảng tìm</td><td>60 cm</td><td>Bắt đầu tiếp cận</td></tr><tr><td>Khoảng đọc màu</td><td>1–2 cm</td><td>Cự ly TCS3200 ổn định</td></tr><tr><td>Thời gian đẩy</td><td>1500 ms</td><td>Điều chỉnh theo sa hình</td></tr></tbody></table></div></div></div></section>
+  <section class="lesson"><h2>4. Chương trình hoàn chỉnh</h2><div class="note">Chương trình sử dụng thư viện chung <strong>RobotMega2560Mini</strong>. <a href="CODE_BAI_18_24_THU_VIEN_VA_NANG_CAO/Bai_22_Nhan_dang_day_khoi_mau/Bai_22_Nhan_dang_day_khoi_mau.ino" download style="color:#7afcff;font-weight:bold;">Tải file .ino</a></div><div class="code-collapse"><button class="code-collapse-head" onclick="toggleCode(this)"><span>💻 Xem code ví dụ</span><span class="arrow">⌄</span></button><div class="code-collapse-body"><div class="code-box"><div class="code-title">Bai_22_Nhan_dang_day_khoi_mau.ino</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-cpp">#include &lt;Robot.h&gt;
 
-// BÀI 22: BÁM LINE PID VÀ TRÁNH HAI VẬT CẢN
-// Robot bám line, đi vòng khi HC-SR04 phát hiện vật cản trên vạch.
-// Sau khi vượt thành công vật cản thứ hai, robot coi như hết khu vực line.
+// BÀI 22: NHẬN DẠNG VÀ ĐẨY KHỐI MÀU
+// Giả thiết sa hình: các khối nằm tại những vị trí kiểm tra xác định.
+// Robot quay tìm khối, dùng siêu âm để tiếp cận, đọc TCS3200 ở cự ly gần,
+// sau đó chỉ đẩy khối có màu đúng yêu cầu.
 
-BoDieuKhienPID pidLine;
-const float NGUONG_VAT_CAN_CM = 22.0f;
-const uint8_t SO_VAT_CAN_DE_KET_THUC = 2;
-const int PWM_BAM_LINE = 115;
-const int PWM_TOI_DA = 200;
-const int PWM_TIM_LINE = 80;
+enum TrangThaiKhoiMau {
+  TIM_KHOI,
+  TIEP_CAN_KHOI,
+  DOC_MAU_KHOI,
+  BO_QUA_KHOI,
+  DAY_KHOI,
+  DAY_XONG
+};
 
-float khoangCachTruocCm = -1.0f;
-uint8_t soVatCanDaVuot = 0;
-bool daHoanThanh = false;
-bool coLoi = false;
-unsigned long lanDocSieuAmMs = 0;
-unsigned long boQuaVatCanDenMs = 0;
-unsigned long lanHienThiMs = 0;
+const MauSac MAU_YEU_CAU = MAU_XANH_DUONG;
+TrangThaiKhoiMau trangThai = TIM_KHOI;
+float khoangCachKhoi = -1.0f;
+MauSac mauVuaDoc = MAU_KHONG_XAC_DINH;
 
-void hienThiLine(const char *trangThai) {
-  DuLieuLine line = docLine();
-  oledXoa();
-  oledTieuDe("BAI 22 - LINE + VAT");
-  oledInChu(4, 17, trangThai);
-  oledInChu(4, 31, "LINE:"); oledInSo(38, 31, line.viTri);
-  oledInChu(4, 44, "KC:");
-  if (khoangCachTruocCm &gt; 0) oledInSoThuc(27, 44, khoangCachTruocCm);
-  else oledInChu(27, 44, "NO ECHO");
-  oledInChu(73, 44, "VAT:"); oledInSo(99, 44, soVatCanDaVuot);
-  oledInChu(112, 44, "/2");
-  oledCapNhat();
+DuLieuMau docMauTrungBinh(uint8_t soMau) {
+  DuLieuMau trungBinh = {0, 0, 0, 0, false};
+  uint8_t soMauHopLe = 0;
 
-  Serial.print(trangThai); Serial.print(F("  line="));
-  Serial.print(line.viTri); Serial.print(F("  truoc="));
-  Serial.print(khoangCachTruocCm); Serial.print(F("cm  vat="));
-  Serial.print(soVatCanDaVuot); Serial.println(F("/2"));
+  for (uint8_t i = 0; i &lt; soMau; i++) {
+    DuLieuMau d = docCamBienMau();
+    if (!d.hopLe) continue;
+    trungBinh.doPulse += d.doPulse;
+    trungBinh.xanhLaPulse += d.xanhLaPulse;
+    trungBinh.xanhDuongPulse += d.xanhDuongPulse;
+    trungBinh.clearPulse += d.clearPulse;
+    soMauHopLe++;
+  }
+
+  if (soMauHopLe &gt; 0) {
+    trungBinh.doPulse /= soMauHopLe;
+    trungBinh.xanhLaPulse /= soMauHopLe;
+    trungBinh.xanhDuongPulse /= soMauHopLe;
+    trungBinh.clearPulse /= soMauHopLe;
+    trungBinh.hopLe = true;
+  }
+  return trungBinh;
 }
 
-bool tranhMotVatCan() {
-  dungRobot();
-  hienThiLine("BAT DAU DI VONG");
-  delay(150);
+const char *tenTrangThai() {
+  switch (trangThai) {
+    case TIM_KHOI: return "TIM KHOI";
+    case TIEP_CAN_KHOI: return "TIEP CAN";
+    case DOC_MAU_KHOI: return "DOC MAU";
+    case BO_QUA_KHOI: return "BO QUA KHOI";
+    case DAY_KHOI: return "DAY KHOI";
+    default: return "HOAN THANH";
+  }
+}
 
-  // Quỹ đạo hình chữ nhật đi vòng về bên phải vật cản.
-  diLui(90); delay(250); dungRobot();
-  quayPhaiTheoThoiGian(110, 450);
-  diThang(100); delay(650); dungRobot();
-  quayTraiTheoThoiGian(110, 450);
-  diThang(100); delay(900); dungRobot();
-  quayTraiTheoThoiGian(110, 450);
-  diThang(90); delay(600); dungRobot();
-  quayPhaiTheoThoiGian(110, 450);
+void hienThiKhoiMau() {
+  oledXoa();
+  oledTieuDe("BAI 22 - KHOI MAU");
+  oledInChu(4, 18, tenTrangThai());
+  oledInChu(4, 33, "KC:");
+  if (khoangCachKhoi &gt; 0) oledInSoThuc(25, 33, khoangCachKhoi);
+  else oledInChu(25, 33, "NO ECHO");
+  oledInChu(4, 47, "MAU:"); oledInChu(34, 47, tenMau(mauVuaDoc));
+  oledCapNhat();
 
-  // Quay chậm có giới hạn thời gian để tìm lại vạch.
-  bool thayLine = timLaiVach(1, PWM_TIM_LINE, 3500UL);
-  pidXoa(pidLine);
-  return thayLine;
+  Serial.print(tenTrangThai());
+  Serial.print(F("  Khoang cach=")); Serial.print(khoangCachKhoi);
+  Serial.print(F("  Mau=")); Serial.println(tenMau(mauVuaDoc));
 }
 
 void setup() {
@@ -552,65 +562,68 @@ void setup() {
   oledBatDau();
   dongCoBatDau();
   sieuAmBatDau();
-  pidCauHinh(pidLine, 0.45f, 0.02f, 0.003f, 500.0f);
-  oledThongBao("BAI 22", "LINE PID + 2 VAT",
-               "DAT ROBOT DAU LINE", "CHO 2 GIAY");
+  camBienMauBatDau();
+  oledThongBao("BAI 22", "MAU CAN DAY:", tenMau(MAU_YEU_CAU),
+               "CHO 2 GIAY");
   delay(2000);
 }
 
 void loop() {
-  if (daHoanThanh || coLoi) {
-    dungRobot();
-    return;
-  }
+  switch (trangThai) {
+    case TIM_KHOI:
+      if (docSieuAm(khoangCachKhoi) &amp;&amp; khoangCachKhoi &lt; 60.0f) {
+        dungRobot();
+        trangThai = TIEP_CAN_KHOI;
+      } else {
+        quayPhai(65); // Quay chậm để quét tìm khối phía trước.
+      }
+      break;
 
-  unsigned long hienTaiMs = millis();
-  if (hienTaiMs - lanDocSieuAmMs &gt;= 80) {
-    docSieuAm(khoangCachTruocCm);
-    lanDocSieuAmMs = hienTaiMs;
-  }
+    case TIEP_CAN_KHOI:
+      if (!docSieuAm(khoangCachKhoi) || khoangCachKhoi &gt; 70.0f) {
+        trangThai = TIM_KHOI;
+      } else if (khoangCachKhoi &gt; 7.0f) {
+        diThang(70);
+      } else {
+        // Tiến rất ngắn để cảm biến màu cách bề mặt khối khoảng 1–2 cm.
+        diThang(55); delay(180); dungRobot();
+        trangThai = DOC_MAU_KHOI;
+      }
+      break;
 
-  bool duocPhepPhatHien = hienTaiMs &gt;= boQuaVatCanDenMs;
-  bool coVatCan = duocPhepPhatHien &amp;&amp; khoangCachTruocCm &gt; 0 &amp;&amp;
-                  khoangCachTruocCm &lt;= NGUONG_VAT_CAN_CM;
-
-  if (coVatCan) {
-    if (!tranhMotVatCan()) {
-      coLoi = true;
-      hienThiLine("LOI - MAT LINE");
-      Serial.println(F("Dung an toan vi khong tim lai duoc line."));
-      return;
+    case DOC_MAU_KHOI: {
+      DuLieuMau duLieu = docMauTrungBinh(2);
+      mauVuaDoc = nhanDangMau(duLieu);
+      trangThai = (mauVuaDoc == MAU_YEU_CAU) ? DAY_KHOI : BO_QUA_KHOI;
+      break;
     }
 
-    soVatCanDaVuot++;
-    boQuaVatCanDenMs = millis() + 1200UL;
-    hienThiLine("DA VUOT VAT CAN");
-    delay(400);
+    case BO_QUA_KHOI:
+      diLui(80); delay(450); dungRobot();
+      quayPhaiTheoThoiGian(90, 550);
+      mauVuaDoc = MAU_KHONG_XAC_DINH;
+      trangThai = TIM_KHOI;
+      break;
 
-    if (soVatCanDaVuot &gt;= SO_VAT_CAN_DE_KET_THUC) {
-      daHoanThanh = true;
+    case DAY_KHOI:
+      diThang(115); delay(1500); dungRobot();
+      trangThai = DAY_XONG;
+      break;
+
+    case DAY_XONG:
       dungRobot();
-      oledThongBao("BAI 22", "DA VUOT VAT CAN 2",
-                   "HET KHU VUC LINE", "DUNG ROBOT");
-      Serial.println(F("Da vuot vat can thu hai: ket thuc khu vuc line."));
-      return;
-    }
-  } else {
-    bamLinePIDMotBuoc(pidLine, PWM_BAM_LINE, PWM_TOI_DA, PWM_TIM_LINE);
+      break;
   }
 
-  if (millis() - lanHienThiMs &gt;= 200) {
-    hienThiLine("DANG BAM LINE");
-    lanHienThiMs = millis();
-  }
-  delay(10);
+  hienThiKhoiMau();
+  delay(50);
 }
 </code></pre></div></div></div></section>
-  <section class="lesson"><h2>5. Phân tích chương trình</h2><ul><li>Đếm vật cản sau khi timLaiVach() thành công nên lỗi tìm line không bị coi là đã vượt.</li><li>boQuaVatCanDenMs tạo khoảng khóa ngắn để không phát hiện lại cùng vật cản.</li><li>Quỹ đạo tránh vật cản dùng thời gian, vì vậy phải hiệu chỉnh theo kích thước vật và mặt sân.</li></ul></section>
-  <section class="lesson"><h2>6. Quy trình thực hành và hiệu chỉnh</h2><ol><li>Hiệu chỉnh ngưỡng năm mắt line bằng Bài 10.</li><li>Chạy PID không có vật cản trước.</li><li>Đặt một vật cản và chỉnh bốn đoạn đi vòng đến khi tìm lại line.</li><li>Đặt hai vật cản, xác nhận robot dừng sau vật thứ hai.</li></ol></section>
-  <section class="lesson"><h2>7. Bài tập mở rộng</h2><ol><li>Cho phép chọn đi vòng trái hoặc phải theo laser.</li><li>Dùng encoder thay delay trong quỹ đạo đi vòng.</li><li>Thiết kế máy trạng thái không chặn cho toàn bộ thao tác tránh.</li></ol></section>
-  <section class="lesson"><h2>8. Lỗi thường gặp và cách xử lý</h2><div class="warning">Robot không thấy vạch: kiểm tra màu vạch và LINE_DARK_IS_LOW.</div><div class="warning">Đi vòng xong quay sai: hiệu chỉnh bốn thời gian trong tranhMotVatCan().</div><div class="warning">Dừng ngay khi chưa có vật: kiểm tra Echo D7 và ngưỡng 22 cm.</div></section>
-  <section class="lesson"><h2>9. Kết luận</h2><p>Bài 22 kết hợp điều khiển liên tục PID với hành vi tránh vật cản theo sự kiện.</p></section>
+  <section class="lesson"><h2>5. Phân tích chương trình</h2><ul><li>Máy trạng thái tách rõ tìm, tiếp cận, đọc màu, bỏ qua và đẩy.</li><li>Lấy trung bình làm giảm nhiễu do ánh sáng và rung của robot.</li><li>Nếu một kênh không có xung, dữ liệu bị đánh dấu không hợp lệ thay vì kết luận màu sai.</li></ul></section>
+  <section class="lesson"><h2>6. Quy trình thực hành và hiệu chỉnh</h2><ol><li>Bật LED trắng của cảm biến và che ánh sáng ngoài.</li><li>Đặt từng mẫu đỏ, xanh lá, xanh dương ở 1–2 cm để xem xung.</li><li>Chỉnh quy tắc nhận dạng trong thư viện nếu màu thực tế bị nhầm.</li><li>Đặt ba khối và xác nhận robot chỉ đẩy màu yêu cầu.</li></ol></section>
+  <section class="lesson"><h2>7. Bài tập mở rộng</h2><ol><li>Cho chọn màu cần đẩy bằng lệnh Serial.</li><li>Đếm số khối đã kiểm tra.</li><li>Bổ sung servo để gạt khối thay vì dùng thân robot.</li></ol></section>
+  <section class="lesson"><h2>8. Lỗi thường gặp và cách xử lý</h2><div class="warning">OLED báo NO PULSE: kiểm tra OUT D29, LED D26 và cự ly vật.</div><div class="warning">Màu thay đổi theo phòng: cần hiệu chuẩn tại nơi thi.</div><div class="warning">Robot đâm khối quá mạnh: giảm tốc tiếp cận và ngưỡng 7 cm.</div></section>
+  <section class="lesson"><h2>9. Kết luận</h2><p>Bài 22 đưa cảm biến màu vào một nhiệm vụ robot có trình tự rõ ràng.</p></section>
   <nav class="nav-bottom" aria-label="Điều hướng bài học"><a href="bai21.html">← Bài 21</a><a href="tailieu-kythuat.html">Danh sách bài học</a><a href="bai23.html">Bài 23 →</a></nav>
 </main>
 <!-- ===== NỘI DUNG===== -->

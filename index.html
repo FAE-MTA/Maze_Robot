@@ -575,7 +575,7 @@ body {
 
 
 
-/* ===== COUNTDOWN HUD - THỜI GIAN ĐĂNG KÝ ===== */
+/* ===== COUNTDOWN HUD - THỜI GIAN SƠ LOẠI ===== */
 .countdown-hud {
   position: fixed;
   left: clamp(14px, 1.8vw, 28px);
@@ -1626,9 +1626,9 @@ body {
   <div class="teams-status" id="teamsStatus">Đồng bộ từ Google Sheets</div>
 </aside>
 
-<!-- ===== ĐẾM NGƯỢC THỜI GIAN ĐĂNG KÝ ===== -->
-<aside class="countdown-hud" id="countdownHud" aria-label="Đếm ngược thời gian đăng ký">
-  <div class="countdown-head">Đăng ký <span>còn lại</span></div>
+<!-- ===== ĐẾM NGƯỢC ĐẾN NGÀY SƠ LOẠI ===== -->
+<aside class="countdown-hud" id="countdownHud" aria-label="Đếm ngược đến ngày sơ loại">
+  <div class="countdown-head">Thời gian sơ loại: <span>26/9/2026</span></div>
 
   <div class="countdown-grid">
     <div class="countdown-box">
@@ -1649,7 +1649,7 @@ body {
     </div>
   </div>
 
-  <div class="countdown-status" id="countdownStatus">Hạn đăng ký: 10/7/2026</div>
+  <div class="countdown-status" id="countdownStatus">Đếm ngược đến ngày sơ loại</div>
 </aside>
 
 <div class="teams-modal" id="teamsModal" onclick="closeTeamsModal(event)">
@@ -1850,13 +1850,13 @@ setInterval(loadTeams, 60000);
 
 
 
-const REGISTRATION_DEADLINE = new Date("2026-07-10T23:59:59+07:00");
+const PRELIMINARY_DATE = new Date("2026-09-26T00:00:00+07:00");
 
-function updateRegistrationCountdown() {
+function updatePreliminaryCountdown() {
   const hud = document.getElementById("countdownHud");
   const status = document.getElementById("countdownStatus");
   const now = new Date();
-  const diff = REGISTRATION_DEADLINE - now;
+  const diff = PRELIMINARY_DATE - now;
 
   const setValue = (id, value) => {
     const el = document.getElementById(id);
@@ -1870,7 +1870,7 @@ function updateRegistrationCountdown() {
     setValue("cdSeconds", 0);
     hud.classList.remove("urgent");
     hud.classList.add("ended");
-    status.textContent = "Đã hết hạn đăng ký";
+    status.textContent = "Đã đến ngày sơ loại";
     return;
   }
 
@@ -1886,15 +1886,15 @@ function updateRegistrationCountdown() {
 
   if (diff <= 7 * 24 * 60 * 60 * 1000) {
     hud.classList.add("urgent");
-    status.textContent = "Sắp hết hạn đăng ký";
+    status.textContent = "Sắp đến ngày sơ loại";
   } else {
     hud.classList.remove("urgent");
-    status.textContent = "Hạn đăng ký: 10/7/2026";
+    status.textContent = "Đếm ngược đến ngày sơ loại";
   }
 }
 
-updateRegistrationCountdown();
-setInterval(updateRegistrationCountdown, 1000);
+updatePreliminaryCountdown();
+setInterval(updatePreliminaryCountdown, 1000);
 
 function toggleMenu() {
   const menu = document.getElementById("mobileMenu");
