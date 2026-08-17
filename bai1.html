@@ -544,265 +544,88 @@ h1 {
   </section>
 
   <section class="lesson">
-    <h2>3. Sơ đồ kết nối chân trên Robot thi đấu</h2>
-
-    <p>
-      Hình dưới đây là sơ đồ kết nối tổng thể giữa Arduino Mega 2560 Pro và các mô-đun phần cứng trên robot.
-    </p>
-
-    <div class="image-wrap">
-      <img src="DATA/Bai1_Pinout.png" alt="Sơ đồ kết nối chân Robot thi đấu" class="lesson-img">
-    </div>
-
-    <div class="pin-collapse">
-      <button class="pin-collapse-head" onclick="togglePinTable(this)">
-        <span>📌 Bảng kết nối chi tiết và chức năng các chân</span>
-        <span class="pin-collapse-arrow">▶</span>
-      </button>
-
-      <div class="pin-collapse-body">
-        <table class="pin-table">
-          <tr>
-            <th>TT</th>
-            <th>Thiết bị</th>
-            <th>Chân kết nối</th>
-            <th>Chức năng / phân tích</th>
-          </tr>
-
-          <tr>
-            <td>1</td>
-            <td>Cảm biến dò đường</td>
-            <td>A1, A2, A3, A4, A5</td>
-            <td>Gồm 5 kênh cảm biến dùng để nhận biết vạch dẫn đường. Các chân analog cho phép đọc mức phản xạ của từng mắt cảm biến.</td>
-          </tr>
-
-          <tr>
-            <td>2</td>
-            <td>Động cơ trái</td>
-            <td>D5, D9</td>
-            <td>Hai chân điều khiển chiều quay và tốc độ của động cơ trái.</td>
-          </tr>
-
-          <tr>
-            <td>3</td>
-            <td>Encoder động cơ trái</td>
-            <td>D2, D12</td>
-            <td>Dùng để đọc xung phản hồi từ động cơ trái.</td>
-          </tr>
-
-          <tr>
-            <td>4</td>
-            <td>Động cơ phải</td>
-            <td>D6, D10</td>
-            <td>Hai chân điều khiển chiều quay và tốc độ của động cơ phải.</td>
-          </tr>
-
-          <tr>
-            <td>5</td>
-            <td>Encoder động cơ phải</td>
-            <td>D3, D14</td>
-            <td>Dùng để đọc xung phản hồi từ động cơ phải.</td>
-          </tr>
-
-          <tr>
-            <td>6</td>
-            <td>Cảm biến siêu âm HC-SR04</td>
-            <td>Trig D4; Echo D7, D8, D11</td>
-            <td>D4 phát xung Trigger chung. D7, D8, D11 nhận phản hồi từ cảm biến trái, trước và phải.</td>
-          </tr>
-
-          <tr>
-            <td>7</td>
-            <td>Cảm biến màu TCS3200/TCS230</td>
-            <td>D24=S1, D25=S0, D26=LED, D27=S3, D28=S2, D29=OUT</td>
-            <td>S0/S1 chọn tần số đầu ra; S2/S3 chọn bộ lọc màu; OUT là tín hiệu xung cần đo; LED bật/tắt đèn chiếu sáng.</td>
-          </tr>
-
-          <tr>
-            <td>8</td>
-            <td>IMU MPU6050</td>
-            <td>I2C: SDA=20, SCL=21</td>
-            <td>Dùng để đo gia tốc và vận tốc góc, hỗ trợ giữ hướng đi thẳng và quay góc chính xác hơn.</td>
-          </tr>
-
-          <tr>
-            <td>9</td>
-            <td>Màn hình OLED</td>
-            <td>I2C: SDA=20, SCL=21</td>
-            <td>Dùng để hiển thị trạng thái robot, giá trị cảm biến, chế độ chạy và thông tin debug.</td>
-          </tr>
-
-          <tr>
-            <td>10</td>
-            <td>Cảm biến tiệm cận hồng ngoại</td>
-            <td>A6</td>
-            <td>Dùng để phát hiện vật thể ở khoảng cách gần.</td>
-          </tr>
-
-          <tr>
-            <td>11</td>
-            <td>Bluetooth HC-06</td>
-            <td>Serial1</td>
-            <td>Dùng để giao tiếp không dây.</td>
-          </tr>
-
-          <tr>
-            <td>12</td>
-            <td>LED WS2812</td>
-            <td>D13</td>
-            <td>Dùng báo trạng thái robot như sẵn sàng, đang chạy, lỗi cảm biến, hoàn thành nhiệm vụ.</td>
-          </tr>
-
-          <tr>
-            <td>13</td>
-            <td>RC Servo</td>
-            <td>D15</td>
-            <td>Dùng điều khiển cơ cấu gạt hoặc đẩy vật trong vùng nhiệm vụ.</td>
-          </tr>
-
-          <tr>
-            <td>14</td>
-            <td>Nút nhấn</td>
-            <td>A0</td>
-            <td>Dùng để khởi động robot, chọn chế độ chạy hoặc xác nhận trước khi thi đấu.</td>
-          </tr>
-
-          <tr>
-            <td>15</td>
-            <td>Nguồn hệ thống</td>
-            <td>Pin 12V</td>
-            <td>Cấp nguồn chính cho robot. Cần bảo đảm nguồn ổn định để tránh reset vi điều khiển khi động cơ hoạt động.</td>
-          </tr>
-        </table>
-      </div>
-    </div>
-  </section>
+  <h2>3. Cấu hình chân mới nhất của Robot</h2>
+  <p>Bảng dưới đây là cấu hình nguồn sự thật đã được dùng trong thư viện <strong>RobotMega2560Mini v1.2.0</strong> và các chương trình đã kiểm tra trên robot thật.</p>
+  <div class="pin-collapse open">
+    <button class="pin-collapse-head" onclick="togglePinTable(this)">
+      <span>📌 Bảng chân theo cấu hình robot mới nhất</span>
+      <span class="pin-collapse-arrow">▶</span>
+    </button>
+    <div class="pin-collapse-body"><table class="pin-table">
+      <tr><th>Thiết bị / tín hiệu</th><th>Chân Mega 2560 Mini</th><th>Chức năng</th><th>Ghi chú</th></tr>
+      <tr><td>Động cơ trái</td><td>D5, D9</td><td>Chiều và PWM</td><td>Không đảo trong phần mềm</td></tr>
+      <tr><td>Động cơ phải</td><td>D6, D10</td><td>Chiều và PWM</td><td>Đảo chiều trong phần mềm</td></tr>
+      <tr><td>Encoder trái</td><td>D2, D12</td><td>Xung A/B</td><td>D2 dùng ngắt ngoài</td></tr>
+      <tr><td>Encoder phải</td><td>D3, D14</td><td>Xung A/B</td><td>D3 dùng ngắt ngoài</td></tr>
+      <tr><td>HC-SR04 phía trước</td><td>TRIG D4, ECHO D7</td><td>Khoảng cách trước</td><td>Một cảm biến</td></tr>
+      <tr><td>VL53L0X trái</td><td>XSHUT D39</td><td>Nhìn vuông góc sang trái</td><td>I2C 0x30</td></tr>
+      <tr><td>VL53L0X phải</td><td>XSHUT D37</td><td>Nhìn vuông góc sang phải</td><td>I2C 0x31</td></tr>
+      <tr><td>Năm cảm biến line</td><td>A1–A5</td><td>Từ trái sang phải</td><td>Analog</td></tr>
+      <tr><td>TCS3200</td><td>S0 D25, S1 D24, LED D26, OUT D29, S2 D28, S3 D27</td><td>Nhận dạng màu</td><td>Đúng theo robot đã thử</td></tr>
+      <tr><td>OLED</td><td>SDA D20, SCL D21</td><td>Hiển thị</td><td>I2C 0x3C</td></tr>
+      <tr><td>Servo RC</td><td>D15</td><td>Cơ cấu đẩy/gạt</td><td>Ngắt tín hiệu khi không dùng</td></tr>
+      <tr><td>NeoPixel</td><td>D13</td><td>12 LED trạng thái</td><td>GRB, 800 kHz</td></tr>
+      <tr><td>Bluetooth</td><td>Serial1 D18/D19</td><td>Dự kiến</td><td>Chưa đấu nối</td></tr>
+      <tr><td>Nút nhấn</td><td>A0</td><td>Dự kiến</td><td>Chưa đấu nối</td></tr>
+      <tr><td>MPU6050</td><td>I2C D20/D21</td><td>Mở rộng</td><td>Chưa đấu nối</td></tr>
+    </table></div>
+  </div>
+  <div class="warning">Sơ đồ cũ có ba chân Echo siêu âm và cảm biến IR A6 không còn được dùng trong bộ bài cập nhật này.</div>
+</section>
 
   <section class="lesson">
-    <h2>4. Khai báo chân trong Arduino IDE</h2>
-
-    <p>
-      Sau khi nắm được sơ đồ kết nối chân, bước đầu tiên khi lập trình là khai báo các chân
-      sử dụng trong chương trình Arduino. Việc khai báo rõ ràng giúp chương trình dễ đọc,
-      dễ debug và tránh nhầm lẫn khi sử dụng nhiều thiết bị.
-    </p>
-
-
-<div class="code-collapse">
-  <button class="code-collapse-head" onclick="toggleCode(this)">
-    <span>💻 Xem ví dụ khai báo chân Arduino IDE</span>
-    <span class="code-collapse-arrow">▶</span>
-  </button>
-
-  <div class="code-collapse-body">
-    <div class="code-box">
-      <div class="code-title">Khai báo chân Arduino IDE</div>
+  <h2>4. Khai báo chân thống nhất trong Arduino IDE</h2>
+  <p>Sinh viên dùng đúng các tên và chân dưới đây trong tất cả bài thực hành. Khi phần cứng thay đổi, chỉ sửa tại vùng cấu hình, không thay rải rác trong thuật toán.</p>
+  <div class="code-collapse">
+    <button class="code-collapse-head" onclick="toggleCode(this)">
+      <span>💻 Cấu hình chân Robot Mega 2560 Mini</span><span class="arrow">▶</span>
+    </button>
+    <div class="code-collapse-body"><div class="code-box">
+      <div class="code-title">Cấu hình chân Robot Mega 2560 Mini</div>
       <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-<pre><code class="language-cpp">// ===== LINE SENSOR =====
-#define LINE_1 A1
-#define LINE_2 A2
-#define LINE_3 A3
-#define LINE_4 A4
-#define LINE_5 A5
+      <pre><code class="language-cpp">// ===== ĐỘNG CƠ VÀ ENCODER =====
+const uint8_t MOTOR_TRAI_A = 5;
+const uint8_t MOTOR_TRAI_B = 9;
+const uint8_t MOTOR_PHAI_A = 6;
+const uint8_t MOTOR_PHAI_B = 10;
+const bool DAO_DONG_CO_TRAI = false;
+const bool DAO_DONG_CO_PHAI = true;
 
-// ===== MOTOR LEFT =====
-#define MOTOR_L_IN1 5
-#define MOTOR_L_IN2 9
-#define ENCODER_L_A 2
-#define ENCODER_L_B 12
+const uint8_t ENCODER_TRAI_A = 2;
+const uint8_t ENCODER_TRAI_B = 12;
+const uint8_t ENCODER_PHAI_A = 3;
+const uint8_t ENCODER_PHAI_B = 14;
 
-// ===== MOTOR RIGHT =====
-#define MOTOR_R_IN1 6
-#define MOTOR_R_IN2 10
-#define ENCODER_R_A 3
-#define ENCODER_R_B 14
+// ===== CẢM BIẾN KHOẢNG CÁCH =====
+const uint8_t SIEU_AM_TRIG = 4;
+const uint8_t SIEU_AM_ECHO = 7;
+const uint8_t LASER_TRAI_XSHUT = 39;
+const uint8_t LASER_PHAI_XSHUT = 37;
+const uint8_t LASER_TRAI_DIA_CHI = 0x30;
+const uint8_t LASER_PHAI_DIA_CHI = 0x31;
 
-// ===== ULTRASONIC =====
-#define TRIG_PIN 4
-#define ECHO_LEFT 7
-#define ECHO_FRONT 8
-#define ECHO_RIGHT 11
+// ===== CẢM BIẾN LINE =====
+const uint8_t LINE_PIN[5] = {A1, A2, A3, A4, A5};
 
-// ===== COLOR SENSOR =====
-#define COLOR_S1 24
-#define COLOR_S0 25
-#define COLOR_LED 26
-#define COLOR_S3 27
-#define COLOR_S2 28
-#define COLOR_OUT 29
+// ===== CẢM BIẾN MÀU TCS3200 =====
+const uint8_t MAU_S0 = 25;
+const uint8_t MAU_S1 = 24;
+const uint8_t MAU_LED = 26;
+const uint8_t MAU_OUT = 29;
+const uint8_t MAU_S2 = 28;
+const uint8_t MAU_S3 = 27;
 
-// ===== I2C =====
-// SDA = 20
-// SCL = 21
+// ===== CƠ CẤU CHẤP HÀNH VÀ HIỂN THỊ =====
+const uint8_t SERVO_PIN = 15;
+const uint8_t NEOPIXEL_PIN = 13;
+const uint8_t SO_LED_NEOPIXEL = 12;
+const uint8_t DIA_CHI_OLED = 0x3C;
+// I2C Mega 2560: SDA D20, SCL D21.
 
-// ===== OTHER =====
-#define IR_SENSOR A6
-#define SERVO_PIN 15
-#define LED_RING 13
-#define BUTTON_PIN A0
-</code></pre>
-    </div>
+// Bluetooth Serial1 và nút A0 hiện CHƯA ĐẤU NỐI.</code></pre>
+    </div></div>
   </div>
-</div>
-
-<div class="code-collapse">
-  <button class="code-collapse-head" onclick="toggleCode(this)">
-    <span>💻 Xem ví dụ thiết lập chế độ chân</span>
-    <span class="code-collapse-arrow">▶</span>
-  </button>
-
-  <div class="code-collapse-body">
-    <div class="code-box">
-      <div class="code-title">Thiết lập chế độ chân (setup)</div>
-      <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-<pre><code class="language-cpp">void setup() {
-
-  // ===== MOTOR =====
-  pinMode(MOTOR_L_IN1, OUTPUT);
-  pinMode(MOTOR_L_IN2, OUTPUT);
-  pinMode(MOTOR_R_IN1, OUTPUT);
-  pinMode(MOTOR_R_IN2, OUTPUT);
-
-  // ===== ENCODER =====
-  pinMode(ENCODER_L_A, INPUT);
-  pinMode(ENCODER_L_B, INPUT);
-  pinMode(ENCODER_R_A, INPUT);
-  pinMode(ENCODER_R_B, INPUT);
-
-  // ===== ULTRASONIC =====
-  pinMode(TRIG_PIN, OUTPUT);
-  pinMode(ECHO_LEFT, INPUT);
-  pinMode(ECHO_FRONT, INPUT);
-  pinMode(ECHO_RIGHT, INPUT);
-
-  // ===== COLOR SENSOR =====
-  pinMode(COLOR_S0, OUTPUT);
-  pinMode(COLOR_S1, OUTPUT);
-  pinMode(COLOR_S2, OUTPUT);
-  pinMode(COLOR_S3, OUTPUT);
-  pinMode(COLOR_OUT, INPUT);
-  pinMode(COLOR_LED, OUTPUT);
-
-  // ===== LINE SENSOR =====
-  pinMode(LINE_1, INPUT);
-  pinMode(LINE_2, INPUT);
-  pinMode(LINE_3, INPUT);
-  pinMode(LINE_4, INPUT);
-  pinMode(LINE_5, INPUT);
-
-  // ===== OTHER =====
-  pinMode(IR_SENSOR, INPUT);
-  pinMode(SERVO_PIN, OUTPUT);
-  pinMode(LED_RING, OUTPUT);
-
-  // Nút nhấn dùng điện trở kéo lên nội
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
-}
-</code></pre>
-    </div>
-  </div>
-</div>
-  </section>
+</section>
 
   <section class="lesson">
   <h2>5. Tài liệu tự học lập trình Arduino</h2>

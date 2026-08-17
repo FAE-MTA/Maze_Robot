@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Bài 4. Giao tiếp Serial và debug chương trình</title>
+<title>Bài 16. Robot bám line bằng PID</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -480,92 +480,230 @@ h1 {
 <main class="page">
   <section class="hero">
     <div class="label">BÀI GIẢNG LẬP TRÌNH ROBOT MÊ CUNG</div>
-    <h1>Bài 4. Giao tiếp Serial và debug chương trình</h1>
-    <p class="subtitle">Gửi dữ liệu, nhận lệnh thử nghiệm và quan sát trạng thái chương trình mà không chiếm các chân phần cứng của robot.</p>
+    <h1>Bài 16. Robot bám line bằng PID</h1>
+    <p class="subtitle">Kết hợp năm cảm biến dò line với điều khiển PID để robot bám vạch mượt, xử lý đường cong và phục hồi khi mất line.</p>
   </section>
-  <section class="lesson"><h2>1. Mục tiêu bài học</h2><ul>
-      <li>Khởi tạo Serial Monitor đúng 115200 baud.</li>
-      <li>In dữ liệu có nhãn để dễ phân tích.</li>
-      <li>Nhận ký tự lệnh và kiểm tra thuật toán ở chế độ không chạy động cơ.</li>
-      <li>Dùng millis() để gửi dữ liệu định kỳ.</li>
-    </ul></section>
-  <section class="lesson"><h2>2. Kiến thức trọng tâm</h2><p>Serial qua cổng USB là công cụ debug chính. Bài này không dùng nút D4 hoặc LED D8 như ví dụ cũ vì các chân đó thuộc cảm biến và không có LED rời trên robot.</p>
-      <p>Các ký tự F, B, L, R, S chỉ được giải mã và in tên lệnh. Động cơ chưa được kích hoạt, giúp sinh viên kiểm tra giao thức an toàn trước khi ghép với Bài 6.</p></section>
-  <section class="lesson"><h2>3. Kết nối phần cứng</h2><div class="pin-collapse open">
-    <button class="pin-collapse-head" onclick="togglePinTable(this)">
-      <span>📌 Bảng chân theo cấu hình robot mới nhất</span>
-      <span class="pin-collapse-arrow">▶</span>
-    </button>
-    <div class="pin-collapse-body"><table class="pin-table">
-      <tr><th>Thiết bị / tín hiệu</th><th>Chân Mega 2560 Mini</th><th>Chức năng</th><th>Ghi chú</th></tr>
-      <tr><td>Serial USB</td><td>Serial</td><td>Debug với máy tính</td><td>115200 baud</td></tr>
-      <tr><td>Bluetooth</td><td>Serial1 D18/D19</td><td>Chưa sử dụng</td><td>Module chưa đấu nối</td></tr>
-    </table></div>
-  </div></section>
-  <section class="lesson"><h2>4. Chương trình thực hành</h2><p>Mã ví dụ sử dụng đúng cấu hình đã kiểm tra trên robot, có OLED và Serial để quan sát.</p><div class="code-collapse">
-    <button class="code-collapse-head" onclick="toggleCode(this)">
-      <span>💻 Bài 4 – nhận lệnh Serial ở chế độ an toàn</span><span class="arrow">▶</span>
-    </button>
-    <div class="code-collapse-body"><div class="code-box">
-      <div class="code-title">Bài 4 – nhận lệnh Serial ở chế độ an toàn</div>
-      <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-      <pre><code class="language-cpp">// BÀI 4: GIAO TIẾP SERIAL - CHƯA ĐIỀU KHIỂN ĐỘNG CƠ
+
+  <section class="lesson">
+    <h2>1. Mục tiêu bài học</h2>
+    <ul>
+      <li>Sử dụng vị trí line có trọng số làm sai số điều khiển.</li>
+      <li>Giải thích vai trò của Kp, Ki, Kd và chu kỳ lấy mẫu.</li>
+      <li>Chuyển đầu ra PID thành tốc độ bánh trái và bánh phải.</li>
+      <li>Thiết kế hành vi tìm lại vạch khi tổng tín hiệu line quá nhỏ.</li>
+    </ul>
+  </section>
+
+  <section class="lesson">
+    <h2>2. Kiến thức trọng tâm</h2>
+    <p>Mục tiêu là giữ vị trí line bằng 0, tức line nằm dưới tâm robot. Bộ PID tính hiệu chỉnh từ sai số hiện tại, tổng sai số và tốc độ thay đổi sai số.</p>
+    <div class="note"><strong>PID:</strong> u = Kp·e + Ki·∑e·dt + Kd·(e−e<sub>trước</sub>)/dt. Tốc độ trái = tốc độ cơ bản + u; tốc độ phải = tốc độ cơ bản − u.</div>
+    <p>Kp tạo phản ứng chính, Kd giảm lắc khi sai số thay đổi nhanh, Ki bù sai lệch kéo dài nhưng dễ tích lũy quá mức. Với robot bám line, thường bắt đầu bằng Ki = 0, chỉnh Kp rồi mới thêm Kd.</p>
+  </section>
+
+  <section class="lesson">
+    <h2>3. Kết nối phần cứng</h2>
+    
+    <div class="pin-collapse open">
+      <button class="pin-collapse-head" onclick="togglePinTable(this)">
+        <span>📌 Bảng kết nối sử dụng trong bài</span>
+        <span class="pin-collapse-arrow">▶</span>
+      </button>
+      <div class="pin-collapse-body">
+        <table class="pin-table">
+          <tr><th>Thiết bị / tín hiệu</th><th>Chân Mega 2560</th><th>Vai trò</th><th>Lưu ý</th></tr>
+          <tr><td>Năm mắt line</td><td>A1–A5</td><td>Tạo sai số -200…+200</td><td>Hiệu chỉnh ngưỡng từng mắt</td></tr>
+          <tr><td>Động cơ trái</td><td>D5, D9</td><td>Tốc độ cơ bản + hiệu chỉnh</td><td>PWM</td></tr>
+          <tr><td>Động cơ phải</td><td>D6, D10</td><td>Tốc độ cơ bản − hiệu chỉnh</td><td>Đảo chiều phần mềm</td></tr>
+          <tr><td>OLED</td><td>D20, D21</td><td>Hiển thị sai số/PID</td><td>Cập nhật 200 ms</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="lesson">
+    <h2>4. Chương trình thực hành</h2>
+    <p>Chương trình dưới đây được viết đầy đủ, có chú thích tiếng Việt và có thể mở trực tiếp trong Arduino IDE.</p>
+    <div class="code-collapse">
+      <button class="code-collapse-head" onclick="toggleCode(this)">
+        <span>💻 Bài 16 – bám line PID và tìm lại vạch</span><span class="arrow">▶</span>
+      </button>
+      <div class="code-collapse-body">
+        <div class="code-box">
+          <div class="code-title">Bài 16 – bám line PID và tìm lại vạch</div>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          <pre><code class="language-cpp">// BÀI 16: ROBOT BÁM LINE BẰNG PID
+#include &lt;Wire.h&gt;
+#include &lt;Adafruit_GFX.h&gt;
+#include &lt;Adafruit_SSD1306.h&gt;
+
+const uint8_t LINE_PIN[5] = {A1, A2, A3, A4, A5};
+const int TRONG_SO[5] = {-200, -100, 0, 100, 200};
+int nguong[5] = {500, 500, 500, 500, 500}; // Hiệu chỉnh thực tế.
+
+const uint8_t MOTOR_TRAI_A = 5, MOTOR_TRAI_B = 9;
+const uint8_t MOTOR_PHAI_A = 6, MOTOR_PHAI_B = 10;
+
+const int TOC_DO_CO_BAN = 105;
+const float KP = 0.55;
+const float KI = 0.000;
+const float KD = 0.90;
+const float GIOI_HAN_TICH_PHAN = 500.0;
+
+Adafruit_SSD1306 oled(128, 64, &amp;Wire, -1);
+float tongSaiSo = 0.0;
+float saiSoTruoc = 0.0;
+float saiSoCuoiCoLine = 0.0;
+unsigned long mocUs = 0;
+
+void datMotDongCo(uint8_t a, uint8_t b, int pwm, bool dao) {
+  pwm = constrain(pwm, -255, 255);
+  if (dao) pwm = -pwm;
+  if (pwm &gt; 0) { analogWrite(a, pwm); analogWrite(b, 0); }
+  else if (pwm &lt; 0) { analogWrite(a, 0); analogWrite(b, -pwm); }
+  else { analogWrite(a, 0); analogWrite(b, 0); }
+}
+void datHaiDongCo(int trai, int phai) {
+  datMotDongCo(MOTOR_TRAI_A, MOTOR_TRAI_B, trai, false);
+  datMotDongCo(MOTOR_PHAI_A, MOTOR_PHAI_B, phai, true);
+}
+
+bool docViTriLine(float &amp;viTri, int &amp;tongCuongDo) {
+  long tongTrongSo = 0;
+  tongCuongDo = 0;
+  for (uint8_t i = 0; i &lt; 5; i++) {
+    int raw = analogRead(LINE_PIN[i]);
+    int cuongDo = nguong[i] - raw; // Vạch tối cho giá trị thấp.
+    if (cuongDo &lt; 0) cuongDo = 0;
+    tongTrongSo += (long)cuongDo * TRONG_SO[i];
+    tongCuongDo += cuongDo;
+  }
+  if (tongCuongDo &lt; 80) return false;
+  viTri = (float)tongTrongSo / tongCuongDo;
+  return true;
+}
+
 void setup() {
   Serial.begin(115200);
-  Serial.println(F("Nhap F/B/L/R/S roi nhan Send"));
-  Serial.println(F("Chi giai ma lenh, robot KHONG chay"));
+  for (uint8_t i = 0; i &lt; 5; i++) pinMode(LINE_PIN[i], INPUT);
+  pinMode(MOTOR_TRAI_A, OUTPUT); pinMode(MOTOR_TRAI_B, OUTPUT);
+  pinMode(MOTOR_PHAI_A, OUTPUT); pinMode(MOTOR_PHAI_B, OUTPUT);
+  datHaiDongCo(0, 0);
+
+  Wire.begin();
+  if (!oled.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println("LOI OLED");
+    while (true) delay(1000);
+  }
+  delay(2000);
+  mocUs = micros();
 }
 
 void loop() {
-  static unsigned long mocBaoCao = 0;
+  unsigned long bayGioUs = micros();
+  float dt = (bayGioUs - mocUs) / 1000000.0;
+  mocUs = bayGioUs;
+  if (dt &lt;= 0.0 || dt &gt; 0.1) dt = 0.01;
 
-  if (Serial.available() &gt; 0) {
-    char lenh = toupper(Serial.read());
-    if (lenh == '\n' || lenh == '\r') return;
+  float saiSo = 0.0;
+  int tongCuongDo = 0;
+  bool coLine = docViTriLine(saiSo, tongCuongDo);
+  float dieuKhien = 0.0;
+  int pwmTrai = 0, pwmPhai = 0;
 
-    Serial.print(F("Nhan lenh: "));
-    switch (lenh) {
-      case 'F': Serial.println(F("TIEN")); break;
-      case 'B': Serial.println(F("LUI")); break;
-      case 'L': Serial.println(F("TRAI")); break;
-      case 'R': Serial.println(F("PHAI")); break;
-      case 'S': Serial.println(F("DUNG")); break;
-      default:  Serial.println(F("KHONG HOP LE")); break;
+  if (coLine) {
+    saiSoCuoiCoLine = saiSo;
+    tongSaiSo += saiSo * dt;
+    tongSaiSo = constrain(tongSaiSo,
+                          -GIOI_HAN_TICH_PHAN,
+                           GIOI_HAN_TICH_PHAN);
+    float daoHam = (saiSo - saiSoTruoc) / dt;
+    saiSoTruoc = saiSo;
+
+    dieuKhien = KP * saiSo + KI * tongSaiSo + KD * daoHam;
+    dieuKhien = constrain(dieuKhien, -140.0, 140.0);
+
+    // Sai số dương: line ở bên phải -&gt; tăng bánh trái, giảm bánh phải.
+    pwmTrai = constrain((int)(TOC_DO_CO_BAN + dieuKhien), -160, 200);
+    pwmPhai = constrain((int)(TOC_DO_CO_BAN - dieuKhien), -160, 200);
+  } else {
+    // Tìm lại line theo hướng nhìn thấy gần nhất.
+    tongSaiSo = 0.0;
+    if (saiSoCuoiCoLine &lt; 0) {
+      pwmTrai = -75; pwmPhai = 75;
+    } else {
+      pwmTrai = 75; pwmPhai = -75;
     }
   }
 
-  if (millis() - mocBaoCao &gt;= 1000) {
-    mocBaoCao = millis();
-    Serial.print(F("Uptime: "));
-    Serial.print(millis() / 1000);
-    Serial.println(F(" s"));
+  datHaiDongCo(pwmTrai, pwmPhai);
+
+  static unsigned long mocHienThi = 0;
+  if (millis() - mocHienThi &gt;= 200) {
+    mocHienThi = millis();
+    Serial.print("LINE="); Serial.print(coLine);
+    Serial.print(" E="); Serial.print(saiSo, 1);
+    Serial.print(" U="); Serial.print(dieuKhien, 1);
+    Serial.print(" PWM="); Serial.print(pwmTrai);
+    Serial.print('/'); Serial.println(pwmPhai);
+
+    oled.clearDisplay();
+    oled.setTextColor(SSD1306_WHITE);
+    oled.setTextSize(1);
+    oled.setCursor(0, 0);  oled.println("BAM LINE PID");
+    oled.setCursor(0, 17); oled.print("Line: "); oled.println(coLine ? "CO" : "MAT");
+    oled.setCursor(0, 30); oled.print("Sai so: "); oled.println(saiSo, 1);
+    oled.setCursor(0, 43); oled.print("PID: "); oled.println(dieuKhien, 1);
+    oled.setCursor(0, 56); oled.print("PWM "); oled.print(pwmTrai); oled.print('/'); oled.print(pwmPhai);
+    oled.display();
   }
 }</code></pre>
-    </div></div>
-  </div></section>
-  <section class="lesson"><h2>5. Phân tích chương trình</h2><ul>
-      <li>Serial USB dùng riêng, không liên quan Serial1 dành cho Bluetooth chưa đấu.</li>
-      <li>Switch–case tách phần giải mã lệnh khỏi phần điều khiển phần cứng.</li>
-      <li>Báo cáo thời gian dùng millis() nên chương trình vẫn nhận lệnh liên tục.</li>
-    </ul></section>
-  <section class="lesson"><h2>6. Quy trình thực hành</h2><ol>
-      <li>Mở Serial Monitor ở 115200 baud.</li>
-      <li>Gửi từng lệnh F/B/L/R/S và kiểm tra tên lệnh phản hồi.</li>
-      <li>Gửi một ký tự khác để kiểm tra nhánh KHÔNG HỢP LỆ.</li>
-    </ol></section>
-  <section class="lesson"><h2>7. Bài tập mở rộng</h2><ol>
-      <li>Nhận một số PWM từ 0–255 sau ký tự lệnh.</li>
-      <li>In dữ liệu dạng CSV để dùng Serial Plotter.</li>
-      <li>Ghép lệnh với các hàm động cơ ở Bài 6 nhưng mặc định luôn khởi động ở DỪNG.</li>
-    </ol></section>
-  <section class="lesson"><h2>8. Lỗi thường gặp và cách xử lý</h2><div class="warning">Chữ rác trên Serial: tốc độ Monitor không khớp 115200.</div>
-<div class="warning">Lệnh bị đọc thêm dòng trống: bỏ qua ký tự CR/LF như chương trình mẫu.</div>
-<div class="warning">Bluetooth chưa đấu nên không thay <code>Serial</code> bằng <code>Serial1</code> ở giai đoạn này.</div></section>
-  <section class="lesson"><h2>9. Kết luận</h2><p>Serial đã trở thành kênh debug chuẩn cho tất cả bài tiếp theo mà không chiếm hoặc làm xung đột chân robot.</p></section>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lesson">
+    <h2>5. Phân tích chương trình và thuật toán</h2>
+    <ul>
+      <li>Hàm đọc line kế thừa trực tiếp Bài 10 và trả về sai số liên tục thay vì năm trạng thái rời rạc.</li>
+      <li>Đạo hàm sử dụng thời gian thực <code>dt</code>; tích phân được giới hạn để chống tích lũy quá mức.</li>
+      <li>Khi mất line, robot quay chậm về phía sai số cuối cùng thay vì coi sai số bằng 0 và chạy thẳng.</li>
+      <li>OLED chỉ cập nhật mỗi 200 ms, trong khi vòng PID chạy liên tục để phản ứng nhanh.</li>
+    </ul>
+  </section>
+
+  <section class="lesson">
+    <h2>6. Quy trình thực hành</h2>
+    <ol>
+      <li>Kê robot, kiểm tra khi đưa line sang phải thì PWM trái tăng và PWM phải giảm.</li>
+      <li>Đặt Ki và Kd bằng 0; tăng Kp từ nhỏ đến khi robot bám được nhưng bắt đầu lắc.</li>
+      <li>Giảm Kp một chút, tăng Kd từng bước để giảm lắc và vào cua mượt hơn.</li>
+      <li>Chỉ thêm Ki rất nhỏ nếu robot còn sai lệch cố định trên đoạn thẳng; thử lại ở nhiều mức pin.</li>
+    </ol>
+  </section>
+
+  <section class="lesson">
+    <h2>7. Bài tập củng cố và mở rộng</h2>
+    <ol>
+      <li>Tự động giảm tốc độ cơ bản khi |sai số| lớn để vào cua gắt an toàn.</li>
+      <li>Dừng robot nếu mất line quá 2 giây thay vì tìm vô hạn.</li>
+      <li>Lưu hai bộ hệ số PID cho line thẳng và line nhiều cua, rồi so sánh thời gian hoàn thành.</li>
+    </ol>
+  </section>
+
+  <section class="lesson">
+    <h2>8. Lỗi thường gặp và cách xử lý</h2>
+    <div class="warning">Robot sửa sai ngược: đảo thứ tự cảm biến hoặc đổi dấu hiệu chỉnh, nhưng chỉ thay một nơi.</div>
+    <div class="warning">Robot lắc nhanh: Kp/Kd quá lớn, tín hiệu line nhiễu hoặc chu kỳ vòng lặp không ổn định.</div>
+    <div class="warning">Robot chạy thẳng khi mất line: điều kiện tổng cường độ hoặc ngưỡng cảm biến chưa đúng.</div>
+    <div class="warning">Luôn thử ở PWM thấp và có người sẵn sàng ngắt nguồn khi hiệu chỉnh lần đầu.</div>
+  </section>
+<section class="lesson"><h2>9. Kết luận</h2><p>Bài 16 hoàn chỉnh chuỗi cảm biến–sai số–PID–động cơ. Đây là mẫu thuật toán điều khiển kín có thể tái sử dụng cho nhiều nhiệm vụ robot khác.</p></section>
   <nav class="nav-bottom" aria-label="Điều hướng bài học">
-    <a href="bai3.html">← Bài 3</a>
+    <a href="bai15.html">← Bài 15</a>
     <a href="tailieu-kythuat.html">Danh sách bài học</a>
-    <a href="bai5.html">Bài 5 →</a>
+    <a href="bai17.html">Bài 17 →</a>
   </nav>
 </main>
 <!-- ===== NỘI DUNG===== -->

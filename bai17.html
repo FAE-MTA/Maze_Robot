@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Bài 4. Giao tiếp Serial và debug chương trình</title>
+<title>Bài 17. Kết hợp siêu âm và laser tránh vật cản</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -480,17 +480,18 @@ h1 {
 <main class="page">
   <section class="hero">
     <div class="label">BÀI GIẢNG LẬP TRÌNH ROBOT MÊ CUNG</div>
-    <h1>Bài 4. Giao tiếp Serial và debug chương trình</h1>
-    <p class="subtitle">Gửi dữ liệu, nhận lệnh thử nghiệm và quan sát trạng thái chương trình mà không chiếm các chân phần cứng của robot.</p>
+    <h1>Bài 17. Kết hợp siêu âm và laser tránh vật cản</h1>
+    <p class="subtitle">Dùng HC-SR04 nhìn trước và hai VL53L0X nhìn hai bên để robot dừng trước vật cản, chọn phía rộng hơn rồi đổi hướng.</p>
   </section>
   <section class="lesson"><h2>1. Mục tiêu bài học</h2><ul>
-      <li>Khởi tạo Serial Monitor đúng 115200 baud.</li>
-      <li>In dữ liệu có nhãn để dễ phân tích.</li>
-      <li>Nhận ký tự lệnh và kiểm tra thuật toán ở chế độ không chạy động cơ.</li>
-      <li>Dùng millis() để gửi dữ liệu định kỳ.</li>
+      <li>Đọc được ba hướng theo đúng loại cảm biến và đơn vị đo.</li>
+      <li>Phát hiện vật cản phía trước bằng HC-SR04.</li>
+      <li>So sánh khoảng trống trái–phải bằng VL53L0X.</li>
+      <li>Dừng an toàn khi laser khởi tạo lỗi và hiển thị đầy đủ trên OLED/Serial.</li>
     </ul></section>
-  <section class="lesson"><h2>2. Kiến thức trọng tâm</h2><p>Serial qua cổng USB là công cụ debug chính. Bài này không dùng nút D4 hoặc LED D8 như ví dụ cũ vì các chân đó thuộc cảm biến và không có LED rời trên robot.</p>
-      <p>Các ký tự F, B, L, R, S chỉ được giải mã và in tên lệnh. Động cơ chưa được kích hoạt, giúp sinh viên kiểm tra giao thức an toàn trước khi ghép với Bài 6.</p></section>
+  <section class="lesson"><h2>2. Kiến thức trọng tâm</h2><p>Siêu âm D4/D7 quan sát phía trước theo centimet. Hai laser nhìn vuông góc hai bên, đo theo milimet. Khi phía trước nhỏ hơn ngưỡng, robot dừng rồi chọn bên có khoảng cách laser lớn hơn.</p>
+    <p>Nếu cả hai bên đều gần, robot lùi và quay 180°. Nếu hai bên gần bằng nhau, chương trình đổi hướng ưu tiên so với lần trước để tránh lặp vô hạn.</p>
+    <div class="note">Đây là cấu hình nền cho bài vượt mê cung: trước = HC-SR04; trái = VL53L0X D39; phải = VL53L0X D37.</div></section>
   <section class="lesson"><h2>3. Kết nối phần cứng</h2><div class="pin-collapse open">
     <button class="pin-collapse-head" onclick="togglePinTable(this)">
       <span>📌 Bảng chân theo cấu hình robot mới nhất</span>
@@ -498,74 +499,208 @@ h1 {
     </button>
     <div class="pin-collapse-body"><table class="pin-table">
       <tr><th>Thiết bị / tín hiệu</th><th>Chân Mega 2560 Mini</th><th>Chức năng</th><th>Ghi chú</th></tr>
-      <tr><td>Serial USB</td><td>Serial</td><td>Debug với máy tính</td><td>115200 baud</td></tr>
-      <tr><td>Bluetooth</td><td>Serial1 D18/D19</td><td>Chưa sử dụng</td><td>Module chưa đấu nối</td></tr>
+      <tr><td>Siêu âm Trigger/Echo</td><td>D4/D7</td><td>Khoảng cách trước</td><td>cm</td></tr>
+      <tr><td>Laser trái XSHUT</td><td>D39</td><td>Khoảng cách trái</td><td>0x30, mm</td></tr>
+      <tr><td>Laser phải XSHUT</td><td>D37</td><td>Khoảng cách phải</td><td>0x31, mm</td></tr>
+      <tr><td>Động cơ trái</td><td>D5/D9</td><td>PWM có dấu</td><td>Không đảo</td></tr>
+      <tr><td>Động cơ phải</td><td>D6/D10</td><td>PWM có dấu</td><td>Đảo chiều trong phần mềm</td></tr>
+      <tr><td>OLED</td><td>D20/D21</td><td>Hiển thị ba hướng</td><td>0x3C</td></tr>
     </table></div>
   </div></section>
   <section class="lesson"><h2>4. Chương trình thực hành</h2><p>Mã ví dụ sử dụng đúng cấu hình đã kiểm tra trên robot, có OLED và Serial để quan sát.</p><div class="code-collapse">
     <button class="code-collapse-head" onclick="toggleCode(this)">
-      <span>💻 Bài 4 – nhận lệnh Serial ở chế độ an toàn</span><span class="arrow">▶</span>
+      <span>💻 Bài 17 – chọn phía rộng hơn khi gặp vật cản</span><span class="arrow">▶</span>
     </button>
     <div class="code-collapse-body"><div class="code-box">
-      <div class="code-title">Bài 4 – nhận lệnh Serial ở chế độ an toàn</div>
+      <div class="code-title">Bài 17 – chọn phía rộng hơn khi gặp vật cản</div>
       <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-      <pre><code class="language-cpp">// BÀI 4: GIAO TIẾP SERIAL - CHƯA ĐIỀU KHIỂN ĐỘNG CƠ
+      <pre><code class="language-cpp">// BÀI 17: KẾT HỢP SIÊU ÂM TRƯỚC VÀ HAI LASER BÊN
+#include &lt;Wire.h&gt;
+#include &lt;Adafruit_GFX.h&gt;
+#include &lt;Adafruit_SSD1306.h&gt;
+#include &lt;Adafruit_VL53L0X.h&gt;
+
+const uint8_t TRIG_PIN = 4, ECHO_PIN = 7;
+const uint8_t XSHUT_TRAI = 39, XSHUT_PHAI = 37;
+const uint8_t DIA_CHI_TRAI = 0x30, DIA_CHI_PHAI = 0x31;
+const uint8_t M1_A = 5, M1_B = 9, M2_A = 6, M2_B = 10;
+const bool DAO_M1 = false, DAO_M2 = true;
+
+const float NGUONG_TRUOC_CM = 25.0f;
+const uint16_t NGUONG_NGO_CUT_MM = 180;
+const uint16_t KHOANG_CACH_MO_MM = 2000;
+const int PWM_DI = 110, PWM_QUAY = 120, PWM_LUI = 100;
+const unsigned long QUAY_90_MS = 520;
+const unsigned long QUAY_180_MS = 1050;
+const bool MAT_ECHO_XEM_LA_TRONG = true;
+
+Adafruit_SSD1306 oled(128, 64, &amp;Wire, -1);
+Adafruit_VL53L0X laserTrai, laserPhai;
+bool lanTruocQuayPhai = false;
+
+void datMotDongCo(uint8_t a, uint8_t b, int pwm, bool dao) {
+  pwm = constrain(pwm, -255, 255);
+  if (dao) pwm = -pwm;
+  if (pwm &gt; 0) { analogWrite(a, pwm); analogWrite(b, 0); }
+  else if (pwm &lt; 0) { analogWrite(a, 0); analogWrite(b, -pwm); }
+  else { analogWrite(a, 0); analogWrite(b, 0); }
+}
+
+void datHaiDongCo(int trai, int phai) {
+  datMotDongCo(M1_A, M1_B, trai, DAO_M1);
+  datMotDongCo(M2_A, M2_B, phai, DAO_M2);
+}
+
+bool docTruoc(float &amp;cm) {
+  digitalWrite(TRIG_PIN, LOW); delayMicroseconds(2);
+  digitalWrite(TRIG_PIN, HIGH); delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+  unsigned long us = pulseIn(ECHO_PIN, HIGH, 30000UL);
+  if (us == 0) { cm = -1.0f; return false; }
+  cm = us * 0.0343f / 2.0f;
+  return true;
+}
+
+uint16_t docBen(Adafruit_VL53L0X &amp;laser, bool &amp;hopLe) {
+  VL53L0X_RangingMeasurementData_t kq;
+  laser.rangingTest(&amp;kq, false);
+  hopLe = (kq.RangeStatus == 0);
+  return hopLe ? kq.RangeMilliMeter : KHOANG_CACH_MO_MM;
+}
+
+void hienThi(const __FlashStringHelper *trangThai,
+             float truoc, bool okTruoc,
+             uint16_t trai, uint16_t phai) {
+  oled.clearDisplay();
+  oled.drawRect(0, 0, 128, 64, SSD1306_WHITE);
+  oled.setTextColor(SSD1306_WHITE);
+  oled.setTextSize(1);
+  oled.setCursor(5, 3); oled.println(F("SIEU AM + 2 LASER"));
+  oled.drawLine(0, 14, 127, 14, SSD1306_WHITE);
+  oled.setCursor(4, 18); oled.print(F("F:"));
+  okTruoc ? oled.print(truoc, 1) : oled.print(F("NO ECHO"));
+  oled.setCursor(4, 31); oled.print(F("L:")); oled.print(trai);
+  oled.print(F(" R:")); oled.print(phai);
+  oled.setCursor(4, 45); oled.print(F("TT:")); oled.println(trangThai);
+  oled.setCursor(4, 56); oled.print(F("F cm; L/R mm"));
+  oled.display();
+}
+
+void dungBaoLoi(const __FlashStringHelper *loi) {
+  datHaiDongCo(0, 0);
+  Serial.println(loi);
+  hienThi(loi, -1, false, 0, 0);
+  while (true) delay(1000);
+}
+
+void khoiTaoLaser() {
+  digitalWrite(XSHUT_TRAI, LOW);
+  digitalWrite(XSHUT_PHAI, LOW);
+  delay(10);
+  digitalWrite(XSHUT_TRAI, HIGH); delay(10);
+  if (!laserTrai.begin(DIA_CHI_TRAI)) dungBaoLoi(F("LOI LASER TRAI"));
+  digitalWrite(XSHUT_PHAI, HIGH); delay(10);
+  if (!laserPhai.begin(DIA_CHI_PHAI)) dungBaoLoi(F("LOI LASER PHAI"));
+}
+
+void xuLyVatCan(float truoc, bool okTruoc,
+                uint16_t trai, uint16_t phai) {
+  datHaiDongCo(0, 0);
+  hienThi(F("VAT CAN"), truoc, okTruoc, trai, phai);
+  delay(150);
+
+  if (trai &lt; NGUONG_NGO_CUT_MM &amp;&amp; phai &lt; NGUONG_NGO_CUT_MM) {
+    hienThi(F("NGO CUT"), truoc, okTruoc, trai, phai);
+    datHaiDongCo(-PWM_LUI, -PWM_LUI); delay(300);
+    datHaiDongCo(PWM_QUAY, -PWM_QUAY); delay(QUAY_180_MS);
+    lanTruocQuayPhai = true;
+  } else if (trai &gt; phai + 40) {
+    hienThi(F("QUAY TRAI"), truoc, okTruoc, trai, phai);
+    datHaiDongCo(-PWM_QUAY, PWM_QUAY); delay(QUAY_90_MS);
+    lanTruocQuayPhai = false;
+  } else if (phai &gt; trai + 40) {
+    hienThi(F("QUAY PHAI"), truoc, okTruoc, trai, phai);
+    datHaiDongCo(PWM_QUAY, -PWM_QUAY); delay(QUAY_90_MS);
+    lanTruocQuayPhai = true;
+  } else if (lanTruocQuayPhai) {
+    datHaiDongCo(-PWM_QUAY, PWM_QUAY); delay(QUAY_90_MS);
+    lanTruocQuayPhai = false;
+  } else {
+    datHaiDongCo(PWM_QUAY, -PWM_QUAY); delay(QUAY_90_MS);
+    lanTruocQuayPhai = true;
+  }
+  datHaiDongCo(0, 0);
+  delay(120);
+}
+
 void setup() {
   Serial.begin(115200);
-  Serial.println(F("Nhap F/B/L/R/S roi nhan Send"));
-  Serial.println(F("Chi giai ma lenh, robot KHONG chay"));
+  pinMode(M1_A, OUTPUT); pinMode(M1_B, OUTPUT);
+  pinMode(M2_A, OUTPUT); pinMode(M2_B, OUTPUT);
+  pinMode(TRIG_PIN, OUTPUT); pinMode(ECHO_PIN, INPUT);
+  pinMode(XSHUT_TRAI, OUTPUT); pinMode(XSHUT_PHAI, OUTPUT);
+  datHaiDongCo(0, 0);
+
+  Wire.begin();
+  if (!oled.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println(F("LOI OLED"));
+    while (true) delay(1000);
+  }
+  khoiTaoLaser();
+  delay(1500);
 }
 
 void loop() {
-  static unsigned long mocBaoCao = 0;
+  float truoc;
+  bool okTruoc = docTruoc(truoc);
+  bool okTrai, okPhai;
+  uint16_t trai = docBen(laserTrai, okTrai);
+  uint16_t phai = docBen(laserPhai, okPhai);
 
-  if (Serial.available() &gt; 0) {
-    char lenh = toupper(Serial.read());
-    if (lenh == '\n' || lenh == '\r') return;
+  Serial.print(F("F="));
+  okTruoc ? Serial.print(truoc, 1) : Serial.print(F("NO_ECHO"));
+  Serial.print(F("cm L=")); Serial.print(trai);
+  Serial.print(F("mm R=")); Serial.print(phai); Serial.println(F("mm"));
 
-    Serial.print(F("Nhan lenh: "));
-    switch (lenh) {
-      case 'F': Serial.println(F("TIEN")); break;
-      case 'B': Serial.println(F("LUI")); break;
-      case 'L': Serial.println(F("TRAI")); break;
-      case 'R': Serial.println(F("PHAI")); break;
-      case 'S': Serial.println(F("DUNG")); break;
-      default:  Serial.println(F("KHONG HOP LE")); break;
-    }
+  bool coVatCan = okTruoc &amp;&amp; truoc &lt;= NGUONG_TRUOC_CM;
+  if (coVatCan) {
+    xuLyVatCan(truoc, okTruoc, trai, phai);
+  } else if (!okTruoc &amp;&amp; !MAT_ECHO_XEM_LA_TRONG) {
+    datHaiDongCo(0, 0);
+    hienThi(F("DUNG - MAT ECHO"), truoc, okTruoc, trai, phai);
+  } else {
+    datHaiDongCo(PWM_DI, PWM_DI);
+    hienThi(F("DI THANG"), truoc, okTruoc, trai, phai);
   }
-
-  if (millis() - mocBaoCao &gt;= 1000) {
-    mocBaoCao = millis();
-    Serial.print(F("Uptime: "));
-    Serial.print(millis() / 1000);
-    Serial.println(F(" s"));
-  }
+  delay(60);
 }</code></pre>
     </div></div>
   </div></section>
   <section class="lesson"><h2>5. Phân tích chương trình</h2><ul>
-      <li>Serial USB dùng riêng, không liên quan Serial1 dành cho Bluetooth chưa đấu.</li>
-      <li>Switch–case tách phần giải mã lệnh khỏi phần điều khiển phần cứng.</li>
-      <li>Báo cáo thời gian dùng millis() nên chương trình vẫn nhận lệnh liên tục.</li>
+      <li>Hai đơn vị được giữ rõ: trước theo cm, hai bên theo mm.</li>
+      <li>Động cơ phải dùng cờ đảo chiều nên lệnh tốc độ dương làm cả hai bánh tiến.</li>
+      <li>Laser ngoài tầm được quy ước 2000 mm để biểu diễn phía rộng, giống thuật toán mê cung đã xây dựng.</li>
+      <li>Hai laser khởi tạo lỗi làm robot dừng ngay; mất Echo có thể chọn dừng hoặc coi là đường trống bằng một hằng cấu hình.</li>
     </ul></section>
   <section class="lesson"><h2>6. Quy trình thực hành</h2><ol>
-      <li>Mở Serial Monitor ở 115200 baud.</li>
-      <li>Gửi từng lệnh F/B/L/R/S và kiểm tra tên lệnh phản hồi.</li>
-      <li>Gửi một ký tự khác để kiểm tra nhánh KHÔNG HỢP LỆ.</li>
+      <li>Kê bánh và kiểm tra từng cảm biến độc lập bằng Bài 8, Bài 9.</li>
+      <li>Đặt vật trước robot, lần lượt tạo phía trái rộng hơn rồi phía phải rộng hơn.</li>
+      <li>Hiệu chỉnh ngưỡng 25 cm và thời gian quay 90° ở tốc độ thấp.</li>
+      <li>Tạo ngõ cụt để kiểm tra thao tác lùi và quay 180°.</li>
     </ol></section>
   <section class="lesson"><h2>7. Bài tập mở rộng</h2><ol>
-      <li>Nhận một số PWM từ 0–255 sau ký tự lệnh.</li>
-      <li>In dữ liệu dạng CSV để dùng Serial Plotter.</li>
-      <li>Ghép lệnh với các hàm động cơ ở Bài 6 nhưng mặc định luôn khởi động ở DỪNG.</li>
+      <li>Xác nhận vật cản qua ba lần đo liên tiếp.</li>
+      <li>Đếm số lần gặp vật cản và dừng sau lần thứ năm.</li>
+      <li>Chuyển các thao tác delay thành máy trạng thái không chặn.</li>
     </ol></section>
-  <section class="lesson"><h2>8. Lỗi thường gặp và cách xử lý</h2><div class="warning">Chữ rác trên Serial: tốc độ Monitor không khớp 115200.</div>
-<div class="warning">Lệnh bị đọc thêm dòng trống: bỏ qua ký tự CR/LF như chương trình mẫu.</div>
-<div class="warning">Bluetooth chưa đấu nên không thay <code>Serial</code> bằng <code>Serial1</code> ở giai đoạn này.</div></section>
-  <section class="lesson"><h2>9. Kết luận</h2><p>Serial đã trở thành kênh debug chuẩn cho tất cả bài tiếp theo mà không chiếm hoặc làm xung đột chân robot.</p></section>
+  <section class="lesson"><h2>8. Lỗi thường gặp và cách xử lý</h2><div class="warning">Robot quay sai phía: kiểm tra D39 là trái, D37 là phải.</div>
+<div class="warning">Tiến thành lùi: không bỏ cờ đảo chiều động cơ phải D6/D10.</div>
+<div class="warning">Khi cả hai laser khởi tạo lỗi, robot phải dừng; không tiếp tục chạy mù.</div></section>
+  <section class="lesson"><h2>9. Kết luận</h2><p>Bài 17 đã được sửa đúng bố trí cảm biến của robot thật và là nền tảng trực tiếp cho bài vượt mê cung nâng cao.</p></section>
   <nav class="nav-bottom" aria-label="Điều hướng bài học">
-    <a href="bai3.html">← Bài 3</a>
+    <a href="bai16.html">← Bài 16</a>
     <a href="tailieu-kythuat.html">Danh sách bài học</a>
-    <a href="bai5.html">Bài 5 →</a>
+    <a href="bai18.html">Bài 18 →</a>
   </nav>
 </main>
 <!-- ===== NỘI DUNG===== -->

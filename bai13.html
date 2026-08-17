@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Bài 4. Giao tiếp Serial và debug chương trình</title>
+<title>Bài 13. Encoder và đo tốc độ</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -480,92 +480,198 @@ h1 {
 <main class="page">
   <section class="hero">
     <div class="label">BÀI GIẢNG LẬP TRÌNH ROBOT MÊ CUNG</div>
-    <h1>Bài 4. Giao tiếp Serial và debug chương trình</h1>
-    <p class="subtitle">Gửi dữ liệu, nhận lệnh thử nghiệm và quan sát trạng thái chương trình mà không chiếm các chân phần cứng của robot.</p>
+    <h1>Bài 13. Encoder và đo tốc độ</h1>
+    <p class="subtitle">Đếm xung bằng ngắt ngoài, xác định chiều quay và tính tốc độ vòng/phút của hai bánh xe.</p>
   </section>
-  <section class="lesson"><h2>1. Mục tiêu bài học</h2><ul>
-      <li>Khởi tạo Serial Monitor đúng 115200 baud.</li>
-      <li>In dữ liệu có nhãn để dễ phân tích.</li>
-      <li>Nhận ký tự lệnh và kiểm tra thuật toán ở chế độ không chạy động cơ.</li>
-      <li>Dùng millis() để gửi dữ liệu định kỳ.</li>
-    </ul></section>
-  <section class="lesson"><h2>2. Kiến thức trọng tâm</h2><p>Serial qua cổng USB là công cụ debug chính. Bài này không dùng nút D4 hoặc LED D8 như ví dụ cũ vì các chân đó thuộc cảm biến và không có LED rời trên robot.</p>
-      <p>Các ký tự F, B, L, R, S chỉ được giải mã và in tên lệnh. Động cơ chưa được kích hoạt, giúp sinh viên kiểm tra giao thức an toàn trước khi ghép với Bài 6.</p></section>
-  <section class="lesson"><h2>3. Kết nối phần cứng</h2><div class="pin-collapse open">
-    <button class="pin-collapse-head" onclick="togglePinTable(this)">
-      <span>📌 Bảng chân theo cấu hình robot mới nhất</span>
-      <span class="pin-collapse-arrow">▶</span>
-    </button>
-    <div class="pin-collapse-body"><table class="pin-table">
-      <tr><th>Thiết bị / tín hiệu</th><th>Chân Mega 2560 Mini</th><th>Chức năng</th><th>Ghi chú</th></tr>
-      <tr><td>Serial USB</td><td>Serial</td><td>Debug với máy tính</td><td>115200 baud</td></tr>
-      <tr><td>Bluetooth</td><td>Serial1 D18/D19</td><td>Chưa sử dụng</td><td>Module chưa đấu nối</td></tr>
-    </table></div>
-  </div></section>
-  <section class="lesson"><h2>4. Chương trình thực hành</h2><p>Mã ví dụ sử dụng đúng cấu hình đã kiểm tra trên robot, có OLED và Serial để quan sát.</p><div class="code-collapse">
-    <button class="code-collapse-head" onclick="toggleCode(this)">
-      <span>💻 Bài 4 – nhận lệnh Serial ở chế độ an toàn</span><span class="arrow">▶</span>
-    </button>
-    <div class="code-collapse-body"><div class="code-box">
-      <div class="code-title">Bài 4 – nhận lệnh Serial ở chế độ an toàn</div>
-      <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-      <pre><code class="language-cpp">// BÀI 4: GIAO TIẾP SERIAL - CHƯA ĐIỀU KHIỂN ĐỘNG CƠ
+
+  <section class="lesson">
+    <h2>1. Mục tiêu bài học</h2>
+    <ul>
+      <li>Giải thích được hai kênh A/B của encoder và cách xác định chiều quay.</li>
+      <li>Đếm xung bằng ngắt ngoài trên D2 và D3 mà không bỏ xung khi vòng lặp bận.</li>
+      <li>Chụp dữ liệu biến dùng chung với ISR một cách an toàn.</li>
+      <li>Tính RPM từ số xung, thời gian lấy mẫu và số xung trên một vòng.</li>
+    </ul>
+  </section>
+
+  <section class="lesson">
+    <h2>2. Kiến thức trọng tâm</h2>
+    <p>Encoder tạo chuỗi xung khi trục quay. Kênh A được nối tới chân ngắt ngoài; tại mỗi cạnh lên của A, mức logic kênh B cho biết hướng quay tương đối. Biến đếm phải khai báo <code>volatile</code> vì được thay đổi trong hàm ngắt.</p>
+    <div class="note"><strong>Công thức:</strong> RPM = Δxung × 60.000 / (xung mỗi vòng × Δt ms). Hằng số xung mỗi vòng phải được kiểm tra theo cách đếm một kênh hay hai kênh và vị trí encoder trước/sau hộp số.</div>
+    <p>Hàm ngắt phải thật ngắn: chỉ đọc kênh B và tăng/giảm biến đếm. Mọi phép tính, OLED và Serial đều thực hiện ở <code>loop()</code>.</p>
+  </section>
+
+  <section class="lesson">
+    <h2>3. Kết nối phần cứng</h2>
+    
+    <div class="pin-collapse open">
+      <button class="pin-collapse-head" onclick="togglePinTable(this)">
+        <span>📌 Bảng kết nối sử dụng trong bài</span>
+        <span class="pin-collapse-arrow">▶</span>
+      </button>
+      <div class="pin-collapse-body">
+        <table class="pin-table">
+          <tr><th>Thiết bị / tín hiệu</th><th>Chân Mega 2560</th><th>Vai trò</th><th>Lưu ý</th></tr>
+          <tr><td>Encoder trái A</td><td>D2</td><td>Ngắt ngoài</td><td>Đếm cạnh RISING</td></tr>
+          <tr><td>Encoder trái B</td><td>D12</td><td>Xác định chiều</td><td>INPUT_PULLUP nếu đầu ra phù hợp</td></tr>
+          <tr><td>Encoder phải A</td><td>D3</td><td>Ngắt ngoài</td><td>Đếm cạnh RISING</td></tr>
+          <tr><td>Encoder phải B</td><td>D14</td><td>Xác định chiều</td><td>Có thể cần đảo dấu</td></tr>
+          <tr><td>OLED SDA/SCL</td><td>D20/D21</td><td>Hiển thị RPM</td><td>Địa chỉ 0x3C</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="lesson">
+    <h2>4. Chương trình thực hành</h2>
+    <p>Chương trình dưới đây được viết đầy đủ, có chú thích tiếng Việt và có thể mở trực tiếp trong Arduino IDE.</p>
+    <div class="code-collapse">
+      <button class="code-collapse-head" onclick="toggleCode(this)">
+        <span>💻 Bài 13 – quay bánh bằng tay và đo RPM</span><span class="arrow">▶</span>
+      </button>
+      <div class="code-collapse-body">
+        <div class="code-box">
+          <div class="code-title">Bài 13 – quay bánh bằng tay và đo RPM</div>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          <pre><code class="language-cpp">// BÀI 13: ĐỌC ENCODER VÀ TÍNH RPM
+#include &lt;Wire.h&gt;
+#include &lt;Adafruit_GFX.h&gt;
+#include &lt;Adafruit_SSD1306.h&gt;
+
+const uint8_t ENC_TRAI_A = 2;
+const uint8_t ENC_TRAI_B = 12;
+const uint8_t ENC_PHAI_A = 3;
+const uint8_t ENC_PHAI_B = 14;
+
+// Hiệu chỉnh theo encoder và phương pháp đếm thực tế.
+const float XUNG_MOI_VONG = 20.0;
+const int8_t HE_SO_CHIEU_TRAI = 1;
+const int8_t HE_SO_CHIEU_PHAI = -1;
+
+volatile long xungTrai = 0;
+volatile long xungPhai = 0;
+
+Adafruit_SSD1306 oled(128, 64, &amp;Wire, -1);
+
+void ngatEncoderTrai() {
+  int huong = digitalRead(ENC_TRAI_B) ? 1 : -1;
+  xungTrai += huong * HE_SO_CHIEU_TRAI;
+}
+
+void ngatEncoderPhai() {
+  int huong = digitalRead(ENC_PHAI_B) ? 1 : -1;
+  xungPhai += huong * HE_SO_CHIEU_PHAI;
+}
+
+void chupSoXung(long &amp;trai, long &amp;phai) {
+  noInterrupts();
+  trai = xungTrai;
+  phai = xungPhai;
+  interrupts();
+}
+
 void setup() {
   Serial.begin(115200);
-  Serial.println(F("Nhap F/B/L/R/S roi nhan Send"));
-  Serial.println(F("Chi giai ma lenh, robot KHONG chay"));
+  pinMode(ENC_TRAI_A, INPUT_PULLUP);
+  pinMode(ENC_TRAI_B, INPUT_PULLUP);
+  pinMode(ENC_PHAI_A, INPUT_PULLUP);
+  pinMode(ENC_PHAI_B, INPUT_PULLUP);
+
+  attachInterrupt(digitalPinToInterrupt(ENC_TRAI_A),
+                  ngatEncoderTrai, RISING);
+  attachInterrupt(digitalPinToInterrupt(ENC_PHAI_A),
+                  ngatEncoderPhai, RISING);
+
+  Wire.begin();
+  if (!oled.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println("LOI OLED");
+    while (true) delay(1000);
+  }
+  Serial.println("QUAY TUNG BANH BANG TAY");
 }
 
 void loop() {
-  static unsigned long mocBaoCao = 0;
+  static unsigned long mocMs = millis();
+  static long xungTraiCu = 0;
+  static long xungPhaiCu = 0;
 
-  if (Serial.available() &gt; 0) {
-    char lenh = toupper(Serial.read());
-    if (lenh == '\n' || lenh == '\r') return;
+  if (millis() - mocMs &gt;= 500) {
+    unsigned long bayGio = millis();
+    unsigned long dt = bayGio - mocMs;
+    mocMs = bayGio;
 
-    Serial.print(F("Nhan lenh: "));
-    switch (lenh) {
-      case 'F': Serial.println(F("TIEN")); break;
-      case 'B': Serial.println(F("LUI")); break;
-      case 'L': Serial.println(F("TRAI")); break;
-      case 'R': Serial.println(F("PHAI")); break;
-      case 'S': Serial.println(F("DUNG")); break;
-      default:  Serial.println(F("KHONG HOP LE")); break;
-    }
-  }
+    long trai, phai;
+    chupSoXung(trai, phai);
+    long deltaTrai = trai - xungTraiCu;
+    long deltaPhai = phai - xungPhaiCu;
+    xungTraiCu = trai;
+    xungPhaiCu = phai;
 
-  if (millis() - mocBaoCao &gt;= 1000) {
-    mocBaoCao = millis();
-    Serial.print(F("Uptime: "));
-    Serial.print(millis() / 1000);
-    Serial.println(F(" s"));
+    float rpmTrai = deltaTrai * 60000.0 / (XUNG_MOI_VONG * dt);
+    float rpmPhai = deltaPhai * 60000.0 / (XUNG_MOI_VONG * dt);
+
+    Serial.print("XUNG T/P: ");
+    Serial.print(trai); Serial.print(" / "); Serial.print(phai);
+    Serial.print("  RPM T/P: ");
+    Serial.print(rpmTrai, 1); Serial.print(" / "); Serial.println(rpmPhai, 1);
+
+    oled.clearDisplay();
+    oled.setTextColor(SSD1306_WHITE);
+    oled.setTextSize(1);
+    oled.setCursor(0, 0);  oled.println("ENCODER QUAY TAY");
+    oled.setCursor(0, 18); oled.print("Xung T: "); oled.println(trai);
+    oled.setCursor(0, 30); oled.print("Xung P: "); oled.println(phai);
+    oled.setCursor(0, 44); oled.print("RPM T: "); oled.println(rpmTrai, 1);
+    oled.setCursor(0, 56); oled.print("RPM P: "); oled.println(rpmPhai, 1);
+    oled.display();
   }
 }</code></pre>
-    </div></div>
-  </div></section>
-  <section class="lesson"><h2>5. Phân tích chương trình</h2><ul>
-      <li>Serial USB dùng riêng, không liên quan Serial1 dành cho Bluetooth chưa đấu.</li>
-      <li>Switch–case tách phần giải mã lệnh khỏi phần điều khiển phần cứng.</li>
-      <li>Báo cáo thời gian dùng millis() nên chương trình vẫn nhận lệnh liên tục.</li>
-    </ul></section>
-  <section class="lesson"><h2>6. Quy trình thực hành</h2><ol>
-      <li>Mở Serial Monitor ở 115200 baud.</li>
-      <li>Gửi từng lệnh F/B/L/R/S và kiểm tra tên lệnh phản hồi.</li>
-      <li>Gửi một ký tự khác để kiểm tra nhánh KHÔNG HỢP LỆ.</li>
-    </ol></section>
-  <section class="lesson"><h2>7. Bài tập mở rộng</h2><ol>
-      <li>Nhận một số PWM từ 0–255 sau ký tự lệnh.</li>
-      <li>In dữ liệu dạng CSV để dùng Serial Plotter.</li>
-      <li>Ghép lệnh với các hàm động cơ ở Bài 6 nhưng mặc định luôn khởi động ở DỪNG.</li>
-    </ol></section>
-  <section class="lesson"><h2>8. Lỗi thường gặp và cách xử lý</h2><div class="warning">Chữ rác trên Serial: tốc độ Monitor không khớp 115200.</div>
-<div class="warning">Lệnh bị đọc thêm dòng trống: bỏ qua ký tự CR/LF như chương trình mẫu.</div>
-<div class="warning">Bluetooth chưa đấu nên không thay <code>Serial</code> bằng <code>Serial1</code> ở giai đoạn này.</div></section>
-  <section class="lesson"><h2>9. Kết luận</h2><p>Serial đã trở thành kênh debug chuẩn cho tất cả bài tiếp theo mà không chiếm hoặc làm xung đột chân robot.</p></section>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lesson">
+    <h2>5. Phân tích chương trình và thuật toán</h2>
+    <ul>
+      <li>Ngắt chỉ xử lý cạnh lên kênh A nên số xung/vòng phải tương ứng đúng chế độ đếm này.</li>
+      <li>Hai biến đếm được chụp trong vùng tạm khóa ngắt, tránh đọc dở một biến <code>long</code> đang được ISR cập nhật.</li>
+      <li>RPM có dấu thể hiện chiều quay. Nếu quay bánh theo chiều tiến mà RPM âm, đổi đúng hệ số chiều của bánh đó.</li>
+      <li>Chu kỳ thực tế <code>dt</code> được dùng trong công thức, do đó sai số do thời gian hiển thị OLED được giảm.</li>
+    </ul>
+  </section>
+
+  <section class="lesson">
+    <h2>6. Quy trình thực hành</h2>
+    <ol>
+      <li>Không cấp PWM cho động cơ; kê robot và quay bánh trái bằng tay đúng chiều tiến.</li>
+      <li>Kiểm tra xung trái tăng và RPM trái dương; lặp lại với bánh phải.</li>
+      <li>Đánh dấu bánh xe, quay đúng một vòng và kiểm tra số xung để hiệu chỉnh <code>XUNG_MOI_VONG</code>.</li>
+      <li>Quay hai bánh ở tốc độ khác nhau và đối chiếu RPM trên OLED.</li>
+    </ol>
+  </section>
+
+  <section class="lesson">
+    <h2>7. Bài tập củng cố và mở rộng</h2>
+    <ol>
+      <li>Đếm cả hai cạnh CHANGE của kênh A và xác định lại số xung/vòng.</li>
+      <li>Phát hiện encoder hỏng khi động cơ có PWM nhưng không xuất hiện xung trong 500 ms.</li>
+      <li>Vẽ đồ thị RPM theo thời gian bằng Serial Plotter.</li>
+    </ol>
+  </section>
+
+  <section class="lesson">
+    <h2>8. Lỗi thường gặp và cách xử lý</h2>
+    <div class="warning">Xung luôn bằng 0: kiểm tra nguồn encoder, D2/D3 và lựa chọn cạnh ngắt.</div>
+    <div class="warning">Xung tăng khi quay cả hai chiều: kiểm tra dây kênh B D12/D14 hoặc logic xác định chiều.</div>
+    <div class="warning">RPM sai theo một hệ số cố định: <code>XUNG_MOI_VONG</code> chưa đúng với hộp số và chế độ đếm.</div>
+    <div class="warning">Không gọi Serial, OLED hoặc <code>delay()</code> bên trong hàm ngắt.</div>
+  </section>
+<section class="lesson"><h2>9. Kết luận</h2><p>Bài học tạo được phép đo tốc độ độc lập cho hai bánh. Bài 14 dùng số xung để đo quãng đường, còn Bài 15 dùng chênh lệch xung để giữ robot đi thẳng.</p></section>
   <nav class="nav-bottom" aria-label="Điều hướng bài học">
-    <a href="bai3.html">← Bài 3</a>
+    <a href="bai12.html">← Bài 12</a>
     <a href="tailieu-kythuat.html">Danh sách bài học</a>
-    <a href="bai5.html">Bài 5 →</a>
+    <a href="bai14.html">Bài 14 →</a>
   </nav>
 </main>
 <!-- ===== NỘI DUNG===== -->

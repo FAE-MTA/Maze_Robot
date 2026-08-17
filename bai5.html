@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Bài 5. Điều khiển động cơ RC servo</title>
+<title>Bài 5. Điều khiển động cơ RC Servo an toàn</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -478,245 +478,119 @@ h1 {
 
 <!-- ===== NỘI DUNG===== -->
 <main class="page">
-
-  <!-- ===== HERO ===== -->
   <section class="hero">
     <div class="label">BÀI GIẢNG LẬP TRÌNH ROBOT MÊ CUNG</div>
-
-    <h1>Bài 5. Điều khiển động cơ RC Servo</h1>
-
-    <p class="subtitle">
-      Bài học giúp học viên hiểu nguyên lý hoạt động của servo và cách điều khiển góc quay
-      bằng Arduino để ứng dụng trong robot.
-    </p>
+    <h1>Bài 5. Điều khiển động cơ RC Servo an toàn</h1>
+    <p class="subtitle">Điều khiển servo trên D15, hiển thị góc trên OLED và ngắt xung khi không dùng để tránh rung giật hoặc giữ lực ngoài ý muốn.</p>
   </section>
-
-  <!-- ===== 1 ===== -->
-  <section class="lesson">
-    <h2>1. Mục tiêu bài học</h2>
-    <ul>
-      <li>Hiểu nguyên lý hoạt động của RC Servo</li>
-      <li>Biết cách đấu nối servo với Arduino</li>
-      <li>Điều khiển góc quay từ 0° đến 180°</li>
-      <li>Ứng dụng servo trong robot</li>
-    </ul>
-  </section>
-
-  <!-- ===== 2 ===== -->
-  <section class="lesson">
-    <h2>2. Giới thiệu RC Servo</h2>
-
-    <p>
-      RC Servo là loại động cơ đặc biệt có thể điều khiển chính xác góc quay.
-      Servo thường được sử dụng trong robot để điều khiển cơ cấu như gạt, đẩy hoặc quay cảm biến.
-    </p>
-
-    <div class="image-wrap">
-      <img src="DATA/Bai5.Servo.webp" class="lesson-img" alt="RC Servo">
-      <div class="img-caption">
-        Hình 2.1. Động cơ RC Servo thường dùng trong robot.
-      </div>
-    </div>
-
-    <h3>2.1. Cấu tạo dây servo</h3>
-
-    <ul>
-      <li><strong>Đỏ:</strong> VCC (5V)</li>
-      <li><strong>Nâu/Đen:</strong> GND</li>
-      <li><strong>Vàng/Cam:</strong> Tín hiệu điều khiển</li>
-    </ul>
-
-    <div class="note">
-      Servo nhận tín hiệu PWM từ Arduino để điều khiển góc quay.
-    </div>
-  </section>
-
-  <!-- ===== 3 ===== -->
-  <section class="lesson">
-    <h2>3. Đấu nối Servo với Arduino</h2>
-
-    <ul>
-      <li>Dây đỏ → 5V</li>
-      <li>Dây đen → GND</li>
-      <li>Dây vàng → chân D15</li>
-    </ul>
-
-    <div class="image-wrap">
-      <img src="DATA/Bai5.Servo_wiring.webp" class="lesson-img" alt="Sơ đồ nối Servo">
-      <div class="img-caption">
-        Hình 3.1. Sơ đồ kết nối servo với Arduino Mega 2560.
-      </div>
-    </div>
-    <div class="note">
-  Mô phỏng Wokwi:
-  <br>
-  <a href="https://wokwi.com/projects/464898298273999873" 
-     target="_blank" 
-     class="lesson-link">
-     https://wokwi.com/projects/464898298273999873
-  </a>
-</div>
-    <div class="warning">
-      Không cấp nguồn servo từ chân Arduino nếu servo lớn → nên dùng nguồn ngoài.
-    </div>
-  </section>
-
-  <!-- ===== 4 ===== -->
-  <section class="lesson">
-    <h2>4. Thư viện điều khiển Servo</h2>
-
-    <p>
-      Arduino cung cấp thư viện <code>Servo.h</code> để điều khiển servo dễ dàng.
-    </p>
-
-    <div class="code-box">
-<pre><code class="language-cpp">#include &lt;Servo.h&gt;</code></pre>
-    </div>
-
-    <div class="code-box">
-<pre><code class="language-cpp">servo.attach(15);   // Gắn servo vào chân D15
-servo.write(90);    // Quay đến góc 90 độ</code></pre>
-    </div>
-  </section>
-
-  <!-- ===== 5 ===== -->
-  <section class="lesson">
-    <h2>5. Code điều khiển servo cơ bản</h2>
-
-    <div class="code-collapse">
-      <button class="code-collapse-head" onclick="toggleCode(this)">
-        <span>💻 Code quay servo 0° → 90° → 180°</span>
-        <span class="arrow">▶</span>
-      </button>
-
-      <div class="code-collapse-body">
-        <div class="code-box">
-          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-
-<pre><code class="language-cpp">
+  <section class="lesson"><h2>1. Mục tiêu bài học</h2><ul>
+      <li>Kết nối và điều khiển servo đúng chân D15.</li>
+      <li>Đưa servo đến các góc thử 30°, 90°, 150°.</li>
+      <li>Ngắt tín hiệu servo sau khi hoàn thành chuyển động.</li>
+      <li>Hiểu yêu cầu nguồn riêng và GND chung.</li>
+    </ul></section>
+  <section class="lesson"><h2>2. Kiến thức trọng tâm</h2><p>Thư viện Servo tạo chuỗi xung điều khiển góc. Servo có thể rung khi nguồn yếu, dây tín hiệu nhiễu hoặc chương trình vẫn phát xung trong trạng thái lỗi. Hàm <code>ngatServo()</code> gọi <code>detach()</code> và giữ D15 ở LOW.</p>
+      <div class="warning">Không dùng nút A0 trong bài này vì nút hiện chưa đấu. Không cấp servo tải lớn từ nguồn 5 V yếu của bo mạch.</div></section>
+  <section class="lesson"><h2>3. Kết nối phần cứng</h2><div class="pin-collapse open">
+    <button class="pin-collapse-head" onclick="togglePinTable(this)">
+      <span>📌 Bảng chân theo cấu hình robot mới nhất</span>
+      <span class="pin-collapse-arrow">▶</span>
+    </button>
+    <div class="pin-collapse-body"><table class="pin-table">
+      <tr><th>Thiết bị / tín hiệu</th><th>Chân Mega 2560 Mini</th><th>Chức năng</th><th>Ghi chú</th></tr>
+      <tr><td>Servo Signal</td><td>D15</td><td>Xung điều khiển</td><td>Đúng cấu hình robot</td></tr>
+      <tr><td>Servo VCC</td><td>Nguồn phù hợp</td><td>Cấp công suất</td><td>Ưu tiên nguồn riêng</td></tr>
+      <tr><td>Servo GND</td><td>GND chung</td><td>Mốc tín hiệu</td><td>Bắt buộc chung với Mega</td></tr>
+      <tr><td>OLED</td><td>D20/D21</td><td>Hiển thị góc</td><td>0x3C</td></tr>
+    </table></div>
+  </div></section>
+  <section class="lesson"><h2>4. Chương trình thực hành</h2><p>Mã ví dụ sử dụng đúng cấu hình đã kiểm tra trên robot, có OLED và Serial để quan sát.</p><div class="code-collapse">
+    <button class="code-collapse-head" onclick="toggleCode(this)">
+      <span>💻 Bài 5 – servo D15 có ngắt xung an toàn</span><span class="arrow">▶</span>
+    </button>
+    <div class="code-collapse-body"><div class="code-box">
+      <div class="code-title">Bài 5 – servo D15 có ngắt xung an toàn</div>
+      <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      <pre><code class="language-cpp">// BÀI 5: RC SERVO D15 - NGẮT XUNG KHI KHÔNG DÙNG
+#include &lt;Wire.h&gt;
 #include &lt;Servo.h&gt;
+#include &lt;Adafruit_GFX.h&gt;
+#include &lt;Adafruit_SSD1306.h&gt;
 
-Servo myServo;
+const uint8_t SERVO_PIN = 15;
+Servo servoRobot;
+Adafruit_SSD1306 oled(128, 64, &amp;Wire, -1);
+
+void ngatServo() {
+  if (servoRobot.attached()) servoRobot.detach();
+  pinMode(SERVO_PIN, OUTPUT);
+  digitalWrite(SERVO_PIN, LOW);
+}
+
+void datGoc(int goc) {
+  servoRobot.attach(SERVO_PIN);
+  servoRobot.write(constrain(goc, 0, 180));
+
+  Serial.print(F("Servo = ")); Serial.print(goc); Serial.println(F(" do"));
+  oled.clearDisplay();
+  oled.setTextColor(SSD1306_WHITE);
+  oled.setTextSize(1);
+  oled.setCursor(12, 5); oled.println(F("RC SERVO D15"));
+  oled.setTextSize(3);
+  oled.setCursor(28, 27); oled.print(goc);
+  oled.setTextSize(1); oled.print(F(" do"));
+  oled.display();
+
+  delay(700);  // Chờ servo tới vị trí.
+  ngatServo(); // Ngừng giữ lực và tránh rung khi chờ.
+  delay(500);
+}
 
 void setup() {
-  myServo.attach(15);   // Gắn servo vào chân D15
-}
-
-void loop() {
-
-  myServo.write(0);     // Quay về 0 độ
-  delay(1000);
-
-  myServo.write(90);    // Quay 90 độ
-  delay(1000);
-
-  myServo.write(180);   // Quay 180 độ
-  delay(1000);
-}
-</code></pre>
-
-        </div>
-      </div>
-    </div>
-
-  </section>
-
-  <!-- ===== 6 ===== -->
-  <section class="lesson">
-    <h2>6. Điều khiển servo bằng nút nhấn</h2>
-
-    <p>
-      Kết hợp kiến thức bài trước, ta có thể dùng nút nhấn để điều khiển góc quay của servo.
-    </p>
-
-    <div class="code-collapse">
-      <button class="code-collapse-head" onclick="toggleCode(this)">
-        <span>💻 Điều khiển servo bằng nút nhấn</span>
-        <span class="arrow">▶</span>
-      </button>
-
-      <div class="code-collapse-body">
-        <div class="code-box">
-          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-
-<pre><code class="language-cpp">
-#include &lt;Servo.h&gt;
-#define BUTTON_PIN A0   // Đổi sang A0
-Servo myServo;
-int angle = 0;
-
-void setup() {
-  myServo.attach(15);   // Servo chân D15
-  Serial.begin(9600);   // Debug ngưỡng
-}
-void loop() {
-  int value = analogRead(BUTTON_PIN); // Đọc A0
-  Serial.println(value); // In ra để kiểm tra
-  // ===== NHẤN NÚT =====
-  if (value > 100) {   // Ngưỡng nút (tùy chỉnh theo mạch)
-    angle += 45;       // Tăng góc
-    if (angle > 180) angle = 0;
-    myServo.write(angle);
-    delay(300);        // chống dội
+  Serial.begin(115200);
+  Wire.begin();
+  if (!oled.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println(F("LOI OLED"));
+    ngatServo();
+    while (true) delay(1000);
   }
+  ngatServo();
+  delay(1000);
 }
-</code></pre>
 
-        </div>
-      </div>
-    </div>
-
-  </section>
-
-  <!-- ===== 7 ===== -->
-  <section class="lesson">
-    <h2>7. Ứng dụng trong robot</h2>
-
-    <ul>
-      <li>Gạt vật thể trong sân thi đấu</li>
-      <li>Quay cảm biến siêu âm</li>
-      <li>Điều khiển cơ cấu nâng/hạ</li>
-    </ul>
-
-    <div class="note">
-      Servo thường dùng cho chuyển động chính xác, không dùng để di chuyển robot.
-    </div>
-  </section>
-
-  <!-- ===== 8 ===== -->
-  <section class="lesson">
-    <h2>8. Bài tập thực hành</h2>
-
-    <ul>
-      <li>Viết chương trình quay servo qua 3 góc 0° – 90° – 180°</li>
-      <li>Dùng nút nhấn để điều khiển servo</li>
-      <li>Viết chương trình quay servo liên tục qua lại</li>
-    </ul>
-  </section>
-
-  <!-- ===== 9 ===== -->
-  <section class="lesson">
-    <h2>9. Lỗi thường gặp</h2>
-
-    <div class="warning">
-      Servo rung → nguồn không đủ hoặc dây nối lỏng
-    </div>
-
-    <div class="warning">
-      Servo không quay → sai chân hoặc chưa attach()
-    </div>
-
-    <div class="warning">
-      Servo quay sai góc → cấp tín hiệu PWM không đúng
-    </div>
-
-  </section>
-
-  <div class="nav-bottom">
-    <a href="bai4.html">← Bài trước</a>
-    <a href="bai6.html">Bài tiếp theo →</a>
-  </div>
-
+void loop() {
+  datGoc(30);
+  datGoc(90);
+  datGoc(150);
+  datGoc(90);
+  delay(1500);
+}</code></pre>
+    </div></div>
+  </div></section>
+  <section class="lesson"><h2>5. Phân tích chương trình</h2><ul>
+      <li>Servo chỉ attach trong lúc cần di chuyển.</li>
+      <li>Sau 700 ms, chương trình detach và giữ D15 LOW.</li>
+      <li>Nếu OLED lỗi, servo cũng được ngắt trước khi chương trình dừng.</li>
+    </ul></section>
+  <section class="lesson"><h2>6. Quy trình thực hành</h2><ol>
+      <li>Tháo cơ cấu tải hoặc đặt servo ở vị trí không gây va chạm.</li>
+      <li>Cấp nguồn phù hợp, nối GND chung và nạp chương trình.</li>
+      <li>Quan sát bốn góc thử và kiểm tra servo đứng yên khi chờ.</li>
+    </ol></section>
+  <section class="lesson"><h2>7. Bài tập mở rộng</h2><ol>
+      <li>Thay đổi giới hạn an toàn theo cơ cấu gạt thực tế.</li>
+      <li>Chỉ giữ attach khi nhiệm vụ thực sự cần giữ lực.</li>
+      <li>Kết hợp màu NeoPixel đỏ khi servo báo lỗi.</li>
+    </ol></section>
+  <section class="lesson"><h2>8. Lỗi thường gặp và cách xử lý</h2><div class="warning">Servo giật khi dừng: kiểm tra chương trình đã gọi detach, nguồn và GND.</div>
+<div class="warning">Servo quay quá giới hạn cơ khí: giảm khoảng góc trước khi gắn tải.</div>
+<div class="warning">Không cập nhật NeoPixel liên tục trong lúc phát xung servo.</div></section>
+  <section class="lesson"><h2>9. Kết luận</h2><p>Servo D15 được điều khiển đúng chân và có trạng thái nghỉ an toàn, phù hợp để phát triển cơ cấu đẩy khối màu.</p></section>
+  <nav class="nav-bottom" aria-label="Điều hướng bài học">
+    <a href="bai4.html">← Bài 4</a>
+    <a href="tailieu-kythuat.html">Danh sách bài học</a>
+    <a href="bai6.html">Bài 6 →</a>
+  </nav>
 </main>
 <!-- ===== NỘI DUNG===== -->
 <script>

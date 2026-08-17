@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Bài 4. Giao tiếp Serial và debug chương trình</title>
+<title>Bài 6. Điều khiển động cơ DC</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -480,92 +480,173 @@ h1 {
 <main class="page">
   <section class="hero">
     <div class="label">BÀI GIẢNG LẬP TRÌNH ROBOT MÊ CUNG</div>
-    <h1>Bài 4. Giao tiếp Serial và debug chương trình</h1>
-    <p class="subtitle">Gửi dữ liệu, nhận lệnh thử nghiệm và quan sát trạng thái chương trình mà không chiếm các chân phần cứng của robot.</p>
+    <h1>Bài 6. Điều khiển động cơ DC</h1>
+    <p class="subtitle">Tìm hiểu cầu H, điều khiển chiều quay và tốc độ hai bánh để tạo các chuyển động tiến, lùi, quay trái, quay phải và dừng an toàn.</p>
   </section>
-  <section class="lesson"><h2>1. Mục tiêu bài học</h2><ul>
-      <li>Khởi tạo Serial Monitor đúng 115200 baud.</li>
-      <li>In dữ liệu có nhãn để dễ phân tích.</li>
-      <li>Nhận ký tự lệnh và kiểm tra thuật toán ở chế độ không chạy động cơ.</li>
-      <li>Dùng millis() để gửi dữ liệu định kỳ.</li>
-    </ul></section>
-  <section class="lesson"><h2>2. Kiến thức trọng tâm</h2><p>Serial qua cổng USB là công cụ debug chính. Bài này không dùng nút D4 hoặc LED D8 như ví dụ cũ vì các chân đó thuộc cảm biến và không có LED rời trên robot.</p>
-      <p>Các ký tự F, B, L, R, S chỉ được giải mã và in tên lệnh. Động cơ chưa được kích hoạt, giúp sinh viên kiểm tra giao thức an toàn trước khi ghép với Bài 6.</p></section>
-  <section class="lesson"><h2>3. Kết nối phần cứng</h2><div class="pin-collapse open">
-    <button class="pin-collapse-head" onclick="togglePinTable(this)">
-      <span>📌 Bảng chân theo cấu hình robot mới nhất</span>
-      <span class="pin-collapse-arrow">▶</span>
-    </button>
-    <div class="pin-collapse-body"><table class="pin-table">
-      <tr><th>Thiết bị / tín hiệu</th><th>Chân Mega 2560 Mini</th><th>Chức năng</th><th>Ghi chú</th></tr>
-      <tr><td>Serial USB</td><td>Serial</td><td>Debug với máy tính</td><td>115200 baud</td></tr>
-      <tr><td>Bluetooth</td><td>Serial1 D18/D19</td><td>Chưa sử dụng</td><td>Module chưa đấu nối</td></tr>
-    </table></div>
-  </div></section>
-  <section class="lesson"><h2>4. Chương trình thực hành</h2><p>Mã ví dụ sử dụng đúng cấu hình đã kiểm tra trên robot, có OLED và Serial để quan sát.</p><div class="code-collapse">
-    <button class="code-collapse-head" onclick="toggleCode(this)">
-      <span>💻 Bài 4 – nhận lệnh Serial ở chế độ an toàn</span><span class="arrow">▶</span>
-    </button>
-    <div class="code-collapse-body"><div class="code-box">
-      <div class="code-title">Bài 4 – nhận lệnh Serial ở chế độ an toàn</div>
-      <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-      <pre><code class="language-cpp">// BÀI 4: GIAO TIẾP SERIAL - CHƯA ĐIỀU KHIỂN ĐỘNG CƠ
+
+  <section class="lesson">
+    <h2>1. Mục tiêu bài học</h2>
+    <ul>
+      <li>Giải thích được vì sao không cấp động cơ trực tiếp từ chân Arduino.</li>
+      <li>Điều khiển đúng chiều và tốc độ của từng động cơ bằng bốn chân PWM.</li>
+      <li>Xây dựng các hàm chuyển động cơ bản để tái sử dụng ở những bài sau.</li>
+      <li>Thực hiện đúng quy trình thử động cơ an toàn khi bánh xe được kê khỏi mặt đất.</li>
+    </ul>
+  </section>
+
+  <section class="lesson">
+    <h2>2. Kiến thức trọng tâm</h2>
+    <p>Động cơ DC cần dòng điện lớn và tạo nhiễu điện, vì vậy Arduino chỉ phát tín hiệu điều khiển tới mạch cầu H. Trên robot, mỗi động cơ dùng hai chân PWM: đặt PWM vào một chân và giữ chân còn lại bằng 0 để chọn chiều quay.</p>
+    <p>Giá trị PWM nằm trong khoảng <strong>0–255</strong>. PWM càng lớn thì điện áp trung bình cấp cho động cơ càng cao. Hai động cơ được lắp đối xứng nên cùng một lệnh điện có thể làm hai bánh quay theo hai chiều cơ khí khác nhau; chương trình phải đảo chiều động cơ phải.</p>
+    <div class="note"><strong>Quy ước của bài:</strong> tốc độ dương làm robot tiến, tốc độ âm làm robot lùi, tốc độ bằng 0 làm động cơ dừng.</div>
+  </section>
+
+  <section class="lesson">
+    <h2>3. Kết nối phần cứng</h2>
+    
+    <div class="pin-collapse open">
+      <button class="pin-collapse-head" onclick="togglePinTable(this)">
+        <span>📌 Bảng kết nối sử dụng trong bài</span>
+        <span class="pin-collapse-arrow">▶</span>
+      </button>
+      <div class="pin-collapse-body">
+        <table class="pin-table">
+          <tr><th>Thiết bị / tín hiệu</th><th>Chân Mega 2560</th><th>Vai trò</th><th>Lưu ý</th></tr>
+          <tr><td>Động cơ trái – chân A</td><td>D5</td><td>PWM chiều tiến</td><td>Chân PWM</td></tr>
+          <tr><td>Động cơ trái – chân B</td><td>D9</td><td>PWM chiều lùi</td><td>Chân PWM</td></tr>
+          <tr><td>Động cơ phải – chân A</td><td>D6</td><td>Một đầu cầu H</td><td>Đã đảo chiều trong phần mềm</td></tr>
+          <tr><td>Động cơ phải – chân B</td><td>D10</td><td>Đầu còn lại của cầu H</td><td>Chân PWM</td></tr>
+          <tr><td>Nguồn động cơ</td><td>Pin 12 V</td><td>Cấp công suất</td><td>Bắt buộc nối chung GND với Mega 2560</td></tr>
+        </table>
+      </div>
+    </div><div class="image-wrap"><img src="DATA/Bai6.DCmotor_2.png" alt="Sơ đồ kết nối động cơ DC" class="lesson-img"><div class="img-caption">Sơ đồ nguyên lý điều khiển hai động cơ; đối chiếu lại đầu nối thực tế trước khi cấp nguồn.</div></div>
+  </section>
+
+  <section class="lesson">
+    <h2>4. Chương trình thực hành</h2>
+    <p>Chương trình dưới đây được viết đầy đủ, có chú thích tiếng Việt và có thể mở trực tiếp trong Arduino IDE.</p>
+    <div class="code-collapse">
+      <button class="code-collapse-head" onclick="toggleCode(this)">
+        <span>💻 Bài 6 – kiểm tra tiến, lùi, trái, phải</span><span class="arrow">▶</span>
+      </button>
+      <div class="code-collapse-body">
+        <div class="code-box">
+          <div class="code-title">Bài 6 – kiểm tra tiến, lùi, trái, phải</div>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          <pre><code class="language-cpp">// BÀI 6: ĐIỀU KHIỂN HAI ĐỘNG CƠ DC
+// Bo mạch: Arduino Mega 2560 Mini
+
+const uint8_t MOTOR_TRAI_A = 5;
+const uint8_t MOTOR_TRAI_B = 9;
+const uint8_t MOTOR_PHAI_A = 6;
+const uint8_t MOTOR_PHAI_B = 10;
+
+// Điều khiển một động cơ bằng tốc độ có dấu.
+// tocDo &gt; 0: quay thuận; tocDo &lt; 0: quay ngược; tocDo = 0: dừng.
+void datMotDongCo(uint8_t chanA, uint8_t chanB,
+                 int tocDo, bool daoChieu) {
+  tocDo = constrain(tocDo, -255, 255);
+  if (daoChieu) tocDo = -tocDo;
+
+  if (tocDo &gt; 0) {
+    analogWrite(chanA, tocDo);
+    analogWrite(chanB, 0);
+  } else if (tocDo &lt; 0) {
+    analogWrite(chanA, 0);
+    analogWrite(chanB, -tocDo);
+  } else {
+    analogWrite(chanA, 0);
+    analogWrite(chanB, 0);
+  }
+}
+
+void datHaiDongCo(int tocDoTrai, int tocDoPhai) {
+  datMotDongCo(MOTOR_TRAI_A, MOTOR_TRAI_B, tocDoTrai, false);
+  datMotDongCo(MOTOR_PHAI_A, MOTOR_PHAI_B, tocDoPhai, true);
+}
+
+void diThang(int pwm)  { datHaiDongCo( pwm,  pwm); }
+void diLui(int pwm)    { datHaiDongCo(-pwm, -pwm); }
+void quayTrai(int pwm) { datHaiDongCo(-pwm,  pwm); }
+void quayPhai(int pwm) { datHaiDongCo( pwm, -pwm); }
+void dungRobot()       { datHaiDongCo(0, 0); }
+
+void chayTrongThoiGian(const char *tenLenh,
+                       void (*hamChuyenDong)(int),
+                       int pwm, unsigned long thoiGianMs) {
+  Serial.println(tenLenh);
+  hamChuyenDong(pwm);
+  delay(thoiGianMs);
+  dungRobot();
+  delay(800);
+}
+
 void setup() {
   Serial.begin(115200);
-  Serial.println(F("Nhap F/B/L/R/S roi nhan Send"));
-  Serial.println(F("Chi giai ma lenh, robot KHONG chay"));
+  pinMode(MOTOR_TRAI_A, OUTPUT);
+  pinMode(MOTOR_TRAI_B, OUTPUT);
+  pinMode(MOTOR_PHAI_A, OUTPUT);
+  pinMode(MOTOR_PHAI_B, OUTPUT);
+  dungRobot();
+  Serial.println("BAT DAU BAI 6");
+  delay(2000);
 }
 
 void loop() {
-  static unsigned long mocBaoCao = 0;
+  chayTrongThoiGian("TIEN",  diThang,  120, 1500);
+  chayTrongThoiGian("LUI",   diLui,    120, 1500);
+  chayTrongThoiGian("TRAI",  quayTrai, 110, 700);
+  chayTrongThoiGian("PHAI",  quayPhai, 110, 700);
 
-  if (Serial.available() &gt; 0) {
-    char lenh = toupper(Serial.read());
-    if (lenh == '\n' || lenh == '\r') return;
-
-    Serial.print(F("Nhan lenh: "));
-    switch (lenh) {
-      case 'F': Serial.println(F("TIEN")); break;
-      case 'B': Serial.println(F("LUI")); break;
-      case 'L': Serial.println(F("TRAI")); break;
-      case 'R': Serial.println(F("PHAI")); break;
-      case 'S': Serial.println(F("DUNG")); break;
-      default:  Serial.println(F("KHONG HOP LE")); break;
-    }
-  }
-
-  if (millis() - mocBaoCao &gt;= 1000) {
-    mocBaoCao = millis();
-    Serial.print(F("Uptime: "));
-    Serial.print(millis() / 1000);
-    Serial.println(F(" s"));
-  }
+  Serial.println("KET THUC CHU KY\n");
+  delay(2500);
 }</code></pre>
-    </div></div>
-  </div></section>
-  <section class="lesson"><h2>5. Phân tích chương trình</h2><ul>
-      <li>Serial USB dùng riêng, không liên quan Serial1 dành cho Bluetooth chưa đấu.</li>
-      <li>Switch–case tách phần giải mã lệnh khỏi phần điều khiển phần cứng.</li>
-      <li>Báo cáo thời gian dùng millis() nên chương trình vẫn nhận lệnh liên tục.</li>
-    </ul></section>
-  <section class="lesson"><h2>6. Quy trình thực hành</h2><ol>
-      <li>Mở Serial Monitor ở 115200 baud.</li>
-      <li>Gửi từng lệnh F/B/L/R/S và kiểm tra tên lệnh phản hồi.</li>
-      <li>Gửi một ký tự khác để kiểm tra nhánh KHÔNG HỢP LỆ.</li>
-    </ol></section>
-  <section class="lesson"><h2>7. Bài tập mở rộng</h2><ol>
-      <li>Nhận một số PWM từ 0–255 sau ký tự lệnh.</li>
-      <li>In dữ liệu dạng CSV để dùng Serial Plotter.</li>
-      <li>Ghép lệnh với các hàm động cơ ở Bài 6 nhưng mặc định luôn khởi động ở DỪNG.</li>
-    </ol></section>
-  <section class="lesson"><h2>8. Lỗi thường gặp và cách xử lý</h2><div class="warning">Chữ rác trên Serial: tốc độ Monitor không khớp 115200.</div>
-<div class="warning">Lệnh bị đọc thêm dòng trống: bỏ qua ký tự CR/LF như chương trình mẫu.</div>
-<div class="warning">Bluetooth chưa đấu nên không thay <code>Serial</code> bằng <code>Serial1</code> ở giai đoạn này.</div></section>
-  <section class="lesson"><h2>9. Kết luận</h2><p>Serial đã trở thành kênh debug chuẩn cho tất cả bài tiếp theo mà không chiếm hoặc làm xung đột chân robot.</p></section>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lesson">
+    <h2>5. Phân tích chương trình và thuật toán</h2>
+    <ul>
+      <li>Hàm <code>datMotDongCo()</code> giới hạn tốc độ và biến tốc độ có dấu thành hai tín hiệu PWM cho cầu H.</li>
+      <li>Tham số <code>daoChieu</code> xử lý việc hai động cơ được lắp đối xứng; không cần đảo dây trong từng thuật toán.</li>
+      <li>Các hàm <code>diThang()</code>, <code>diLui()</code>, <code>quayTrai()</code> và <code>quayPhai()</code> là lớp lệnh chuyển động dùng lại ở Bài 14–17.</li>
+      <li>Robot luôn gọi <code>dungRobot()</code> sau mỗi phép thử để tránh chuyển hướng đột ngột.</li>
+    </ul>
+  </section>
+
+  <section class="lesson">
+    <h2>6. Quy trình thực hành</h2>
+    <ol>
+      <li>Kê hai bánh chủ động khỏi mặt bàn, kiểm tra nguồn và GND chung.</li>
+      <li>Nạp chương trình, mở Serial Monitor ở 115200 baud và quan sát từng lệnh.</li>
+      <li>Kiểm tra cả hai bánh tạo đúng chuyển động tiến. Nếu chỉ một bánh ngược, sửa đúng biến <code>daoChieu</code> của bánh đó.</li>
+      <li>Hạ robot xuống sàn, thử lại với PWM 80–120 trước khi tăng tốc.</li>
+    </ol>
+  </section>
+
+  <section class="lesson">
+    <h2>7. Bài tập củng cố và mở rộng</h2>
+    <ol>
+      <li>Viết thêm hàm rẽ cong bằng cách đặt hai bánh cùng chiều nhưng khác tốc độ.</li>
+      <li>Thay <code>delay()</code> bằng bộ định thời <code>millis()</code> để chương trình vẫn đọc được cảm biến khi đang chạy.</li>
+      <li>Đo PWM nhỏ nhất làm từng bánh bắt đầu quay và ghi kết quả vào bảng thực hành.</li>
+    </ol>
+  </section>
+
+  <section class="lesson">
+    <h2>8. Lỗi thường gặp và cách xử lý</h2>
+    <div class="warning">Robot không chạy: kiểm tra nguồn động cơ, công tắc nguồn và dây GND chung.</div>
+    <div class="warning">Một bánh quay ngược: chỉ đổi cờ đảo chiều của đúng động cơ; không đảo đồng thời cả phần cứng lẫn phần mềm.</div>
+    <div class="warning">Mega 2560 bị reset khi động cơ khởi động: nguồn yếu hoặc nhiễu động cơ; tách nguồn công suất và kiểm tra tụ lọc.</div>
+    <div class="warning">Bánh quay quá nhanh khi kê lên: giảm PWM trước khi đặt robot xuống sàn.</div>
+  </section>
+<section class="lesson"><h2>9. Kết luận</h2><p>Sau bài học, sinh viên đã có bộ hàm chuyển động cơ bản và quy ước chiều thống nhất. Đây là nền tảng để điều khiển theo encoder, bám line và tránh vật cản.</p></section>
   <nav class="nav-bottom" aria-label="Điều hướng bài học">
-    <a href="bai3.html">← Bài 3</a>
+    <a href="bai5.html">← Bài 5</a>
     <a href="tailieu-kythuat.html">Danh sách bài học</a>
-    <a href="bai5.html">Bài 5 →</a>
+    <a href="bai7.html">Bài 7 →</a>
   </nav>
 </main>
 <!-- ===== NỘI DUNG===== -->

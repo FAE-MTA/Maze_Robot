@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Bài 4. Giao tiếp Serial và debug chương trình</title>
+<title>Bài 18. Robot bám tường bằng hai laser</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -479,93 +479,88 @@ h1 {
 <!-- ===== NỘI DUNG===== -->
 <main class="page">
   <section class="hero">
-    <div class="label">BÀI GIẢNG LẬP TRÌNH ROBOT MÊ CUNG</div>
-    <h1>Bài 4. Giao tiếp Serial và debug chương trình</h1>
-    <p class="subtitle">Gửi dữ liệu, nhận lệnh thử nghiệm và quan sát trạng thái chương trình mà không chiếm các chân phần cứng của robot.</p>
+    <div class="label">BÀI HỌC NÂNG CAO · ĐÃ HOÀN THIỆN</div>
+    <h1>Bài 18. Robot bám tường bằng hai laser</h1>
+    <p class="subtitle">Bài học liên thông sử dụng cấu hình robot mới nhất và thư viện hàm dùng chung.</p>
   </section>
-  <section class="lesson"><h2>1. Mục tiêu bài học</h2><ul>
-      <li>Khởi tạo Serial Monitor đúng 115200 baud.</li>
-      <li>In dữ liệu có nhãn để dễ phân tích.</li>
-      <li>Nhận ký tự lệnh và kiểm tra thuật toán ở chế độ không chạy động cơ.</li>
-      <li>Dùng millis() để gửi dữ liệu định kỳ.</li>
-    </ul></section>
-  <section class="lesson"><h2>2. Kiến thức trọng tâm</h2><p>Serial qua cổng USB là công cụ debug chính. Bài này không dùng nút D4 hoặc LED D8 như ví dụ cũ vì các chân đó thuộc cảm biến và không có LED rời trên robot.</p>
-      <p>Các ký tự F, B, L, R, S chỉ được giải mã và in tên lệnh. Động cơ chưa được kích hoạt, giúp sinh viên kiểm tra giao thức an toàn trước khi ghép với Bài 6.</p></section>
-  <section class="lesson"><h2>3. Kết nối phần cứng</h2><div class="pin-collapse open">
-    <button class="pin-collapse-head" onclick="togglePinTable(this)">
-      <span>📌 Bảng chân theo cấu hình robot mới nhất</span>
-      <span class="pin-collapse-arrow">▶</span>
-    </button>
-    <div class="pin-collapse-body"><table class="pin-table">
-      <tr><th>Thiết bị / tín hiệu</th><th>Chân Mega 2560 Mini</th><th>Chức năng</th><th>Ghi chú</th></tr>
-      <tr><td>Serial USB</td><td>Serial</td><td>Debug với máy tính</td><td>115200 baud</td></tr>
-      <tr><td>Bluetooth</td><td>Serial1 D18/D19</td><td>Chưa sử dụng</td><td>Module chưa đấu nối</td></tr>
-    </table></div>
-  </div></section>
-  <section class="lesson"><h2>4. Chương trình thực hành</h2><p>Mã ví dụ sử dụng đúng cấu hình đã kiểm tra trên robot, có OLED và Serial để quan sát.</p><div class="code-collapse">
-    <button class="code-collapse-head" onclick="toggleCode(this)">
-      <span>💻 Bài 4 – nhận lệnh Serial ở chế độ an toàn</span><span class="arrow">▶</span>
-    </button>
-    <div class="code-collapse-body"><div class="code-box">
-      <div class="code-title">Bài 4 – nhận lệnh Serial ở chế độ an toàn</div>
-      <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-      <pre><code class="language-cpp">// BÀI 4: GIAO TIẾP SERIAL - CHƯA ĐIỀU KHIỂN ĐỘNG CƠ
+  <section class="lesson"><h2>1. Mục tiêu bài học</h2><ul><li>Hiểu sai số khoảng cách giữa robot và tường.</li><li>Dùng điều khiển tỉ lệ P để hiệu chỉnh tốc độ hai bánh.</li><li>Dừng hoặc đổi hướng an toàn khi phía trước có vật cản.</li></ul><div class="note"><strong>Điều kiện học trước:</strong> Bài 6, 8, 9, 15 và 17.</div></section>
+  <section class="lesson"><h2>2. Chuẩn bị</h2><p><strong>Phần cứng:</strong> Hai VL53L0X nhìn sang trái/phải, HC-SR04 phía trước, hai động cơ và OLED.</p><p><strong>Phần mềm:</strong> Arduino IDE, board Arduino Mega or Mega 2560, Serial Monitor 115200 baud.</p><div class="warning">Trước khi biên dịch, chép thư mục <strong>THU_VIEN_ROBOT/RobotMega2560Mini</strong> vào <strong>Documents/Arduino/libraries</strong>, sau đó khởi động lại Arduino IDE. Kê hai bánh khỏi mặt đất ở lần thử đầu tiên.</div></section>
+  <section class="lesson"><h2>3. Nguyên lý và thuật toán</h2><ol><li>Đọc đồng thời khoảng cách trước, trái và phải.</li><li>Chọn bám tường trái hoặc phải; lấy khoảng cách đặt trừ khoảng cách đo để tạo sai số.</li><li>Nhân sai số với KP rồi cộng/trừ vào PWM hai bánh.</li><li>Nếu không thấy tường, robot quay nhẹ về phía cần tìm; nếu phía trước bị chặn, robot lùi và đổi hướng.</li></ol><div class="pin-collapse open"><button class="pin-collapse-head" onclick="togglePinTable(this)"><span>⚙️ Thông số cần hiệu chỉnh</span><span class="arrow">⌄</span></button><div class="pin-collapse-body"><div class="pin-table-wrap"><table class="pin-table"><thead><tr><th>Thông số</th><th>Giá trị ban đầu</th><th>Ý nghĩa</th></tr></thead><tbody><tr><td>BAM_TUONG_TRAI</td><td>true</td><td>Đổi thành false để bám tường phải</td></tr><tr><td>KHOANG_CACH_DAT_MM</td><td>180 mm</td><td>Khoảng cách mong muốn đến tường</td></tr><tr><td>KP_TUONG</td><td>0.35</td><td>Độ mạnh của hiệu chỉnh</td></tr><tr><td>NGUONG_TRUOC_CM</td><td>23 cm</td><td>Ngưỡng tránh va chạm phía trước</td></tr></tbody></table></div></div></div></section>
+  <section class="lesson"><h2>4. Chương trình hoàn chỉnh</h2><div class="note">Chương trình sử dụng thư viện chung <strong>RobotMega2560Mini</strong>. <a href="CODE_BAI_18_24_NANG_CAO/Bai_18_Bam_tuong_hai_laser/Bai_18_Bam_tuong_hai_laser.ino" download style="color:#7afcff;font-weight:bold;">Tải file .ino</a></div><div class="code-collapse"><button class="code-collapse-head" onclick="toggleCode(this)"><span>💻 Xem code ví dụ</span><span class="arrow">⌄</span></button><div class="code-collapse-body"><div class="code-box"><div class="code-title">Bai_18_Bam_tuong_hai_laser.ino</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-cpp">#include &lt;Robot.h&gt;
+
+// BÀI 18: ROBOT BÁM TƯỜNG BẰNG LASER
+// Hai laser đặt bên hông; siêu âm phía trước dùng để tránh va chạm.
+
+const bool BAM_TUONG_TRAI = true;  // Đổi false để bám tường phải.
+const uint16_t KHOANG_CACH_DAT_MM = 180;
+const int PWM_CO_BAN = 120;
+const int PWM_QUAY = 125;
+const float KP_TUONG = 0.35f;
+const float NGUONG_TRUOC_CM = 23.0f;
+
+void hienThiBamTuong(const char *trangThai, const DuLieuKhoangCach &amp;d) {
+  oledXoa();
+  oledTieuDe("BAI 18 - BAM TUONG");
+  oledInChu(4, 16, trangThai);
+  oledInChu(4, 30, "F:");
+  if (d.sieuAmHopLe) oledInSoThuc(18, 30, d.truocCm); else oledInChu(18, 30, "NO ECHO");
+  oledInChu(4, 46, "L:");
+  if (d.laserTraiHopLe) oledInSo(18, 46, d.traiMm); else oledInChu(18, 46, "LOI");
+  oledInChu(65, 46, "R:");
+  if (d.laserPhaiHopLe) oledInSo(79, 46, d.phaiMm); else oledInChu(79, 46, "LOI");
+  oledCapNhat();
+
+  Serial.print(trangThai); Serial.print(F(" F/L/R="));
+  Serial.print(d.truocCm); Serial.print('/'); Serial.print(d.traiMm);
+  Serial.print('/'); Serial.println(d.phaiMm);
+}
+
+void tranhVatCanTruoc(const DuLieuKhoangCach &amp;d) {
+  dungRobot();
+  hienThiBamTuong("VAT CAN PHIA TRUOC", d);
+  delay(120);
+  diLui(105); delay(300); dungRobot();
+  if (BAM_TUONG_TRAI) quayPhaiTheoThoiGian(PWM_QUAY, 480);
+  else quayTraiTheoThoiGian(PWM_QUAY, 480);
+}
+
 void setup() {
-  Serial.begin(115200);
-  Serial.println(F("Nhap F/B/L/R/S roi nhan Send"));
-  Serial.println(F("Chi giai ma lenh, robot KHONG chay"));
+  batDauSerial();
+  oledBatDau();
+  dongCoBatDau();
+  sieuAmBatDau();
+  laserBatDau();
+  oledThongBao("BAI 18 - BAM TUONG",
+               BAM_TUONG_TRAI ? "BAM BEN TRAI" : "BAM BEN PHAI",
+               "CHO 1 GIAY", "");
+  delay(1000);
 }
 
 void loop() {
-  static unsigned long mocBaoCao = 0;
-
-  if (Serial.available() &gt; 0) {
-    char lenh = toupper(Serial.read());
-    if (lenh == '\n' || lenh == '\r') return;
-
-    Serial.print(F("Nhan lenh: "));
-    switch (lenh) {
-      case 'F': Serial.println(F("TIEN")); break;
-      case 'B': Serial.println(F("LUI")); break;
-      case 'L': Serial.println(F("TRAI")); break;
-      case 'R': Serial.println(F("PHAI")); break;
-      case 'S': Serial.println(F("DUNG")); break;
-      default:  Serial.println(F("KHONG HOP LE")); break;
-    }
+  DuLieuKhoangCach d = docBaHuong();
+  if (!d.sieuAmHopLe) {
+    dungRobot();
+    hienThiBamTuong("DUNG - MAT ECHO", d);
+  } else if (d.truocCm &lt;= NGUONG_TRUOC_CM) {
+    tranhVatCanTruoc(d);
+  } else {
+    bool thayTuong = bamTuongMotBuoc(BAM_TUONG_TRAI,
+                                     KHOANG_CACH_DAT_MM,
+                                     PWM_CO_BAN, KP_TUONG);
+    hienThiBamTuong(thayTuong ? "DANG BAM TUONG" : "DANG TIM TUONG", d);
   }
-
-  if (millis() - mocBaoCao &gt;= 1000) {
-    mocBaoCao = millis();
-    Serial.print(F("Uptime: "));
-    Serial.print(millis() / 1000);
-    Serial.println(F(" s"));
-  }
-}</code></pre>
-    </div></div>
-  </div></section>
-  <section class="lesson"><h2>5. Phân tích chương trình</h2><ul>
-      <li>Serial USB dùng riêng, không liên quan Serial1 dành cho Bluetooth chưa đấu.</li>
-      <li>Switch–case tách phần giải mã lệnh khỏi phần điều khiển phần cứng.</li>
-      <li>Báo cáo thời gian dùng millis() nên chương trình vẫn nhận lệnh liên tục.</li>
-    </ul></section>
-  <section class="lesson"><h2>6. Quy trình thực hành</h2><ol>
-      <li>Mở Serial Monitor ở 115200 baud.</li>
-      <li>Gửi từng lệnh F/B/L/R/S và kiểm tra tên lệnh phản hồi.</li>
-      <li>Gửi một ký tự khác để kiểm tra nhánh KHÔNG HỢP LỆ.</li>
-    </ol></section>
-  <section class="lesson"><h2>7. Bài tập mở rộng</h2><ol>
-      <li>Nhận một số PWM từ 0–255 sau ký tự lệnh.</li>
-      <li>In dữ liệu dạng CSV để dùng Serial Plotter.</li>
-      <li>Ghép lệnh với các hàm động cơ ở Bài 6 nhưng mặc định luôn khởi động ở DỪNG.</li>
-    </ol></section>
-  <section class="lesson"><h2>8. Lỗi thường gặp và cách xử lý</h2><div class="warning">Chữ rác trên Serial: tốc độ Monitor không khớp 115200.</div>
-<div class="warning">Lệnh bị đọc thêm dòng trống: bỏ qua ký tự CR/LF như chương trình mẫu.</div>
-<div class="warning">Bluetooth chưa đấu nên không thay <code>Serial</code> bằng <code>Serial1</code> ở giai đoạn này.</div></section>
-  <section class="lesson"><h2>9. Kết luận</h2><p>Serial đã trở thành kênh debug chuẩn cho tất cả bài tiếp theo mà không chiếm hoặc làm xung đột chân robot.</p></section>
+  delay(80);
+}
+</code></pre></div></div></div></section>
+  <section class="lesson"><h2>5. Phân tích chương trình</h2><ul><li>Hàm bamTuongMotBuoc() đóng gói thuật toán P nhưng chỉ xử lý một chu kỳ, vì vậy loop() vẫn cập nhật được OLED và cảm biến trước.</li><li>Giá trị KP quá nhỏ làm robot phản ứng chậm; quá lớn làm robot lắc qua lại.</li><li>Laser ngoài tầm không được dùng như một số đo thật; chương trình chuyển sang trạng thái tìm tường.</li></ul></section>
+  <section class="lesson"><h2>6. Quy trình thực hành và hiệu chỉnh</h2><ol><li>Kê bánh và kiểm tra D39 đúng là laser trái, D37 đúng là laser phải.</li><li>Đặt robot song song với tường ở 180 mm, chạy PWM thấp.</li><li>Tăng KP từng bước 0.05 đến khi robot bám nhanh nhưng không rung.</li><li>Thử cuối hành lang để kiểm tra HC-SR04 và thao tác đổi hướng.</li></ol></section>
+  <section class="lesson"><h2>7. Bài tập mở rộng</h2><ol><li>Bổ sung thành phần D để giảm dao động.</li><li>Cho phép đổi bên bám tường qua Serial Monitor.</li><li>Ghi sai số và PWM ra Serial Plotter.</li></ol></section>
+  <section class="lesson"><h2>8. Lỗi thường gặp và cách xử lý</h2><div class="warning">Robot rời xa tường: kiểm tra lại lựa chọn bên bám và chiều hiệu chỉnh.</div><div class="warning">Giá trị laser luôn lỗi: kiểm tra XSHUT D39/D37 và địa chỉ 0x30/0x31.</div><div class="warning">Robot tiến thành lùi: không thay cờ đảo chiều động cơ phải trong thư viện.</div></section>
+  <section class="lesson"><h2>9. Kết luận</h2><p>Bài 18 tạo hành vi bám tường có thể tái sử dụng cho hành lang và mê cung.</p></section>
   <nav class="nav-bottom" aria-label="Điều hướng bài học">
-    <a href="bai3.html">← Bài 3</a>
+    <a href="bai17.html">← Bài 17</a>
     <a href="tailieu-kythuat.html">Danh sách bài học</a>
-    <a href="bai5.html">Bài 5 →</a>
+    <a href="bai19.html">Bài 19 →</a>
   </nav>
 </main>
 <!-- ===== NỘI DUNG===== -->

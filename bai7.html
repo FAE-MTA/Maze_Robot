@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Bài 4. Giao tiếp Serial và debug chương trình</title>
+<title>Bài 7. Hiển thị với OLED</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -480,92 +480,172 @@ h1 {
 <main class="page">
   <section class="hero">
     <div class="label">BÀI GIẢNG LẬP TRÌNH ROBOT MÊ CUNG</div>
-    <h1>Bài 4. Giao tiếp Serial và debug chương trình</h1>
-    <p class="subtitle">Gửi dữ liệu, nhận lệnh thử nghiệm và quan sát trạng thái chương trình mà không chiếm các chân phần cứng của robot.</p>
+    <h1>Bài 7. Hiển thị với OLED</h1>
+    <p class="subtitle">Khởi tạo màn hình OLED I2C, trình bày dữ liệu cảm biến và xây dựng giao diện debug ngắn gọn cho robot.</p>
   </section>
-  <section class="lesson"><h2>1. Mục tiêu bài học</h2><ul>
-      <li>Khởi tạo Serial Monitor đúng 115200 baud.</li>
-      <li>In dữ liệu có nhãn để dễ phân tích.</li>
-      <li>Nhận ký tự lệnh và kiểm tra thuật toán ở chế độ không chạy động cơ.</li>
-      <li>Dùng millis() để gửi dữ liệu định kỳ.</li>
-    </ul></section>
-  <section class="lesson"><h2>2. Kiến thức trọng tâm</h2><p>Serial qua cổng USB là công cụ debug chính. Bài này không dùng nút D4 hoặc LED D8 như ví dụ cũ vì các chân đó thuộc cảm biến và không có LED rời trên robot.</p>
-      <p>Các ký tự F, B, L, R, S chỉ được giải mã và in tên lệnh. Động cơ chưa được kích hoạt, giúp sinh viên kiểm tra giao thức an toàn trước khi ghép với Bài 6.</p></section>
-  <section class="lesson"><h2>3. Kết nối phần cứng</h2><div class="pin-collapse open">
-    <button class="pin-collapse-head" onclick="togglePinTable(this)">
-      <span>📌 Bảng chân theo cấu hình robot mới nhất</span>
-      <span class="pin-collapse-arrow">▶</span>
-    </button>
-    <div class="pin-collapse-body"><table class="pin-table">
-      <tr><th>Thiết bị / tín hiệu</th><th>Chân Mega 2560 Mini</th><th>Chức năng</th><th>Ghi chú</th></tr>
-      <tr><td>Serial USB</td><td>Serial</td><td>Debug với máy tính</td><td>115200 baud</td></tr>
-      <tr><td>Bluetooth</td><td>Serial1 D18/D19</td><td>Chưa sử dụng</td><td>Module chưa đấu nối</td></tr>
-    </table></div>
-  </div></section>
-  <section class="lesson"><h2>4. Chương trình thực hành</h2><p>Mã ví dụ sử dụng đúng cấu hình đã kiểm tra trên robot, có OLED và Serial để quan sát.</p><div class="code-collapse">
-    <button class="code-collapse-head" onclick="toggleCode(this)">
-      <span>💻 Bài 4 – nhận lệnh Serial ở chế độ an toàn</span><span class="arrow">▶</span>
-    </button>
-    <div class="code-collapse-body"><div class="code-box">
-      <div class="code-title">Bài 4 – nhận lệnh Serial ở chế độ an toàn</div>
-      <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-      <pre><code class="language-cpp">// BÀI 4: GIAO TIẾP SERIAL - CHƯA ĐIỀU KHIỂN ĐỘNG CƠ
-void setup() {
-  Serial.begin(115200);
-  Serial.println(F("Nhap F/B/L/R/S roi nhan Send"));
-  Serial.println(F("Chi giai ma lenh, robot KHONG chay"));
+
+  <section class="lesson">
+    <h2>1. Mục tiêu bài học</h2>
+    <ul>
+      <li>Kết nối đúng OLED với bus I2C của Mega 2560.</li>
+      <li>Khởi tạo màn hình SSD1306 địa chỉ 0x3C và phát hiện lỗi khởi tạo.</li>
+      <li>Hiển thị chữ, số và trạng thái mà không làm chậm vòng điều khiển.</li>
+      <li>Kết hợp OLED với Serial Monitor để debug robot.</li>
+    </ul>
+  </section>
+
+  <section class="lesson">
+    <h2>2. Kiến thức trọng tâm</h2>
+    <p>I2C sử dụng hai đường tín hiệu: <strong>SDA</strong> truyền dữ liệu và <strong>SCL</strong> truyền xung nhịp. Trên Mega 2560, SDA là D20 và SCL là D21. Nhiều thiết bị có thể dùng chung hai dây nếu địa chỉ I2C không trùng nhau.</p>
+    <p>OLED 128×64 không tự hiển thị ngay sau lệnh vẽ. Các lệnh chỉ thay đổi bộ đệm RAM; phải gọi <code>display.display()</code> để gửi toàn bộ bộ đệm lên màn hình.</p>
+    <div class="note">Không nên xóa và cập nhật OLED ở mọi vòng lặp rất nhanh. Chu kỳ 100–250 ms đủ để quan sát và giúp thuật toán chuyển động chạy ổn định hơn.</div>
+  </section>
+
+  <section class="lesson">
+    <h2>3. Kết nối phần cứng</h2>
+    
+    <div class="pin-collapse open">
+      <button class="pin-collapse-head" onclick="togglePinTable(this)">
+        <span>📌 Bảng kết nối sử dụng trong bài</span>
+        <span class="pin-collapse-arrow">▶</span>
+      </button>
+      <div class="pin-collapse-body">
+        <table class="pin-table">
+          <tr><th>Thiết bị / tín hiệu</th><th>Chân Mega 2560</th><th>Vai trò</th><th>Lưu ý</th></tr>
+          <tr><td>OLED VCC</td><td>5 V hoặc 3,3 V theo module</td><td>Nguồn</td><td>Kiểm tra chữ in trên module</td></tr>
+          <tr><td>OLED GND</td><td>GND</td><td>Mốc điện áp</td><td>Phải nối chung GND</td></tr>
+          <tr><td>OLED SDA</td><td>D20</td><td>Dữ liệu I2C</td><td>Dùng chung được với MPU6050</td></tr>
+          <tr><td>OLED SCL</td><td>D21</td><td>Xung nhịp I2C</td><td>Không nhầm với chân digital khác</td></tr>
+          <tr><td>Địa chỉ</td><td>0x3C</td><td>Địa chỉ phần mềm</td><td>Quét I2C nếu màn hình không nhận</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="lesson">
+    <h2>4. Chương trình thực hành</h2>
+    <p>Chương trình dưới đây được viết đầy đủ, có chú thích tiếng Việt và có thể mở trực tiếp trong Arduino IDE.</p>
+    <div class="code-collapse">
+      <button class="code-collapse-head" onclick="toggleCode(this)">
+        <span>💻 Bài 7 – OLED hiển thị bộ đếm và trạng thái</span><span class="arrow">▶</span>
+      </button>
+      <div class="code-collapse-body">
+        <div class="code-box">
+          <div class="code-title">Bài 7 – OLED hiển thị bộ đếm và trạng thái</div>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          <pre><code class="language-cpp">// BÀI 7: HIỂN THỊ OLED 128x64 QUA I2C
+#include &lt;Wire.h&gt;
+#include &lt;Adafruit_GFX.h&gt;
+#include &lt;Adafruit_SSD1306.h&gt;
+
+const uint8_t DIA_CHI_OLED = 0x3C;
+const int CHIEU_RONG = 128;
+const int CHIEU_CAO = 64;
+
+Adafruit_SSD1306 oled(CHIEU_RONG, CHIEU_CAO, &amp;Wire, -1);
+unsigned long lanCapNhatCuoi = 0;
+unsigned long boDem = 0;
+
+void hienThiTrangThai(const char *trangThai) {
+  oled.clearDisplay();
+  oled.setTextColor(SSD1306_WHITE);
+
+  oled.setTextSize(1);
+  oled.setCursor(0, 0);
+  oled.println("ROBOT MEGA 2560");
+  oled.drawLine(0, 11, 127, 11, SSD1306_WHITE);
+
+  oled.setCursor(0, 20);
+  oled.print("Trang thai: ");
+  oled.println(trangThai);
+
+  oled.setCursor(0, 36);
+  oled.print("Thoi gian: ");
+  oled.print(millis() / 1000.0, 1);
+  oled.println(" s");
+
+  oled.setCursor(0, 50);
+  oled.print("So lan: ");
+  oled.println(boDem);
+
+  // Gửi bộ đệm lên màn hình.
+  oled.display();
 }
 
-void loop() {
-  static unsigned long mocBaoCao = 0;
+void setup() {
+  Serial.begin(115200);
+  Wire.begin();
 
-  if (Serial.available() &gt; 0) {
-    char lenh = toupper(Serial.read());
-    if (lenh == '\n' || lenh == '\r') return;
-
-    Serial.print(F("Nhan lenh: "));
-    switch (lenh) {
-      case 'F': Serial.println(F("TIEN")); break;
-      case 'B': Serial.println(F("LUI")); break;
-      case 'L': Serial.println(F("TRAI")); break;
-      case 'R': Serial.println(F("PHAI")); break;
-      case 'S': Serial.println(F("DUNG")); break;
-      default:  Serial.println(F("KHONG HOP LE")); break;
+  if (!oled.begin(SSD1306_SWITCHCAPVCC, DIA_CHI_OLED)) {
+    Serial.println("LOI: KHONG TIM THAY OLED");
+    while (true) {
+      delay(1000); // Dừng an toàn để chờ kiểm tra phần cứng.
     }
   }
 
-  if (millis() - mocBaoCao &gt;= 1000) {
-    mocBaoCao = millis();
-    Serial.print(F("Uptime: "));
-    Serial.print(millis() / 1000);
-    Serial.println(F(" s"));
+  oled.clearDisplay();
+  oled.display();
+  hienThiTrangThai("KHOI DONG");
+  Serial.println("OLED DA SAN SANG");
+}
+
+void loop() {
+  // Chỉ làm mới màn hình mỗi 200 ms.
+  if (millis() - lanCapNhatCuoi &gt;= 200) {
+    lanCapNhatCuoi = millis();
+    boDem++;
+    hienThiTrangThai("DANG CHAY");
+
+    Serial.print("Bo dem = ");
+    Serial.println(boDem);
   }
 }</code></pre>
-    </div></div>
-  </div></section>
-  <section class="lesson"><h2>5. Phân tích chương trình</h2><ul>
-      <li>Serial USB dùng riêng, không liên quan Serial1 dành cho Bluetooth chưa đấu.</li>
-      <li>Switch–case tách phần giải mã lệnh khỏi phần điều khiển phần cứng.</li>
-      <li>Báo cáo thời gian dùng millis() nên chương trình vẫn nhận lệnh liên tục.</li>
-    </ul></section>
-  <section class="lesson"><h2>6. Quy trình thực hành</h2><ol>
-      <li>Mở Serial Monitor ở 115200 baud.</li>
-      <li>Gửi từng lệnh F/B/L/R/S và kiểm tra tên lệnh phản hồi.</li>
-      <li>Gửi một ký tự khác để kiểm tra nhánh KHÔNG HỢP LỆ.</li>
-    </ol></section>
-  <section class="lesson"><h2>7. Bài tập mở rộng</h2><ol>
-      <li>Nhận một số PWM từ 0–255 sau ký tự lệnh.</li>
-      <li>In dữ liệu dạng CSV để dùng Serial Plotter.</li>
-      <li>Ghép lệnh với các hàm động cơ ở Bài 6 nhưng mặc định luôn khởi động ở DỪNG.</li>
-    </ol></section>
-  <section class="lesson"><h2>8. Lỗi thường gặp và cách xử lý</h2><div class="warning">Chữ rác trên Serial: tốc độ Monitor không khớp 115200.</div>
-<div class="warning">Lệnh bị đọc thêm dòng trống: bỏ qua ký tự CR/LF như chương trình mẫu.</div>
-<div class="warning">Bluetooth chưa đấu nên không thay <code>Serial</code> bằng <code>Serial1</code> ở giai đoạn này.</div></section>
-  <section class="lesson"><h2>9. Kết luận</h2><p>Serial đã trở thành kênh debug chuẩn cho tất cả bài tiếp theo mà không chiếm hoặc làm xung đột chân robot.</p></section>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lesson">
+    <h2>5. Phân tích chương trình và thuật toán</h2>
+    <ul>
+      <li><code>Wire.begin()</code> khởi tạo bus I2C; <code>oled.begin()</code> kiểm tra màn hình tại địa chỉ 0x3C.</li>
+      <li>Hàm <code>hienThiTrangThai()</code> gom toàn bộ thao tác trình bày vào một nơi, giúp các bài sau chỉ cần truyền trạng thái cần hiển thị.</li>
+      <li>Điều kiện dựa trên <code>millis()</code> thay cho <code>delay()</code>, vì vậy vòng lặp vẫn có thể đọc cảm biến và điều khiển động cơ.</li>
+      <li>Serial được giữ song song để vẫn quan sát được lỗi khi OLED không khởi tạo.</li>
+    </ul>
+  </section>
+
+  <section class="lesson">
+    <h2>6. Quy trình thực hành</h2>
+    <ol>
+      <li>Cài Adafruit GFX Library và Adafruit SSD1306 trong Library Manager.</li>
+      <li>Đấu SDA vào D20, SCL vào D21, sau đó nạp chương trình.</li>
+      <li>Quan sát dòng trạng thái, thời gian và bộ đếm trên OLED; đối chiếu bộ đếm trên Serial Monitor.</li>
+      <li>Thử tăng chu kỳ cập nhật từ 200 ms lên 500 ms và nhận xét độ mượt của hiển thị.</li>
+    </ol>
+  </section>
+
+  <section class="lesson">
+    <h2>7. Bài tập củng cố và mở rộng</h2>
+    <ol>
+      <li>Tạo hàm hiển thị ba khoảng cách trái, trước và phải.</li>
+      <li>Vẽ thanh biểu diễn giá trị PWM từ 0 đến 255 bằng <code>fillRect()</code>.</li>
+      <li>Chỉ cập nhật vùng số thay đổi và so sánh tốc độ với cách xóa toàn màn hình.</li>
+    </ol>
+  </section>
+
+  <section class="lesson">
+    <h2>8. Lỗi thường gặp và cách xử lý</h2>
+    <div class="warning">OLED không sáng: kiểm tra địa chỉ 0x3C, nguồn, SDA D20 và SCL D21.</div>
+    <div class="warning">Chương trình báo thiếu tệp thư viện: cài Adafruit GFX và Adafruit SSD1306, sau đó khởi động lại Arduino IDE.</div>
+    <div class="warning">Màn hình nhấp nháy: giảm tần suất <code>clearDisplay()</code> và <code>display()</code>.</div>
+    <div class="warning">OLED khởi động chậm: tránh ảnh splash lớn và chỉ hiển thị màn hình chào trong thời gian ngắn.</div>
+  </section>
+<section class="lesson"><h2>9. Kết luận</h2><p>OLED trở thành công cụ quan sát tại chỗ, còn Serial cung cấp dữ liệu chi tiết cho máy tính. Từ Bài 8 trở đi, hai kênh này được sử dụng đồng thời.</p></section>
   <nav class="nav-bottom" aria-label="Điều hướng bài học">
-    <a href="bai3.html">← Bài 3</a>
+    <a href="bai6.html">← Bài 6</a>
     <a href="tailieu-kythuat.html">Danh sách bài học</a>
-    <a href="bai5.html">Bài 5 →</a>
+    <a href="bai8.html">Bài 8 →</a>
   </nav>
 </main>
 <!-- ===== NỘI DUNG===== -->

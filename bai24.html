@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Bài 24. Nhiệm vụ tổng hợp ba khu vực</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+
+<style>
+:root {
+  --bg1: #0b1020;
+  --bg2: #0f0525;
+  --neon: #7afcff;
+  --lime: #b6ff00;
+  --gold: #ffd700;
+  --text: #f5f8ff;
+  --card: rgba(16,24,48,.52);
+}
+.btn {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 12px 20px;
+
+  font-size: 1rem;
+  font-weight: bold;
+
+  background: linear-gradient(135deg, #00c6ff, #0072ff);
+  color: white;
+
+  border-radius: 10px;
+  text-decoration: none;
+
+  box-shadow: 0 4px 18px rgba(0, 170, 255, 0.5);
+  transition: all 0.25s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(0, 200, 255, 0.8);
+}
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 10% 10%, #121a3a, transparent 45%),
+    radial-gradient(circle at 90% 90%, #1a0b32, transparent 50%),
+    linear-gradient(135deg, var(--bg1), var(--bg2));
+  min-height: 100vh;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.gradient {
+  position: absolute;
+  inset: -25vmax;
+  background: conic-gradient(from 0deg at 50% 50%, #00111a, #101040, #2a004a, #00111a);
+  filter: blur(80px) saturate(150%);
+  animation: spin 24s linear infinite;
+  opacity: .55;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg) scale(1.05); }
+}
+
+canvas#fx {
+  position: absolute;
+  inset: 0;
+  opacity: .5;
+}
+
+.home {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.12);
+  color: var(--neon);
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  border: 2px solid rgba(122,252,255,.6);
+  box-shadow: 0 0 18px rgba(122,252,255,.35);
+  z-index: 10;
+  transition: .25s ease;
+}
+
+.home:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 28px rgba(122,252,255,.8);
+}
+
+.page {
+  position: relative;
+  z-index: 1;
+  width: min(1120px, 94%);
+  margin: 0 auto;
+  padding: 82px 0 60px;
+}
+
+.hero {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.hero .label {
+  display: inline-block;
+  padding: 7px 15px;
+  border: 1px solid rgba(122,252,255,.6);
+  border-radius: 999px;
+  color: var(--neon);
+  font-weight: bold;
+  letter-spacing: 1px;
+  background: rgba(0,20,60,.35);
+}
+
+h1 {
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  margin: 18px 0 10px;
+  color: white;
+  text-shadow: 0 0 24px rgba(122,252,255,.35);
+}
+
+.subtitle {
+  max-width: 840px;
+  margin: 0 auto;
+  color: rgba(245,248,255,.82);
+  font-size: 1.05rem;
+  line-height: 1.75;
+}
+
+.lesson {
+  background: var(--card);
+  border: 1px solid rgba(122,252,255,.18);
+  border-radius: 24px;
+  padding: clamp(18px, 3vw, 30px);
+  margin-bottom: 24px;
+  box-shadow: 0 14px 38px rgba(0,0,0,.42);
+  backdrop-filter: blur(12px);
+}
+
+.lesson h2 {
+  color: var(--gold);
+  margin-top: 0;
+  font-size: clamp(1.35rem, 1.3vw + 1rem, 1.85rem);
+}
+
+.lesson h3 {
+  color: var(--neon);
+  margin-top: 24px;
+  font-size: 1.18rem;
+}
+
+.lesson p,
+.lesson li {
+  font-size: clamp(0.98rem, 0.35vw + 0.9rem, 1.08rem);
+  line-height: 1.8;
+  color: rgba(245,248,255,.88);
+}
+
+.note {
+  border-left: 4px solid var(--lime);
+  background: rgba(182,255,0,.08);
+  padding: 12px 15px;
+  border-radius: 12px;
+  margin: 14px 0;
+}
+
+.warning {
+  border-left: 4px solid #ff7a00;
+  background: rgba(255,122,0,.1);
+  padding: 12px 15px;
+  border-radius: 12px;
+  margin: 14px 0;
+}
+
+.image-wrap {
+  width: 100%;
+  overflow-x: auto;
+  padding: 8px 0;
+}
+
+.lesson-img {
+  display: block;
+  width: 100%;
+  max-width: 980px;
+  height: auto;
+  margin: 20px auto;
+  border-radius: 18px;
+  background: white;
+  box-shadow: 0 14px 38px rgba(0,0,0,.42);
+  object-fit: contain;
+}
+
+/* ===== COLLAPSE PIN TABLE ===== */
+.pin-collapse {
+  margin-top: 20px;
+  border: 1px solid rgba(122,252,255,.22);
+  border-radius: 18px;
+  background: rgba(0,0,0,.24);
+  overflow: hidden;
+}
+
+.pin-collapse-head {
+  width: 100%;
+  border: none;
+  background: rgba(0,170,255,.14);
+  color: white;
+  padding: 15px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.pin-collapse-head:hover {
+  background: rgba(0,170,255,.24);
+}
+
+.pin-collapse-arrow {
+  color: var(--gold);
+  transition: transform .25s ease;
+}
+
+.pin-collapse.open .pin-collapse-arrow {
+  transform: rotate(90deg);
+}
+
+.pin-collapse-body {
+  display: none;
+  padding: 14px;
+  border-top: 1px solid rgba(122,252,255,.16);
+  overflow-x: auto;
+}
+
+.pin-collapse.open .pin-collapse-body {
+  display: block;
+}
+
+.pin-table {
+  width: 100%;
+  min-width: 820px;
+  border-collapse: collapse;
+  font-size: .84rem;
+  background: rgba(0,0,0,.18);
+}
+
+.pin-table th,
+.pin-table td {
+  border: 1px solid rgba(255,255,255,.12);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+  line-height: 1.45;
+}
+
+.pin-table th {
+  color: var(--lime);
+  background: rgba(0,170,255,.16);
+  font-size: .86rem;
+}
+
+.pin-table td:nth-child(3) {
+  color: var(--neon);
+  font-weight: bold;
+  font-family: Consolas, Monaco, monospace;
+}
+
+/* ===== CODE BOX ===== */
+/* ===== CODE COLLAPSE ===== */
+.code-collapse {
+  margin: 18px 0;
+  border: 1px solid rgba(122,252,255,.2);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.code-collapse-head {
+  width: 100%;
+  background: rgba(0,170,255,.12);
+  color: white;
+  padding: 14px;
+  border: none;
+  cursor: pointer;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  font-weight: bold;
+}
+
+.code-collapse-head:hover {
+  background: rgba(0,170,255,.25);
+}
+
+.code-collapse .arrow {
+  transition: 0.3s;
+  color: var(--gold);
+}
+
+.code-collapse.open .arrow {
+  transform: rotate(90deg);
+}
+
+.code-collapse-body {
+  display: none;
+}
+
+.code-collapse.open .code-collapse-body {
+  display: block;
+}
+
+.code-box {
+  position: relative;
+  background: #282c34;
+  border: 1px solid rgba(122,252,255,.22);
+  border-radius: 16px;
+  margin: 16px 0;
+  overflow: hidden;
+  box-shadow: inset 0 0 18px rgba(0,234,255,.06);
+}
+
+.code-title {
+  padding: 10px 14px;
+  background: rgba(255,255,255,.05);
+  color: var(--lime);
+  font-weight: bold;
+  border-bottom: 1px solid rgba(122,252,255,.18);
+}
+
+.code-box pre {
+  margin: 0;
+  padding: 18px;
+  overflow-x: auto;
+}
+
+.code-box code {
+  font-family: Consolas, Monaco, "Courier New", monospace;
+  font-size: .92rem;
+  line-height: 1.55;
+}
+
+.copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  border: 1px solid rgba(122,252,255,.45);
+  background: rgba(0,90,160,.7);
+  color: white;
+  border-radius: 9px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.copy-btn:hover {
+  background: rgba(0,160,255,.9);
+}
+
+.nav-bottom {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.nav-bottom a {
+  flex: 1;
+  text-align: center;
+  text-decoration: none;
+  color: white;
+  font-weight: bold;
+  padding: 13px;
+  border-radius: 14px;
+  background: rgba(0,90,160,.5);
+  border: 1px solid rgba(122,252,255,.35);
+  transition: .25s ease;
+}
+
+.nav-bottom a:hover {
+  color: var(--lime);
+  box-shadow: 0 0 22px rgba(122,252,255,.35);
+}
+
+@media (max-width: 640px) {
+  .page {
+    width: 94%;
+    padding-top: 72px;
+  }
+
+  .hero {
+    text-align: left;
+  }
+
+  h1 {
+    font-size: 1.75rem;
+    line-height: 1.25;
+  }
+
+  .subtitle {
+    font-size: .98rem;
+  }
+
+  .lesson {
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .lesson h2 {
+    font-size: 1.25rem;
+  }
+
+  .lesson-img {
+    border-radius: 12px;
+    margin: 14px auto;
+  }
+
+  .pin-collapse-head {
+    font-size: .92rem;
+    padding: 13px;
+  }
+
+  .pin-table {
+    font-size: .76rem;
+    min-width: 760px;
+  }
+
+  .pin-table th,
+  .pin-table td {
+    padding: 7px;
+  }
+
+  .nav-bottom {
+    flex-direction: column;
+  }
+}
+.img-caption {
+  margin-top: 6px;
+  font-size: 14px;
+  color: #bbb;
+  font-style: italic;
+  text-align: center;
+}
+</style>
+</head>
+
+<body>
+
+<div class="backdrop" aria-hidden="true">
+  <div class="gradient"></div>
+  <canvas id="fx"></canvas>
+</div>
+
+<a href="tailieu-kythuat.html" class="home" title="Quay lại tài liệu kỹ thuật">🏠</a>
+
+<!-- ===== NỘI DUNG===== -->
+<main class="page">
+  <section class="hero">
+    <div class="label">BÀI HỌC NÂNG CAO · ĐÃ HOÀN THIỆN</div>
+    <h1>Bài 24. Nhiệm vụ tổng hợp ba khu vực</h1>
+    <p class="subtitle">Bài học liên thông sử dụng cấu hình robot mới nhất và thư viện hàm dùng chung.</p>
+  </section>
+  <section class="lesson"><h2>1. Mục tiêu bài học</h2><ul><li>Điều phối ba khu vực bằng máy trạng thái.</li><li>Tái sử dụng các hàm đã hoàn thiện độc lập.</li><li>Dừng an toàn khi mất cảm biến hoặc hoàn thành nhiệm vụ.</li></ul><div class="note"><strong>Điều kiện học trước:</strong> Bài 20, 21, 22 và 23.</div></section>
+  <section class="lesson"><h2>2. Chuẩn bị</h2><p><strong>Phần cứng:</strong> Toàn bộ cảm biến và cơ cấu cần cho mê cung, line và khối màu; Bluetooth và nút chưa dùng.</p><p><strong>Phần mềm:</strong> Arduino IDE, board Arduino Mega or Mega 2560, Serial Monitor 115200 baud.</p><div class="warning">Trước khi biên dịch, chép thư mục <strong>THU_VIEN_ROBOT/RobotMega2560Mini</strong> vào <strong>Documents/Arduino/libraries</strong>, sau đó khởi động lại Arduino IDE. Kê hai bánh khỏi mặt đất ở lần thử đầu tiên.</div></section>
+  <section class="lesson"><h2>3. Nguyên lý và thuật toán</h2><ol><li>Khu vực 1: siêu âm và laser vượt mê cung; sau năm vật cản chuyển sang line.</li><li>Khu vực 2: PID bám line, đi vòng; vượt xong vật cản thứ hai chuyển sang khối màu.</li><li>Khu vực 3: tìm, nhận dạng và đẩy đúng khối màu.</li><li>Trạng thái HOAN_THANH hoặc LOI đều dừng động cơ và ngắt xung servo.</li></ol><div class="pin-collapse open"><button class="pin-collapse-head" onclick="togglePinTable(this)"><span>⚙️ Thông số cần hiệu chỉnh</span><span class="arrow">⌄</span></button><div class="pin-collapse-body"><div class="pin-table-wrap"><table class="pin-table"><thead><tr><th>Thông số</th><th>Giá trị ban đầu</th><th>Ý nghĩa</th></tr></thead><tbody><tr><td>Mê cung</td><td>25 cm, 5 vật cản</td><td>Điều kiện chuyển vùng 1→2</td></tr><tr><td>Line</td><td>22 cm, 2 vật cản</td><td>Điều kiện chuyển vùng 2→3</td></tr><tr><td>Màu yêu cầu</td><td>Xanh dương</td><td>Đích của khu vực 3</td></tr><tr><td>PWM</td><td>90–120</td><td>Cần hiệu chỉnh theo pin và sân</td></tr></tbody></table></div></div></div></section>
+  <section class="lesson"><h2>4. Chương trình hoàn chỉnh</h2><div class="note">Chương trình sử dụng thư viện chung <strong>RobotMega2560Mini</strong>. <a href="CODE_BAI_18_24_NANG_CAO/Bai_24_Nhiem_vu_tong_hop_3_khu_vuc/Bai_24_Nhiem_vu_tong_hop_3_khu_vuc.ino" download style="color:#7afcff;font-weight:bold;">Tải file .ino</a></div><div class="code-collapse"><button class="code-collapse-head" onclick="toggleCode(this)"><span>💻 Xem code ví dụ</span><span class="arrow">⌄</span></button><div class="code-collapse-body"><div class="code-box"><div class="code-title">Bai_24_Nhiem_vu_tong_hop_3_khu_vuc.ino</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-cpp">#include &lt;Robot.h&gt;
+
+// BÀI 24: NHIỆM VỤ TỔNG HỢP BA KHU VỰC
+// Khu vực 1: đi qua mê cung bằng siêu âm và hai cảm biến laser.
+// Khu vực 2: bám line PID, tránh vật cản rồi tìm lại line.
+// Khu vực 3: tìm đúng khối màu yêu cầu và đẩy khối ra khỏi vị trí.
+//
+// Quy ước sa hình:
+// - Sau 5 lần siêu âm phát hiện vật cản, coi như đã ra khỏi mê cung.
+// - Khu vực line có 2 vật cản; vượt xong vật cản thứ 2 thì hết khu vực.
+// - Các khối màu đặt tại những vị trí kiểm tra xác định.
+
+enum KhuVuc {
+  KHOI_DONG,
+  KHU_VUC_ME_CUNG,
+  KHU_VUC_LINE,
+  KHU_VUC_KHOI_MAU,
+  NHIEM_VU_HOAN_THANH,
+  NHIEM_VU_LOI
+};
+
+enum TrangThaiKhoiMau {
+  TIM_KHOI,
+  TIEP_CAN_KHOI,
+  DOC_MAU_KHOI,
+  BO_QUA_KHOI,
+  DAY_KHOI
+};
+
+// Các thông số dưới đây cần được hiệu chỉnh theo mặt sân và điện áp pin.
+const float NGUONG_VAT_CAN_ME_CUNG_CM = 25.0f;
+const float NGUONG_VAT_CAN_LINE_CM = 22.0f;
+const uint8_t SO_VAT_CAN_LINE_DE_THOAT = 2;
+const uint16_t NGUONG_NGO_CUT_MM = 180;
+const uint16_t KHOANG_CACH_MO_MM = 2000;
+const uint8_t SO_LAN_VAT_CAN_DE_THOAT = 5;
+const int PWM_ME_CUNG = 110;
+const int PWM_LINE = 120;
+const int PWM_QUAY = 120;
+const int PWM_LUI_ME_CUNG = 100;
+const unsigned long THOI_GIAN_QUAY_90_MS = 520;
+const unsigned long THOI_GIAN_QUAY_180_MS = 1050;
+const bool MAT_ECHO_XEM_LA_TRONG = true;
+const MauSac MAU_YEU_CAU = MAU_XANH_DUONG;
+
+KhuVuc khuVuc = KHOI_DONG;
+TrangThaiKhoiMau trangThaiKhoi = TIM_KHOI;
+BoDieuKhienPID pidLine;
+
+DuLieuKhoangCach khoangCach = {-1.0f, 0, 0, false, false, false};
+float khoangCachKhoiCm = -1.0f;
+MauSac mauVuaDoc = MAU_KHONG_XAC_DINH;
+
+unsigned long lanDocSieuAmMs = 0;
+unsigned long lanHienThiMs = 0;
+uint8_t soLanGapVatCanMeCung = 0;
+uint8_t soVatCanLineDaVuot = 0;
+bool lanTruocQuayPhai = false;
+
+const char *tenKhuVuc() {
+  switch (khuVuc) {
+    case KHOI_DONG: return "KHOI DONG";
+    case KHU_VUC_ME_CUNG: return "1: ME CUNG";
+    case KHU_VUC_LINE: return "2: LINE";
+    case KHU_VUC_KHOI_MAU: return "3: KHOI MAU";
+    case NHIEM_VU_HOAN_THANH: return "HOAN THANH";
+    default: return "BAO LOI";
+  }
+}
+
+void hienThiTongHop(const char *trangThai) {
+  oledXoa();
+  oledTieuDe("BAI 24 - TONG HOP");
+  oledInChu(4, 17, tenKhuVuc());
+  oledInChu(4, 30, trangThai);
+
+  if (khuVuc == KHU_VUC_ME_CUNG) {
+    oledInChu(4, 42, "F:");
+    if (khoangCach.sieuAmHopLe) oledInSoThuc(18, 42, khoangCach.truocCm);
+    else oledInChu(18, 42, "NO ECHO");
+    oledInChu(62, 42, "L:"); oledInSo(76, 42, khoangCach.traiMm);
+    oledInChu(4, 54, "R:"); oledInSo(18, 54, khoangCach.phaiMm);
+    oledInChu(63, 54, "LAN:"); oledInSo(91, 54, soLanGapVatCanMeCung);
+    oledInChu(103, 54, "/5");
+  } else if (khuVuc == KHU_VUC_LINE) {
+    DuLieuLine line = docLine();
+    oledInChu(4, 43, "LINE:"); oledInSo(39, 43, line.viTri);
+    oledInChu(72, 43, "D:"); oledInSoThuc(86, 43, khoangCachKhoiCm);
+    oledInChu(4, 55, "VAT CAN:"); oledInSo(58, 55, soVatCanLineDaVuot);
+    oledInChu(69, 55, "/2");
+  } else if (khuVuc == KHU_VUC_KHOI_MAU) {
+    oledInChu(4, 46, "D:"); oledInSoThuc(18, 46, khoangCachKhoiCm);
+    oledInChu(62, 46, "M:"); oledInChu(76, 46, tenMau(mauVuaDoc));
+  }
+  oledCapNhat();
+
+  Serial.print(F("Khu vuc=")); Serial.print(tenKhuVuc());
+  Serial.print(F("  Trang thai=")); Serial.println(trangThai);
+}
+
+void chuyenKhuVuc(KhuVuc khuVucMoi, const char *thongBao) {
+  dungRobot();
+  khuVuc = khuVucMoi;
+
+  // Với trạng thái cuối, chỉ đặt màu LED và ngắt servo đúng một lần.
+  // Không gửi lại NeoPixel liên tục vì thư viện NeoPixel tạm khóa ngắt,
+  // có thể làm xung servo bị nhiễu và khiến servo rung giật.
+  if (khuVucMoi == NHIEM_VU_LOI) {
+    servoNgatTinHieu();
+    datMauNeoPixel(100, 0, 0);
+  } else if (khuVucMoi == NHIEM_VU_HOAN_THANH) {
+    servoNgatTinHieu();
+    datMauNeoPixel(0, 100, 0);
+  }
+
+  Serial.print(F("Chuyen sang "));
+  Serial.print(tenKhuVuc());
+  Serial.print(F(": "));
+  Serial.println(thongBao);
+  oledThongBao("BAI 24 - CHUYEN VUNG", tenKhuVuc(), thongBao, "");
+  delay(800);
+}
+
+void quayTraiMeCung() {
+  hienThiTongHop("QUAY TRAI");
+  quayTraiTheoThoiGian(PWM_QUAY, THOI_GIAN_QUAY_90_MS);
+  lanTruocQuayPhai = false;
+}
+
+void quayPhaiMeCung() {
+  hienThiTongHop("QUAY PHAI");
+  quayPhaiTheoThoiGian(PWM_QUAY, THOI_GIAN_QUAY_90_MS);
+  lanTruocQuayPhai = true;
+}
+
+void thoatNgoCutMeCung() {
+  hienThiTongHop("NGO CUT - DANG LUI");
+  diLui(PWM_LUI_ME_CUNG);
+  delay(300);
+  dungRobot();
+  delay(100);
+  hienThiTongHop("NGO CUT - QUAY 180");
+  quayPhaiTheoThoiGian(PWM_QUAY, THOI_GIAN_QUAY_180_MS);
+  lanTruocQuayPhai = true;
+}
+
+void xuLyMotLanVatCanMeCung() {
+  // Mỗi lần gọi là một lần siêu âm xác nhận vật cản phía trước.
+  soLanGapVatCanMeCung++;
+  dungRobot();
+  hienThiTongHop("VAT CAN PHIA TRUOC");
+  delay(150);
+
+  // Laser đã khởi tạo nhưng ngoài tầm đo được quy ước là 2000 mm,
+  // tức phía đó đang rất thoáng như trong bài 11 gốc.
+  bool dungDuocLaserTrai = khoangCach.laserTraiHopLe || laserTraiDaSanSang();
+  bool dungDuocLaserPhai = khoangCach.laserPhaiHopLe || laserPhaiDaSanSang();
+  uint16_t traiDeChon = khoangCach.laserTraiHopLe
+      ? khoangCach.traiMm : KHOANG_CACH_MO_MM;
+  uint16_t phaiDeChon = khoangCach.laserPhaiHopLe
+      ? khoangCach.phaiMm : KHOANG_CACH_MO_MM;
+
+  if (dungDuocLaserTrai &amp;&amp; dungDuocLaserPhai &amp;&amp;
+      traiDeChon &lt; NGUONG_NGO_CUT_MM &amp;&amp; phaiDeChon &lt; NGUONG_NGO_CUT_MM) {
+    thoatNgoCutMeCung();
+  } else if (dungDuocLaserTrai &amp;&amp; dungDuocLaserPhai) {
+    if (traiDeChon &gt; phaiDeChon + 40) quayTraiMeCung();
+    else if (phaiDeChon &gt; traiDeChon + 40) quayPhaiMeCung();
+    else if (lanTruocQuayPhai) quayTraiMeCung();
+    else quayPhaiMeCung();
+  } else if (dungDuocLaserTrai) {
+    quayTraiMeCung();
+  } else if (dungDuocLaserPhai) {
+    quayPhaiMeCung();
+  } else {
+    chuyenKhuVuc(NHIEM_VU_LOI, "LOI HAI LASER");
+    return;
+  }
+
+  if (soLanGapVatCanMeCung &gt;= SO_LAN_VAT_CAN_DE_THOAT) {
+    chuyenKhuVuc(KHU_VUC_LINE, "DU 5 VAT CAN - BAM LINE");
+  }
+}
+
+void xuLyMeCungMotBuoc() {
+  khoangCach = docBaHuong();
+  bool coVatCan = khoangCach.sieuAmHopLe &amp;&amp;
+                  khoangCach.truocCm &lt;= NGUONG_VAT_CAN_ME_CUNG_CM;
+
+  if (coVatCan) {
+    xuLyMotLanVatCanMeCung();
+  } else if (!khoangCach.sieuAmHopLe &amp;&amp; !MAT_ECHO_XEM_LA_TRONG) {
+    dungRobot();
+    hienThiTongHop("MAT ECHO SIEU AM");
+  } else {
+    diThang(PWM_ME_CUNG);
+    hienThiTongHop("DI THANG");
+  }
+}
+
+bool tranhVatCanVaTimLaiLine() {
+  dungRobot();
+  hienThiTongHop("TRANH VAT CAN");
+  delay(150);
+
+  diLui(90); delay(300); dungRobot();
+  quayPhaiTheoThoiGian(110, 450);
+  diThang(100); delay(650); dungRobot();
+  quayTraiTheoThoiGian(110, 450);
+  diThang(90); delay(450); dungRobot();
+
+  bool thayLaiVach = timLaiVach(1, 80, 3500);
+  pidXoa(pidLine);
+  return thayLaiVach;
+}
+
+void xuLyLineMotBuoc() {
+  unsigned long hienTaiMs = millis();
+  if (hienTaiMs - lanDocSieuAmMs &gt;= 80) {
+    docSieuAm(khoangCachKhoiCm);
+    lanDocSieuAmMs = hienTaiMs;
+  }
+
+  if (khoangCachKhoiCm &gt; 0 &amp;&amp; khoangCachKhoiCm &lt; NGUONG_VAT_CAN_LINE_CM) {
+    if (!tranhVatCanVaTimLaiLine()) {
+      chuyenKhuVuc(NHIEM_VU_LOI, "MAT LINE SAU VAT CAN");
+      return;
+    }
+
+    // Chỉ tính khi robot đã đi vòng và tìm lại được line thành công.
+    soVatCanLineDaVuot++;
+    Serial.print(F("Da vuot vat can line so "));
+    Serial.print(soVatCanLineDaVuot);
+    Serial.print('/'); Serial.println(SO_VAT_CAN_LINE_DE_THOAT);
+    hienThiTongHop("DA VUOT VAT CAN LINE");
+    delay(300);
+
+    if (soVatCanLineDaVuot &gt;= SO_VAT_CAN_LINE_DE_THOAT) {
+      trangThaiKhoi = TIM_KHOI;
+      mauVuaDoc = MAU_KHONG_XAC_DINH;
+      chuyenKhuVuc(KHU_VUC_KHOI_MAU, "DA VUOT 2 VAT CAN");
+    }
+  } else {
+    bamLinePIDMotBuoc(pidLine, PWM_LINE, 200, 80);
+  }
+}
+
+DuLieuMau docMauTrungBinh(uint8_t soMau) {
+  DuLieuMau trungBinh = {0, 0, 0, 0, false};
+  uint8_t soMauHopLe = 0;
+
+  for (uint8_t i = 0; i &lt; soMau; i++) {
+    DuLieuMau d = docCamBienMau();
+    if (!d.hopLe) continue;
+    trungBinh.doPulse += d.doPulse;
+    trungBinh.xanhLaPulse += d.xanhLaPulse;
+    trungBinh.xanhDuongPulse += d.xanhDuongPulse;
+    trungBinh.clearPulse += d.clearPulse;
+    soMauHopLe++;
+  }
+
+  if (soMauHopLe &gt; 0) {
+    trungBinh.doPulse /= soMauHopLe;
+    trungBinh.xanhLaPulse /= soMauHopLe;
+    trungBinh.xanhDuongPulse /= soMauHopLe;
+    trungBinh.clearPulse /= soMauHopLe;
+    trungBinh.hopLe = true;
+  }
+  return trungBinh;
+}
+
+void xuLyKhoiMauMotBuoc() {
+  switch (trangThaiKhoi) {
+    case TIM_KHOI:
+      if (docSieuAm(khoangCachKhoiCm) &amp;&amp; khoangCachKhoiCm &lt; 60.0f) {
+        dungRobot();
+        trangThaiKhoi = TIEP_CAN_KHOI;
+      } else {
+        quayPhai(65);
+      }
+      break;
+
+    case TIEP_CAN_KHOI:
+      if (!docSieuAm(khoangCachKhoiCm) || khoangCachKhoiCm &gt; 70.0f) {
+        trangThaiKhoi = TIM_KHOI;
+      } else if (khoangCachKhoiCm &gt; 7.0f) {
+        diThang(70);
+      } else {
+        diThang(55); delay(180); dungRobot();
+        trangThaiKhoi = DOC_MAU_KHOI;
+      }
+      break;
+
+    case DOC_MAU_KHOI: {
+      DuLieuMau duLieu = docMauTrungBinh(2);
+      mauVuaDoc = nhanDangMau(duLieu);
+      trangThaiKhoi = (mauVuaDoc == MAU_YEU_CAU) ? DAY_KHOI : BO_QUA_KHOI;
+      break;
+    }
+
+    case BO_QUA_KHOI:
+      diLui(80); delay(450); dungRobot();
+      quayPhaiTheoThoiGian(90, 550);
+      mauVuaDoc = MAU_KHONG_XAC_DINH;
+      trangThaiKhoi = TIM_KHOI;
+      break;
+
+    case DAY_KHOI:
+      diThang(115); delay(1500); dungRobot();
+      chuyenKhuVuc(NHIEM_VU_HOAN_THANH, "DA DAY DUNG KHOI");
+      break;
+  }
+}
+
+void setup() {
+  batDauSerial();
+  oledBatDau();
+  dongCoBatDau();
+  encoderBatDau();
+  // Bài 08 hiện chưa dùng servo, vì vậy giữ chân D15 ở LOW và không phát xung.
+  servoNgatTinHieu();
+  neoPixelBatDau(70);
+  sieuAmBatDau();
+  laserBatDau();
+  camBienMauBatDau();
+
+  pidCauHinh(pidLine, 0.45f, 0.02f, 0.003f, 500.0f);
+  datMauNeoPixel(0, 0, 80);
+  oledThongBao("BAI 24 - TONG HOP", "DAT ROBOT TAI DAU", "CHO 2 GIAY", "");
+  delay(2000);
+  chuyenKhuVuc(KHU_VUC_ME_CUNG, "BAT DAU");
+}
+
+void loop() {
+  switch (khuVuc) {
+    case KHU_VUC_ME_CUNG:
+      xuLyMeCungMotBuoc();
+      break;
+    case KHU_VUC_LINE:
+      xuLyLineMotBuoc();
+      break;
+    case KHU_VUC_KHOI_MAU:
+      xuLyKhoiMauMotBuoc();
+      break;
+    case NHIEM_VU_HOAN_THANH:
+      dungRobot();
+      break;
+    case NHIEM_VU_LOI:
+      dungRobot();
+      break;
+    default:
+      dungRobot();
+      break;
+  }
+
+  if (millis() - lanHienThiMs &gt;= 200) {
+    if (khuVuc == NHIEM_VU_HOAN_THANH) hienThiTongHop("DA HOAN THANH");
+    else if (khuVuc == NHIEM_VU_LOI) hienThiTongHop("DUNG AN TOAN");
+    else hienThiTongHop("DANG THUC HIEN");
+    lanHienThiMs = millis();
+  }
+  delay(10);
+}
+</code></pre></div></div></div></section>
+  <section class="lesson"><h2>5. Phân tích chương trình</h2><ul><li>enum KhuVuc làm rõ trạng thái tổng thể; enum TrangThaiKhoiMau quản lý trạng thái con.</li><li>Mỗi khu vực chỉ gọi các hàm của chính nó nên dễ thử độc lập trước khi ghép.</li><li>Hàm chuyenKhuVuc() chịu trách nhiệm dừng robot, báo OLED/Serial và thiết lập trạng thái mới.</li></ul></section>
+  <section class="lesson"><h2>6. Quy trình thực hành và hiệu chỉnh</h2><ol><li>Chạy lại riêng Bài 20, 21 và 22 trên đúng sa hình.</li><li>Đặt robot ở đầu từng khu vực để thử chuyển vùng cục bộ.</li><li>Chạy toàn bộ với tốc độ thấp và một người sẵn sàng ngắt nguồn.</li><li>Ghi lại ngưỡng và thời gian cuối cùng đã hiệu chỉnh.</li></ol></section>
+  <section class="lesson"><h2>7. Bài tập mở rộng</h2><ol><li>Thêm timeout cho từng khu vực.</li><li>Dùng NeoPixel biểu thị màu của ba khu vực.</li><li>Lưu nhật ký hướng rẽ và thời gian hoàn thành.</li><li>Chuyển các đoạn delay sang máy trạng thái không chặn.</li></ol></section>
+  <section class="lesson"><h2>8. Lỗi thường gặp và cách xử lý</h2><div class="warning">Không chuyển sang line: kiểm tra bộ đếm mê cung đã đạt 5.</div><div class="warning">Line dừng sau vật thứ nhất: kiểm tra SO_VAT_CAN_LINE_DE_THOAT bằng 2.</div><div class="warning">Servo rung khi báo lỗi: không attach servo nếu bài không dùng và luôn gọi servoNgatTinHieu().</div></section>
+  <section class="lesson"><h2>9. Kết luận</h2><p>Bài 24 là bài toán đích: robot vượt mê cung, bám line tránh hai vật cản và đẩy đúng khối màu.</p></section>
+  <nav class="nav-bottom" aria-label="Điều hướng bài học">
+    <a href="bai23.html">← Bài 23</a>
+    <a href="tailieu-kythuat.html">Danh sách bài học</a>
+    <a href="bai25.html">Bài 25 →</a>
+  </nav>
+</main>
+<!-- ===== NỘI DUNG===== -->
+<script>
+function togglePinTable(button) {
+  const box = button.closest(".pin-collapse");
+  box.classList.toggle("open");
+}
+
+function copyCode(button) {
+  const code = button.parentElement.querySelector("code").innerText;
+  navigator.clipboard.writeText(code);
+
+  button.innerText = "Đã copy";
+  setTimeout(() => {
+    button.innerText = "Copy";
+  }, 1200);
+}
+
+(function(){
+  const c = document.getElementById('fx');
+  const ctx = c.getContext('2d');
+  let w, h, dpr;
+  const N = 70;
+  const pts = [];
+
+  function resize(){
+    dpr = window.devicePixelRatio || 1;
+    w = c.width = innerWidth * dpr;
+    h = c.height = innerHeight * dpr;
+    c.style.width = innerWidth + 'px';
+    c.style.height = innerHeight + 'px';
+  }
+
+  function init(){
+    pts.length = 0;
+    for(let i = 0; i < N; i++){
+      pts.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        vx: (Math.random() - .5) * 0.12 * dpr,
+        vy: (Math.random() - .5) * 0.12 * dpr,
+        r: (Math.random() * 1.6 + 0.6) * dpr
+      });
+    }
+  }
+
+  function step(){
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = 'rgba(255,255,255,.7)';
+
+    for(const p of pts){
+      p.x += p.vx;
+      p.y += p.vy;
+
+      if(p.x < 0 || p.x > w) p.vx *= -1;
+      if(p.y < 0 || p.y > h) p.vy *= -1;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    requestAnimationFrame(step);
+  }
+
+  addEventListener('resize', () => {
+    resize();
+    init();
+  });
+
+  resize();
+  init();
+  step();
+})();
+
+hljs.highlightAll();
+function toggleCode(btn){
+  const box = btn.closest(".code-collapse");
+  box.classList.toggle("open");
+
+  const text = btn.querySelector("span");
+  text.innerText = box.classList.contains("open")
+    ? "🔽 Ẩn code"
+    : "💻 Xem code ví dụ";
+}
+</script>
+
+</body>
+</html>

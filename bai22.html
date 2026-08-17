@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Bài 4. Giao tiếp Serial và debug chương trình</title>
+<title>Bài 22. Nhận dạng và đẩy khối màu</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -479,93 +479,155 @@ h1 {
 <!-- ===== NỘI DUNG===== -->
 <main class="page">
   <section class="hero">
-    <div class="label">BÀI GIẢNG LẬP TRÌNH ROBOT MÊ CUNG</div>
-    <h1>Bài 4. Giao tiếp Serial và debug chương trình</h1>
-    <p class="subtitle">Gửi dữ liệu, nhận lệnh thử nghiệm và quan sát trạng thái chương trình mà không chiếm các chân phần cứng của robot.</p>
+    <div class="label">BÀI HỌC NÂNG CAO · ĐÃ HOÀN THIỆN</div>
+    <h1>Bài 22. Nhận dạng và đẩy khối màu</h1>
+    <p class="subtitle">Bài học liên thông sử dụng cấu hình robot mới nhất và thư viện hàm dùng chung.</p>
   </section>
-  <section class="lesson"><h2>1. Mục tiêu bài học</h2><ul>
-      <li>Khởi tạo Serial Monitor đúng 115200 baud.</li>
-      <li>In dữ liệu có nhãn để dễ phân tích.</li>
-      <li>Nhận ký tự lệnh và kiểm tra thuật toán ở chế độ không chạy động cơ.</li>
-      <li>Dùng millis() để gửi dữ liệu định kỳ.</li>
-    </ul></section>
-  <section class="lesson"><h2>2. Kiến thức trọng tâm</h2><p>Serial qua cổng USB là công cụ debug chính. Bài này không dùng nút D4 hoặc LED D8 như ví dụ cũ vì các chân đó thuộc cảm biến và không có LED rời trên robot.</p>
-      <p>Các ký tự F, B, L, R, S chỉ được giải mã và in tên lệnh. Động cơ chưa được kích hoạt, giúp sinh viên kiểm tra giao thức an toàn trước khi ghép với Bài 6.</p></section>
-  <section class="lesson"><h2>3. Kết nối phần cứng</h2><div class="pin-collapse open">
-    <button class="pin-collapse-head" onclick="togglePinTable(this)">
-      <span>📌 Bảng chân theo cấu hình robot mới nhất</span>
-      <span class="pin-collapse-arrow">▶</span>
-    </button>
-    <div class="pin-collapse-body"><table class="pin-table">
-      <tr><th>Thiết bị / tín hiệu</th><th>Chân Mega 2560 Mini</th><th>Chức năng</th><th>Ghi chú</th></tr>
-      <tr><td>Serial USB</td><td>Serial</td><td>Debug với máy tính</td><td>115200 baud</td></tr>
-      <tr><td>Bluetooth</td><td>Serial1 D18/D19</td><td>Chưa sử dụng</td><td>Module chưa đấu nối</td></tr>
-    </table></div>
-  </div></section>
-  <section class="lesson"><h2>4. Chương trình thực hành</h2><p>Mã ví dụ sử dụng đúng cấu hình đã kiểm tra trên robot, có OLED và Serial để quan sát.</p><div class="code-collapse">
-    <button class="code-collapse-head" onclick="toggleCode(this)">
-      <span>💻 Bài 4 – nhận lệnh Serial ở chế độ an toàn</span><span class="arrow">▶</span>
-    </button>
-    <div class="code-collapse-body"><div class="code-box">
-      <div class="code-title">Bài 4 – nhận lệnh Serial ở chế độ an toàn</div>
-      <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-      <pre><code class="language-cpp">// BÀI 4: GIAO TIẾP SERIAL - CHƯA ĐIỀU KHIỂN ĐỘNG CƠ
+  <section class="lesson"><h2>1. Mục tiêu bài học</h2><ul><li>Tìm và tiếp cận khối ở tốc độ thấp.</li><li>Lấy trung bình nhiều phép đo màu.</li><li>Chỉ đẩy khối có màu yêu cầu và bỏ qua khối khác.</li></ul><div class="note"><strong>Điều kiện học trước:</strong> Bài 6, 8 và 11.</div></section>
+  <section class="lesson"><h2>2. Chuẩn bị</h2><p><strong>Phần cứng:</strong> TCS3200 D24–D29, HC-SR04 phía trước, hai động cơ và OLED.</p><p><strong>Phần mềm:</strong> Arduino IDE, board Arduino Mega or Mega 2560, Serial Monitor 115200 baud.</p><div class="warning">Trước khi biên dịch, chép thư mục <strong>THU_VIEN_ROBOT/RobotMega2560Mini</strong> vào <strong>Documents/Arduino/libraries</strong>, sau đó khởi động lại Arduino IDE. Kê hai bánh khỏi mặt đất ở lần thử đầu tiên.</div></section>
+  <section class="lesson"><h2>3. Nguyên lý và thuật toán</h2><ol><li>Quay chậm cho đến khi siêu âm thấy khối trong 60 cm.</li><li>Tiếp cận đến khi cảm biến màu cách bề mặt khoảng 1–2 cm.</li><li>Đọc hai mẫu R/G/B/C, nhận dạng màu và so sánh với MAU_YEU_CAU.</li><li>Đúng màu thì đẩy; sai màu thì lùi, quay và tìm khối tiếp theo.</li></ol><div class="pin-collapse open"><button class="pin-collapse-head" onclick="togglePinTable(this)"><span>⚙️ Thông số cần hiệu chỉnh</span><span class="arrow">⌄</span></button><div class="pin-collapse-body"><div class="pin-table-wrap"><table class="pin-table"><thead><tr><th>Thông số</th><th>Giá trị ban đầu</th><th>Ý nghĩa</th></tr></thead><tbody><tr><td>MAU_YEU_CAU</td><td>MAU_XANH_DUONG</td><td>Có thể đổi đỏ hoặc xanh lá</td></tr><tr><td>Khoảng tìm</td><td>60 cm</td><td>Bắt đầu tiếp cận</td></tr><tr><td>Khoảng đọc màu</td><td>1–2 cm</td><td>Cự ly TCS3200 ổn định</td></tr><tr><td>Thời gian đẩy</td><td>1500 ms</td><td>Điều chỉnh theo sa hình</td></tr></tbody></table></div></div></div></section>
+  <section class="lesson"><h2>4. Chương trình hoàn chỉnh</h2><div class="note">Chương trình sử dụng thư viện chung <strong>RobotMega2560Mini</strong>. <a href="CODE_BAI_18_24_NANG_CAO/Bai_22_Nhan_dang_day_khoi_mau/Bai_22_Nhan_dang_day_khoi_mau.ino" download style="color:#7afcff;font-weight:bold;">Tải file .ino</a></div><div class="code-collapse"><button class="code-collapse-head" onclick="toggleCode(this)"><span>💻 Xem code ví dụ</span><span class="arrow">⌄</span></button><div class="code-collapse-body"><div class="code-box"><div class="code-title">Bai_22_Nhan_dang_day_khoi_mau.ino</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-cpp">#include &lt;Robot.h&gt;
+
+// BÀI 22: NHẬN DẠNG VÀ ĐẨY KHỐI MÀU
+// Giả thiết sa hình: các khối nằm tại những vị trí kiểm tra xác định.
+// Robot quay tìm khối, dùng siêu âm để tiếp cận, đọc TCS3200 ở cự ly gần,
+// sau đó chỉ đẩy khối có màu đúng yêu cầu.
+
+enum TrangThaiKhoiMau {
+  TIM_KHOI,
+  TIEP_CAN_KHOI,
+  DOC_MAU_KHOI,
+  BO_QUA_KHOI,
+  DAY_KHOI,
+  DAY_XONG
+};
+
+const MauSac MAU_YEU_CAU = MAU_XANH_DUONG;
+TrangThaiKhoiMau trangThai = TIM_KHOI;
+float khoangCachKhoi = -1.0f;
+MauSac mauVuaDoc = MAU_KHONG_XAC_DINH;
+
+DuLieuMau docMauTrungBinh(uint8_t soMau) {
+  DuLieuMau trungBinh = {0, 0, 0, 0, false};
+  uint8_t soMauHopLe = 0;
+
+  for (uint8_t i = 0; i &lt; soMau; i++) {
+    DuLieuMau d = docCamBienMau();
+    if (!d.hopLe) continue;
+    trungBinh.doPulse += d.doPulse;
+    trungBinh.xanhLaPulse += d.xanhLaPulse;
+    trungBinh.xanhDuongPulse += d.xanhDuongPulse;
+    trungBinh.clearPulse += d.clearPulse;
+    soMauHopLe++;
+  }
+
+  if (soMauHopLe &gt; 0) {
+    trungBinh.doPulse /= soMauHopLe;
+    trungBinh.xanhLaPulse /= soMauHopLe;
+    trungBinh.xanhDuongPulse /= soMauHopLe;
+    trungBinh.clearPulse /= soMauHopLe;
+    trungBinh.hopLe = true;
+  }
+  return trungBinh;
+}
+
+const char *tenTrangThai() {
+  switch (trangThai) {
+    case TIM_KHOI: return "TIM KHOI";
+    case TIEP_CAN_KHOI: return "TIEP CAN";
+    case DOC_MAU_KHOI: return "DOC MAU";
+    case BO_QUA_KHOI: return "BO QUA KHOI";
+    case DAY_KHOI: return "DAY KHOI";
+    default: return "HOAN THANH";
+  }
+}
+
+void hienThiKhoiMau() {
+  oledXoa();
+  oledTieuDe("BAI 22 - KHOI MAU");
+  oledInChu(4, 18, tenTrangThai());
+  oledInChu(4, 33, "KC:");
+  if (khoangCachKhoi &gt; 0) oledInSoThuc(25, 33, khoangCachKhoi);
+  else oledInChu(25, 33, "NO ECHO");
+  oledInChu(4, 47, "MAU:"); oledInChu(34, 47, tenMau(mauVuaDoc));
+  oledCapNhat();
+
+  Serial.print(tenTrangThai());
+  Serial.print(F("  Khoang cach=")); Serial.print(khoangCachKhoi);
+  Serial.print(F("  Mau=")); Serial.println(tenMau(mauVuaDoc));
+}
+
 void setup() {
-  Serial.begin(115200);
-  Serial.println(F("Nhap F/B/L/R/S roi nhan Send"));
-  Serial.println(F("Chi giai ma lenh, robot KHONG chay"));
+  batDauSerial();
+  oledBatDau();
+  dongCoBatDau();
+  sieuAmBatDau();
+  camBienMauBatDau();
+  oledThongBao("BAI 22", "MAU CAN DAY:", tenMau(MAU_YEU_CAU),
+               "CHO 2 GIAY");
+  delay(2000);
 }
 
 void loop() {
-  static unsigned long mocBaoCao = 0;
+  switch (trangThai) {
+    case TIM_KHOI:
+      if (docSieuAm(khoangCachKhoi) &amp;&amp; khoangCachKhoi &lt; 60.0f) {
+        dungRobot();
+        trangThai = TIEP_CAN_KHOI;
+      } else {
+        quayPhai(65); // Quay chậm để quét tìm khối phía trước.
+      }
+      break;
 
-  if (Serial.available() &gt; 0) {
-    char lenh = toupper(Serial.read());
-    if (lenh == '\n' || lenh == '\r') return;
+    case TIEP_CAN_KHOI:
+      if (!docSieuAm(khoangCachKhoi) || khoangCachKhoi &gt; 70.0f) {
+        trangThai = TIM_KHOI;
+      } else if (khoangCachKhoi &gt; 7.0f) {
+        diThang(70);
+      } else {
+        // Tiến rất ngắn để cảm biến màu cách bề mặt khối khoảng 1–2 cm.
+        diThang(55); delay(180); dungRobot();
+        trangThai = DOC_MAU_KHOI;
+      }
+      break;
 
-    Serial.print(F("Nhan lenh: "));
-    switch (lenh) {
-      case 'F': Serial.println(F("TIEN")); break;
-      case 'B': Serial.println(F("LUI")); break;
-      case 'L': Serial.println(F("TRAI")); break;
-      case 'R': Serial.println(F("PHAI")); break;
-      case 'S': Serial.println(F("DUNG")); break;
-      default:  Serial.println(F("KHONG HOP LE")); break;
+    case DOC_MAU_KHOI: {
+      DuLieuMau duLieu = docMauTrungBinh(2);
+      mauVuaDoc = nhanDangMau(duLieu);
+      trangThai = (mauVuaDoc == MAU_YEU_CAU) ? DAY_KHOI : BO_QUA_KHOI;
+      break;
     }
+
+    case BO_QUA_KHOI:
+      diLui(80); delay(450); dungRobot();
+      quayPhaiTheoThoiGian(90, 550);
+      mauVuaDoc = MAU_KHONG_XAC_DINH;
+      trangThai = TIM_KHOI;
+      break;
+
+    case DAY_KHOI:
+      diThang(115); delay(1500); dungRobot();
+      trangThai = DAY_XONG;
+      break;
+
+    case DAY_XONG:
+      dungRobot();
+      break;
   }
 
-  if (millis() - mocBaoCao &gt;= 1000) {
-    mocBaoCao = millis();
-    Serial.print(F("Uptime: "));
-    Serial.print(millis() / 1000);
-    Serial.println(F(" s"));
-  }
-}</code></pre>
-    </div></div>
-  </div></section>
-  <section class="lesson"><h2>5. Phân tích chương trình</h2><ul>
-      <li>Serial USB dùng riêng, không liên quan Serial1 dành cho Bluetooth chưa đấu.</li>
-      <li>Switch–case tách phần giải mã lệnh khỏi phần điều khiển phần cứng.</li>
-      <li>Báo cáo thời gian dùng millis() nên chương trình vẫn nhận lệnh liên tục.</li>
-    </ul></section>
-  <section class="lesson"><h2>6. Quy trình thực hành</h2><ol>
-      <li>Mở Serial Monitor ở 115200 baud.</li>
-      <li>Gửi từng lệnh F/B/L/R/S và kiểm tra tên lệnh phản hồi.</li>
-      <li>Gửi một ký tự khác để kiểm tra nhánh KHÔNG HỢP LỆ.</li>
-    </ol></section>
-  <section class="lesson"><h2>7. Bài tập mở rộng</h2><ol>
-      <li>Nhận một số PWM từ 0–255 sau ký tự lệnh.</li>
-      <li>In dữ liệu dạng CSV để dùng Serial Plotter.</li>
-      <li>Ghép lệnh với các hàm động cơ ở Bài 6 nhưng mặc định luôn khởi động ở DỪNG.</li>
-    </ol></section>
-  <section class="lesson"><h2>8. Lỗi thường gặp và cách xử lý</h2><div class="warning">Chữ rác trên Serial: tốc độ Monitor không khớp 115200.</div>
-<div class="warning">Lệnh bị đọc thêm dòng trống: bỏ qua ký tự CR/LF như chương trình mẫu.</div>
-<div class="warning">Bluetooth chưa đấu nên không thay <code>Serial</code> bằng <code>Serial1</code> ở giai đoạn này.</div></section>
-  <section class="lesson"><h2>9. Kết luận</h2><p>Serial đã trở thành kênh debug chuẩn cho tất cả bài tiếp theo mà không chiếm hoặc làm xung đột chân robot.</p></section>
+  hienThiKhoiMau();
+  delay(50);
+}
+</code></pre></div></div></div></section>
+  <section class="lesson"><h2>5. Phân tích chương trình</h2><ul><li>Máy trạng thái tách rõ tìm, tiếp cận, đọc màu, bỏ qua và đẩy.</li><li>Lấy trung bình làm giảm nhiễu do ánh sáng và rung của robot.</li><li>Nếu một kênh không có xung, dữ liệu bị đánh dấu không hợp lệ thay vì kết luận màu sai.</li></ul></section>
+  <section class="lesson"><h2>6. Quy trình thực hành và hiệu chỉnh</h2><ol><li>Bật LED trắng của cảm biến và che ánh sáng ngoài.</li><li>Đặt từng mẫu đỏ, xanh lá, xanh dương ở 1–2 cm để xem xung.</li><li>Chỉnh quy tắc nhận dạng trong thư viện nếu màu thực tế bị nhầm.</li><li>Đặt ba khối và xác nhận robot chỉ đẩy màu yêu cầu.</li></ol></section>
+  <section class="lesson"><h2>7. Bài tập mở rộng</h2><ol><li>Cho chọn màu cần đẩy bằng lệnh Serial.</li><li>Đếm số khối đã kiểm tra.</li><li>Bổ sung servo để gạt khối thay vì dùng thân robot.</li></ol></section>
+  <section class="lesson"><h2>8. Lỗi thường gặp và cách xử lý</h2><div class="warning">OLED báo NO PULSE: kiểm tra OUT D29, LED D26 và cự ly vật.</div><div class="warning">Màu thay đổi theo phòng: cần hiệu chuẩn tại nơi thi.</div><div class="warning">Robot đâm khối quá mạnh: giảm tốc tiếp cận và ngưỡng 7 cm.</div></section>
+  <section class="lesson"><h2>9. Kết luận</h2><p>Bài 22 đưa cảm biến màu vào một nhiệm vụ robot có trình tự rõ ràng.</p></section>
   <nav class="nav-bottom" aria-label="Điều hướng bài học">
-    <a href="bai3.html">← Bài 3</a>
+    <a href="bai21.html">← Bài 21</a>
     <a href="tailieu-kythuat.html">Danh sách bài học</a>
-    <a href="bai5.html">Bài 5 →</a>
+    <a href="bai23.html">Bài 23 →</a>
   </nav>
 </main>
 <!-- ===== NỘI DUNG===== -->

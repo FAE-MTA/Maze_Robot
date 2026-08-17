@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Bài 4. Giao tiếp Serial và debug chương trình</title>
+<title>Bài 10. Cảm biến dò line</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -480,92 +480,189 @@ h1 {
 <main class="page">
   <section class="hero">
     <div class="label">BÀI GIẢNG LẬP TRÌNH ROBOT MÊ CUNG</div>
-    <h1>Bài 4. Giao tiếp Serial và debug chương trình</h1>
-    <p class="subtitle">Gửi dữ liệu, nhận lệnh thử nghiệm và quan sát trạng thái chương trình mà không chiếm các chân phần cứng của robot.</p>
+    <h1>Bài 10. Cảm biến dò line</h1>
+    <p class="subtitle">Đọc năm mắt cảm biến, hiệu chỉnh nền–vạch và tính vị trí tương đối của đường line so với tâm robot.</p>
   </section>
-  <section class="lesson"><h2>1. Mục tiêu bài học</h2><ul>
-      <li>Khởi tạo Serial Monitor đúng 115200 baud.</li>
-      <li>In dữ liệu có nhãn để dễ phân tích.</li>
-      <li>Nhận ký tự lệnh và kiểm tra thuật toán ở chế độ không chạy động cơ.</li>
-      <li>Dùng millis() để gửi dữ liệu định kỳ.</li>
-    </ul></section>
-  <section class="lesson"><h2>2. Kiến thức trọng tâm</h2><p>Serial qua cổng USB là công cụ debug chính. Bài này không dùng nút D4 hoặc LED D8 như ví dụ cũ vì các chân đó thuộc cảm biến và không có LED rời trên robot.</p>
-      <p>Các ký tự F, B, L, R, S chỉ được giải mã và in tên lệnh. Động cơ chưa được kích hoạt, giúp sinh viên kiểm tra giao thức an toàn trước khi ghép với Bài 6.</p></section>
-  <section class="lesson"><h2>3. Kết nối phần cứng</h2><div class="pin-collapse open">
-    <button class="pin-collapse-head" onclick="togglePinTable(this)">
-      <span>📌 Bảng chân theo cấu hình robot mới nhất</span>
-      <span class="pin-collapse-arrow">▶</span>
-    </button>
-    <div class="pin-collapse-body"><table class="pin-table">
-      <tr><th>Thiết bị / tín hiệu</th><th>Chân Mega 2560 Mini</th><th>Chức năng</th><th>Ghi chú</th></tr>
-      <tr><td>Serial USB</td><td>Serial</td><td>Debug với máy tính</td><td>115200 baud</td></tr>
-      <tr><td>Bluetooth</td><td>Serial1 D18/D19</td><td>Chưa sử dụng</td><td>Module chưa đấu nối</td></tr>
-    </table></div>
-  </div></section>
-  <section class="lesson"><h2>4. Chương trình thực hành</h2><p>Mã ví dụ sử dụng đúng cấu hình đã kiểm tra trên robot, có OLED và Serial để quan sát.</p><div class="code-collapse">
-    <button class="code-collapse-head" onclick="toggleCode(this)">
-      <span>💻 Bài 4 – nhận lệnh Serial ở chế độ an toàn</span><span class="arrow">▶</span>
-    </button>
-    <div class="code-collapse-body"><div class="code-box">
-      <div class="code-title">Bài 4 – nhận lệnh Serial ở chế độ an toàn</div>
-      <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-      <pre><code class="language-cpp">// BÀI 4: GIAO TIẾP SERIAL - CHƯA ĐIỀU KHIỂN ĐỘNG CƠ
+
+  <section class="lesson">
+    <h2>1. Mục tiêu bài học</h2>
+    <ul>
+      <li>Đọc đồng thời năm kênh line theo thứ tự từ trái sang phải.</li>
+      <li>Xác định ngưỡng riêng cho từng mắt cảm biến.</li>
+      <li>Tính vị trí line theo phương pháp trọng số thay vì chỉ dùng giá trị 0/1.</li>
+      <li>Phát hiện trạng thái mất line để chuẩn bị cho bộ điều khiển PID.</li>
+    </ul>
+  </section>
+
+  <section class="lesson">
+    <h2>2. Kiến thức trọng tâm</h2>
+    <p>Năm cảm biến A1–A5 quan sát các vị trí khác nhau dưới gầm robot. Khi line lệch trái, nhóm cảm biến trái phản ứng mạnh; khi line ở giữa, cảm biến giữa có tín hiệu mạnh nhất.</p>
+    <p>Phương pháp trọng số gán các vị trí <strong>-200, -100, 0, 100, 200</strong>. Vị trí line là trung bình có trọng số của cường độ từng mắt. Kết quả âm nghĩa là line ở bên trái, kết quả dương nghĩa là line ở bên phải.</p>
+    <div class="note">Bộ cảm biến của robot được giả sử cho giá trị thấp hơn trên vạch tối. Nếu thực tế ngược lại, đổi công thức cường độ trong hàm <code>docViTriLine()</code>.</div>
+  </section>
+
+  <section class="lesson">
+    <h2>3. Kết nối phần cứng</h2>
+    
+    <div class="pin-collapse open">
+      <button class="pin-collapse-head" onclick="togglePinTable(this)">
+        <span>📌 Bảng kết nối sử dụng trong bài</span>
+        <span class="pin-collapse-arrow">▶</span>
+      </button>
+      <div class="pin-collapse-body">
+        <table class="pin-table">
+          <tr><th>Thiết bị / tín hiệu</th><th>Chân Mega 2560</th><th>Vai trò</th><th>Lưu ý</th></tr>
+          <tr><td>Mắt line ngoài trái</td><td>A1</td><td>Vị trí -200</td><td>Thứ tự rất quan trọng</td></tr>
+          <tr><td>Mắt line trái</td><td>A2</td><td>Vị trí -100</td><td>Analog</td></tr>
+          <tr><td>Mắt line giữa</td><td>A3</td><td>Vị trí 0</td><td>Tâm robot</td></tr>
+          <tr><td>Mắt line phải</td><td>A4</td><td>Vị trí +100</td><td>Analog</td></tr>
+          <tr><td>Mắt line ngoài phải</td><td>A5</td><td>Vị trí +200</td><td>Analog</td></tr>
+          <tr><td>OLED SDA/SCL</td><td>D20/D21</td><td>Hiển thị</td><td>Địa chỉ 0x3C</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="lesson">
+    <h2>4. Chương trình thực hành</h2>
+    <p>Chương trình dưới đây được viết đầy đủ, có chú thích tiếng Việt và có thể mở trực tiếp trong Arduino IDE.</p>
+    <div class="code-collapse">
+      <button class="code-collapse-head" onclick="toggleCode(this)">
+        <span>💻 Bài 10 – đọc năm mắt và tính sai số line</span><span class="arrow">▶</span>
+      </button>
+      <div class="code-collapse-body">
+        <div class="code-box">
+          <div class="code-title">Bài 10 – đọc năm mắt và tính sai số line</div>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          <pre><code class="language-cpp">// BÀI 10: ĐỌC 5 CẢM BIẾN DÒ LINE
+#include &lt;Wire.h&gt;
+#include &lt;Adafruit_GFX.h&gt;
+#include &lt;Adafruit_SSD1306.h&gt;
+
+const uint8_t LINE_PIN[5] = {A1, A2, A3, A4, A5};
+const int TRONG_SO[5] = {-200, -100, 0, 100, 200};
+
+// Ngưỡng phải được thay bằng kết quả hiệu chỉnh của từng mắt.
+int nguong[5] = {500, 500, 500, 500, 500};
+int giaTri[5];
+
+Adafruit_SSD1306 oled(128, 64, &amp;Wire, -1);
+
+bool docViTriLine(int &amp;viTri) {
+  long tongTrongSo = 0;
+  long tongCuongDo = 0;
+
+  for (uint8_t i = 0; i &lt; 5; i++) {
+    giaTri[i] = analogRead(LINE_PIN[i]);
+
+    // Vạch tối làm giá trị giảm: cường độ = ngưỡng - giá trị.
+    int cuongDo = nguong[i] - giaTri[i];
+    if (cuongDo &lt; 0) cuongDo = 0;
+
+    tongTrongSo += (long)cuongDo * TRONG_SO[i];
+    tongCuongDo += cuongDo;
+  }
+
+  if (tongCuongDo &lt; 80) {
+    return false; // Không đủ tín hiệu để kết luận có line.
+  }
+
+  viTri = tongTrongSo / tongCuongDo;
+  return true;
+}
+
+void hienThi(bool coLine, int viTri) {
+  oled.clearDisplay();
+  oled.setTextColor(SSD1306_WHITE);
+  oled.setTextSize(1);
+  oled.setCursor(0, 0);
+  oled.println("LINE A1 A2 A3 A4 A5");
+  oled.setCursor(0, 16);
+  for (uint8_t i = 0; i &lt; 5; i++) {
+    oled.print(giaTri[i]);
+    if (i &lt; 4) oled.print(' ');
+  }
+  oled.setCursor(0, 34);
+  oled.print("Vi tri: ");
+  coLine ? oled.println(viTri) : oled.println("MAT LINE");
+  oled.setCursor(0, 50);
+  if (!coLine) oled.println("Dung / tim lai vach");
+  else if (viTri &lt; -30) oled.println("Vach ben TRAI");
+  else if (viTri &gt; 30) oled.println("Vach ben PHAI");
+  else oled.println("Vach O GIUA");
+  oled.display();
+}
+
 void setup() {
   Serial.begin(115200);
-  Serial.println(F("Nhap F/B/L/R/S roi nhan Send"));
-  Serial.println(F("Chi giai ma lenh, robot KHONG chay"));
+  for (uint8_t i = 0; i &lt; 5; i++) pinMode(LINE_PIN[i], INPUT);
+
+  Wire.begin();
+  if (!oled.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println("LOI OLED");
+    while (true) delay(1000);
+  }
 }
 
 void loop() {
-  static unsigned long mocBaoCao = 0;
+  int viTri = 0;
+  bool coLine = docViTriLine(viTri);
 
-  if (Serial.available() &gt; 0) {
-    char lenh = toupper(Serial.read());
-    if (lenh == '\n' || lenh == '\r') return;
-
-    Serial.print(F("Nhan lenh: "));
-    switch (lenh) {
-      case 'F': Serial.println(F("TIEN")); break;
-      case 'B': Serial.println(F("LUI")); break;
-      case 'L': Serial.println(F("TRAI")); break;
-      case 'R': Serial.println(F("PHAI")); break;
-      case 'S': Serial.println(F("DUNG")); break;
-      default:  Serial.println(F("KHONG HOP LE")); break;
-    }
+  for (uint8_t i = 0; i &lt; 5; i++) {
+    Serial.print(giaTri[i]); Serial.print(i &lt; 4 ? ',' : ' ');
   }
+  Serial.print("VI_TRI=");
+  coLine ? Serial.println(viTri) : Serial.println("MAT_LINE");
 
-  if (millis() - mocBaoCao &gt;= 1000) {
-    mocBaoCao = millis();
-    Serial.print(F("Uptime: "));
-    Serial.print(millis() / 1000);
-    Serial.println(F(" s"));
-  }
+  hienThi(coLine, viTri);
+  delay(100);
 }</code></pre>
-    </div></div>
-  </div></section>
-  <section class="lesson"><h2>5. Phân tích chương trình</h2><ul>
-      <li>Serial USB dùng riêng, không liên quan Serial1 dành cho Bluetooth chưa đấu.</li>
-      <li>Switch–case tách phần giải mã lệnh khỏi phần điều khiển phần cứng.</li>
-      <li>Báo cáo thời gian dùng millis() nên chương trình vẫn nhận lệnh liên tục.</li>
-    </ul></section>
-  <section class="lesson"><h2>6. Quy trình thực hành</h2><ol>
-      <li>Mở Serial Monitor ở 115200 baud.</li>
-      <li>Gửi từng lệnh F/B/L/R/S và kiểm tra tên lệnh phản hồi.</li>
-      <li>Gửi một ký tự khác để kiểm tra nhánh KHÔNG HỢP LỆ.</li>
-    </ol></section>
-  <section class="lesson"><h2>7. Bài tập mở rộng</h2><ol>
-      <li>Nhận một số PWM từ 0–255 sau ký tự lệnh.</li>
-      <li>In dữ liệu dạng CSV để dùng Serial Plotter.</li>
-      <li>Ghép lệnh với các hàm động cơ ở Bài 6 nhưng mặc định luôn khởi động ở DỪNG.</li>
-    </ol></section>
-  <section class="lesson"><h2>8. Lỗi thường gặp và cách xử lý</h2><div class="warning">Chữ rác trên Serial: tốc độ Monitor không khớp 115200.</div>
-<div class="warning">Lệnh bị đọc thêm dòng trống: bỏ qua ký tự CR/LF như chương trình mẫu.</div>
-<div class="warning">Bluetooth chưa đấu nên không thay <code>Serial</code> bằng <code>Serial1</code> ở giai đoạn này.</div></section>
-  <section class="lesson"><h2>9. Kết luận</h2><p>Serial đã trở thành kênh debug chuẩn cho tất cả bài tiếp theo mà không chiếm hoặc làm xung đột chân robot.</p></section>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lesson">
+    <h2>5. Phân tích chương trình và thuật toán</h2>
+    <ul>
+      <li>Mảng chân và mảng trọng số có cùng thứ tự trái sang phải; đảo thứ tự sẽ làm robot sửa sai ngược hướng.</li>
+      <li>Chỉ phần tín hiệu vượt qua ngưỡng mới được dùng làm cường độ line, nhờ đó nền ít ảnh hưởng tới vị trí.</li>
+      <li>Tổng cường độ nhỏ hơn mức tối thiểu được coi là mất line; không trả về sai số 0 vì điều đó dễ bị hiểu nhầm là line ở giữa.</li>
+      <li>Giá trị thô, vị trí và trạng thái đều được xuất ra để hiệu chỉnh trước khi bật động cơ.</li>
+    </ul>
+  </section>
+
+  <section class="lesson">
+    <h2>6. Quy trình thực hành</h2>
+    <ol>
+      <li>Đặt cả năm mắt trên nền, ghi giá trị; sau đó đặt từng mắt trên vạch và ghi lại.</li>
+      <li>Chọn ngưỡng riêng cho từng mắt ở khoảng giữa giá trị nền và vạch.</li>
+      <li>Di chuyển tấm line từ trái qua phải và kiểm tra vị trí thay đổi liên tục từ âm sang dương.</li>
+      <li>Nhấc robot khỏi line và xác nhận trạng thái <code>MAT_LINE</code>.</li>
+    </ol>
+  </section>
+
+  <section class="lesson">
+    <h2>7. Bài tập củng cố và mở rộng</h2>
+    <ol>
+      <li>Viết chương trình tự thu giá trị nhỏ nhất và lớn nhất của mỗi mắt trong 10 giây hiệu chỉnh.</li>
+      <li>Hiển thị năm thanh cường độ trên OLED thay cho năm con số.</li>
+      <li>Thử trọng số -1000 đến +1000 và nhận xét ảnh hưởng tới hệ số PID ở Bài 16.</li>
+    </ol>
+  </section>
+
+  <section class="lesson">
+    <h2>8. Lỗi thường gặp và cách xử lý</h2>
+    <div class="warning">Vị trí đổi dấu ngược: thứ tự chân A1–A5 hoặc vị trí lắp cảm biến đã bị đảo.</div>
+    <div class="warning">Luôn báo mất line: ngưỡng sai hoặc công thức cường độ ngược với đặc tính module.</div>
+    <div class="warning">Robot nhận line khi ở trên nền: đo lại từng ngưỡng trong điều kiện ánh sáng thi đấu.</div>
+    <div class="warning">Không bắt đầu bám line khi chưa quan sát ổn định giá trị thô trên OLED và Serial.</div>
+  </section>
+<section class="lesson"><h2>9. Kết luận</h2><p>Bài học chuyển năm giá trị cảm biến thành một đại lượng sai số duy nhất. Sai số này là đầu vào trực tiếp của bộ điều khiển bám line PID ở Bài 16.</p></section>
   <nav class="nav-bottom" aria-label="Điều hướng bài học">
-    <a href="bai3.html">← Bài 3</a>
+    <a href="bai9.html">← Bài 9</a>
     <a href="tailieu-kythuat.html">Danh sách bài học</a>
-    <a href="bai5.html">Bài 5 →</a>
+    <a href="bai11.html">Bài 11 →</a>
   </nav>
 </main>
 <!-- ===== NỘI DUNG===== -->

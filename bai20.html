@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Bài 4. Giao tiếp Serial và debug chương trình</title>
+<title>Bài 20. Robot vượt mê cung – thoát sau 5 vật cản</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -479,93 +479,176 @@ h1 {
 <!-- ===== NỘI DUNG===== -->
 <main class="page">
   <section class="hero">
-    <div class="label">BÀI GIẢNG LẬP TRÌNH ROBOT MÊ CUNG</div>
-    <h1>Bài 4. Giao tiếp Serial và debug chương trình</h1>
-    <p class="subtitle">Gửi dữ liệu, nhận lệnh thử nghiệm và quan sát trạng thái chương trình mà không chiếm các chân phần cứng của robot.</p>
+    <div class="label">BÀI HỌC NÂNG CAO · ĐÃ HOÀN THIỆN</div>
+    <h1>Bài 20. Robot vượt mê cung – thoát sau 5 vật cản</h1>
+    <p class="subtitle">Bài học liên thông sử dụng cấu hình robot mới nhất và thư viện hàm dùng chung.</p>
   </section>
-  <section class="lesson"><h2>1. Mục tiêu bài học</h2><ul>
-      <li>Khởi tạo Serial Monitor đúng 115200 baud.</li>
-      <li>In dữ liệu có nhãn để dễ phân tích.</li>
-      <li>Nhận ký tự lệnh và kiểm tra thuật toán ở chế độ không chạy động cơ.</li>
-      <li>Dùng millis() để gửi dữ liệu định kỳ.</li>
-    </ul></section>
-  <section class="lesson"><h2>2. Kiến thức trọng tâm</h2><p>Serial qua cổng USB là công cụ debug chính. Bài này không dùng nút D4 hoặc LED D8 như ví dụ cũ vì các chân đó thuộc cảm biến và không có LED rời trên robot.</p>
-      <p>Các ký tự F, B, L, R, S chỉ được giải mã và in tên lệnh. Động cơ chưa được kích hoạt, giúp sinh viên kiểm tra giao thức an toàn trước khi ghép với Bài 6.</p></section>
-  <section class="lesson"><h2>3. Kết nối phần cứng</h2><div class="pin-collapse open">
-    <button class="pin-collapse-head" onclick="togglePinTable(this)">
-      <span>📌 Bảng chân theo cấu hình robot mới nhất</span>
-      <span class="pin-collapse-arrow">▶</span>
-    </button>
-    <div class="pin-collapse-body"><table class="pin-table">
-      <tr><th>Thiết bị / tín hiệu</th><th>Chân Mega 2560 Mini</th><th>Chức năng</th><th>Ghi chú</th></tr>
-      <tr><td>Serial USB</td><td>Serial</td><td>Debug với máy tính</td><td>115200 baud</td></tr>
-      <tr><td>Bluetooth</td><td>Serial1 D18/D19</td><td>Chưa sử dụng</td><td>Module chưa đấu nối</td></tr>
-    </table></div>
-  </div></section>
-  <section class="lesson"><h2>4. Chương trình thực hành</h2><p>Mã ví dụ sử dụng đúng cấu hình đã kiểm tra trên robot, có OLED và Serial để quan sát.</p><div class="code-collapse">
-    <button class="code-collapse-head" onclick="toggleCode(this)">
-      <span>💻 Bài 4 – nhận lệnh Serial ở chế độ an toàn</span><span class="arrow">▶</span>
-    </button>
-    <div class="code-collapse-body"><div class="code-box">
-      <div class="code-title">Bài 4 – nhận lệnh Serial ở chế độ an toàn</div>
-      <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-      <pre><code class="language-cpp">// BÀI 4: GIAO TIẾP SERIAL - CHƯA ĐIỀU KHIỂN ĐỘNG CƠ
+  <section class="lesson"><h2>1. Mục tiêu bài học</h2><ul><li>Chọn hướng rộng hơn khi gặp tường trước.</li><li>Xử lý ngõ cụt và mất phép đo.</li><li>Đếm năm lần gặp vật cản để xác định kết thúc khu vực mê cung.</li></ul><div class="note"><strong>Điều kiện học trước:</strong> Bài 17 và 18.</div></section>
+  <section class="lesson"><h2>2. Chuẩn bị</h2><p><strong>Phần cứng:</strong> HC-SR04 phía trước, hai VL53L0X hai bên, hai động cơ và OLED.</p><p><strong>Phần mềm:</strong> Arduino IDE, board Arduino Mega or Mega 2560, Serial Monitor 115200 baud.</p><div class="warning">Trước khi biên dịch, chép thư mục <strong>THU_VIEN_ROBOT/RobotMega2560Mini</strong> vào <strong>Documents/Arduino/libraries</strong>, sau đó khởi động lại Arduino IDE. Kê hai bánh khỏi mặt đất ở lần thử đầu tiên.</div></section>
+  <section class="lesson"><h2>3. Nguyên lý và thuật toán</h2><ol><li>Robot đi thẳng khi HC-SR04 chưa thấy vật cản.</li><li>Khi vật cản được xác nhận, tăng bộ đếm đúng một lần.</li><li>So sánh hai laser: phía xa hơn là phía ưu tiên quay; hai bên cùng gần là ngõ cụt nên lùi và quay 180°.</li><li>Sau lần thứ năm, robot dừng và chuyển trạng thái đã thoát mê cung.</li></ol><div class="pin-collapse open"><button class="pin-collapse-head" onclick="togglePinTable(this)"><span>⚙️ Thông số cần hiệu chỉnh</span><span class="arrow">⌄</span></button><div class="pin-collapse-body"><div class="pin-table-wrap"><table class="pin-table"><thead><tr><th>Thông số</th><th>Giá trị ban đầu</th><th>Ý nghĩa</th></tr></thead><tbody><tr><td>NGUONG_TRUOC_CM</td><td>25 cm</td><td>Phát hiện tường trước</td></tr><tr><td>NGUONG_NGO_CUT_MM</td><td>180 mm</td><td>Hai bên cùng hẹp</td></tr><tr><td>SO_LAN_VAT_CAN_DE_THOAT</td><td>5</td><td>Điều kiện kết thúc</td></tr><tr><td>THOI_GIAN_QUAY_90_MS</td><td>520 ms</td><td>Cần hiệu chỉnh trên sân</td></tr></tbody></table></div></div></div></section>
+  <section class="lesson"><h2>4. Chương trình hoàn chỉnh</h2><div class="note">Chương trình sử dụng thư viện chung <strong>RobotMega2560Mini</strong>. <a href="CODE_BAI_18_24_NANG_CAO/Bai_20_Vuot_me_cung_5_vat_can/Bai_20_Vuot_me_cung_5_vat_can.ino" download style="color:#7afcff;font-weight:bold;">Tải file .ino</a></div><div class="code-collapse"><button class="code-collapse-head" onclick="toggleCode(this)"><span>💻 Xem code ví dụ</span><span class="arrow">⌄</span></button><div class="code-collapse-body"><div class="code-box"><div class="code-title">Bai_20_Vuot_me_cung_5_vat_can.ino</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-cpp">#include &lt;Robot.h&gt;
+
+// BÀI 20: VƯỢT MÊ CUNG BẰNG SIÊU ÂM VÀ HAI LASER
+// Thuật toán được lấy từ bài 11_Kết hợp siêu âm và laser:
+// 1. Phía trước trống: robot đi thẳng.
+// 2. Siêu âm thấy vật cản: dừng và đọc khoảng cách hai bên.
+// 3. Robot quay về bên có khoảng trống lớn hơn.
+// 4. Hai bên đều gần: lùi rồi quay 180 độ để thoát ngõ cụt.
+// 5. Sau 5 lần siêu âm phát hiện vật cản, coi như đã ra khỏi mê cung.
+
+const float NGUONG_TRUOC_CM = 25.0f;
+const uint16_t NGUONG_NGO_CUT_MM = 180;
+const uint16_t KHOANG_CACH_MO_MM = 2000;
+const uint8_t SO_LAN_VAT_CAN_DE_THOAT = 5;
+const int PWM_DI = 110;
+const int PWM_QUAY = 120;
+const int PWM_LUI = 100;
+const unsigned long QUAY_90_MS = 520;   // Hiệu chỉnh trên robot thật.
+const unsigned long QUAY_180_MS = 1050; // Hiệu chỉnh trên robot thật.
+const bool MAT_ECHO_XEM_LA_TRONG = true;
+
+uint8_t soLanGapVatCan = 0;
+bool lanTruocQuayPhai = false;
+bool daRaKhoiMeCung = false;
+
+void hienThiMeCung(const char *trangThai, const DuLieuKhoangCach &amp;d) {
+  oledXoa();
+  oledTieuDe("BAI 20 - ME CUNG");
+  oledInChu(4, 16, trangThai);
+
+  oledInChu(4, 30, "F:");
+  if (d.sieuAmHopLe) oledInSoThuc(18, 30, d.truocCm);
+  else oledInChu(18, 30, "NO ECHO");
+
+  oledInChu(4, 43, "L:");
+  if (d.laserTraiHopLe) oledInSo(18, 43, d.traiMm);
+  else oledInChu(18, 43, "LOI");
+  oledInChu(64, 43, "R:");
+  if (d.laserPhaiHopLe) oledInSo(78, 43, d.phaiMm);
+  else oledInChu(78, 43, "LOI");
+
+  oledInChu(4, 55, "VAT CAN:");
+  oledInSo(58, 55, soLanGapVatCan);
+  oledInChu(69, 55, "/5");
+  oledCapNhat();
+
+  Serial.print(trangThai);
+  Serial.print(F("  F="));
+  if (d.sieuAmHopLe) Serial.print(d.truocCm);
+  else Serial.print(F("NO_ECHO"));
+  Serial.print(F("cm L=")); Serial.print(d.traiMm);
+  Serial.print(F("mm R=")); Serial.print(d.phaiMm);
+  Serial.print(F("mm  So lan vat can="));
+  Serial.print(soLanGapVatCan);
+  Serial.print('/'); Serial.println(SO_LAN_VAT_CAN_DE_THOAT);
+}
+
+void quayTrai90(const DuLieuKhoangCach &amp;d) {
+  hienThiMeCung("QUAY TRAI", d);
+  quayTraiTheoThoiGian(PWM_QUAY, QUAY_90_MS);
+  lanTruocQuayPhai = false;
+}
+
+void quayPhai90(const DuLieuKhoangCach &amp;d) {
+  hienThiMeCung("QUAY PHAI", d);
+  quayPhaiTheoThoiGian(PWM_QUAY, QUAY_90_MS);
+  lanTruocQuayPhai = true;
+}
+
+void thoatNgoCut(const DuLieuKhoangCach &amp;d) {
+  hienThiMeCung("NGO CUT - DANG LUI", d);
+  diLui(PWM_LUI);
+  delay(300);
+  dungRobot();
+  delay(100);
+
+  hienThiMeCung("NGO CUT - QUAY 180", d);
+  quayPhaiTheoThoiGian(PWM_QUAY, QUAY_180_MS);
+  lanTruocQuayPhai = true;
+}
+
+void xuLyMotLanVatCan(const DuLieuKhoangCach &amp;d) {
+  // Mỗi lần vào hàm này là một lần siêu âm xác nhận vật cản mới
+  // và robot thực hiện một thao tác đổi hướng.
+  soLanGapVatCan++;
+  dungRobot();
+  hienThiMeCung("VAT CAN PHIA TRUOC", d);
+  delay(150);
+
+  // Laser đã khởi tạo nhưng báo ngoài tầm đo được xem là phía rất thoáng,
+  // giống quy ước 2000 mm trong bài 11 gốc.
+  bool dungDuocLaserTrai = d.laserTraiHopLe || laserTraiDaSanSang();
+  bool dungDuocLaserPhai = d.laserPhaiHopLe || laserPhaiDaSanSang();
+  uint16_t traiDeChon = d.laserTraiHopLe ? d.traiMm : KHOANG_CACH_MO_MM;
+  uint16_t phaiDeChon = d.laserPhaiHopLe ? d.phaiMm : KHOANG_CACH_MO_MM;
+
+  if (dungDuocLaserTrai &amp;&amp; dungDuocLaserPhai &amp;&amp;
+      traiDeChon &lt; NGUONG_NGO_CUT_MM &amp;&amp; phaiDeChon &lt; NGUONG_NGO_CUT_MM) {
+    thoatNgoCut(d);
+  } else if (dungDuocLaserTrai &amp;&amp; dungDuocLaserPhai) {
+    if (traiDeChon &gt; phaiDeChon + 40) quayTrai90(d);
+    else if (phaiDeChon &gt; traiDeChon + 40) quayPhai90(d);
+    else if (lanTruocQuayPhai) quayTrai90(d);
+    else quayPhai90(d);
+  } else if (dungDuocLaserTrai) {
+    quayTrai90(d);
+  } else if (dungDuocLaserPhai) {
+    quayPhai90(d);
+  } else {
+    dungRobot();
+    hienThiMeCung("LOI CA HAI LASER", d);
+  }
+
+  if (soLanGapVatCan &gt;= SO_LAN_VAT_CAN_DE_THOAT) {
+    dungRobot();
+    daRaKhoiMeCung = true;
+    oledThongBao("BAI 20 - ME CUNG", "DA GAP 5 VAT CAN",
+                 "COI NHU DA THOAT", "DUNG ROBOT");
+    Serial.println(F("Da du 5 lan sieu am thay vat can: ket thuc me cung."));
+  }
+}
+
 void setup() {
-  Serial.begin(115200);
-  Serial.println(F("Nhap F/B/L/R/S roi nhan Send"));
-  Serial.println(F("Chi giai ma lenh, robot KHONG chay"));
+  batDauSerial();
+  oledBatDau();
+  dongCoBatDau();
+  sieuAmBatDau();
+  laserBatDau();
+  oledThongBao("BAI 20 - ME CUNG", "DAT ROBOT DAU LOI",
+               "THOAT SAU 5 VAT CAN", "CHO 2 GIAY");
+  delay(2000);
 }
 
 void loop() {
-  static unsigned long mocBaoCao = 0;
-
-  if (Serial.available() &gt; 0) {
-    char lenh = toupper(Serial.read());
-    if (lenh == '\n' || lenh == '\r') return;
-
-    Serial.print(F("Nhan lenh: "));
-    switch (lenh) {
-      case 'F': Serial.println(F("TIEN")); break;
-      case 'B': Serial.println(F("LUI")); break;
-      case 'L': Serial.println(F("TRAI")); break;
-      case 'R': Serial.println(F("PHAI")); break;
-      case 'S': Serial.println(F("DUNG")); break;
-      default:  Serial.println(F("KHONG HOP LE")); break;
-    }
+  if (daRaKhoiMeCung) {
+    dungRobot();
+    return;
   }
 
-  if (millis() - mocBaoCao &gt;= 1000) {
-    mocBaoCao = millis();
-    Serial.print(F("Uptime: "));
-    Serial.print(millis() / 1000);
-    Serial.println(F(" s"));
+  DuLieuKhoangCach d = docBaHuong();
+  bool coVatCan = d.sieuAmHopLe &amp;&amp; d.truocCm &lt;= NGUONG_TRUOC_CM;
+
+  if (coVatCan) {
+    xuLyMotLanVatCan(d);
+  } else if (!d.sieuAmHopLe &amp;&amp; !MAT_ECHO_XEM_LA_TRONG) {
+    dungRobot();
+    hienThiMeCung("DUNG - MAT ECHO", d);
+  } else {
+    diThang(PWM_DI);
+    hienThiMeCung("DI THANG", d);
   }
-}</code></pre>
-    </div></div>
-  </div></section>
-  <section class="lesson"><h2>5. Phân tích chương trình</h2><ul>
-      <li>Serial USB dùng riêng, không liên quan Serial1 dành cho Bluetooth chưa đấu.</li>
-      <li>Switch–case tách phần giải mã lệnh khỏi phần điều khiển phần cứng.</li>
-      <li>Báo cáo thời gian dùng millis() nên chương trình vẫn nhận lệnh liên tục.</li>
-    </ul></section>
-  <section class="lesson"><h2>6. Quy trình thực hành</h2><ol>
-      <li>Mở Serial Monitor ở 115200 baud.</li>
-      <li>Gửi từng lệnh F/B/L/R/S và kiểm tra tên lệnh phản hồi.</li>
-      <li>Gửi một ký tự khác để kiểm tra nhánh KHÔNG HỢP LỆ.</li>
-    </ol></section>
-  <section class="lesson"><h2>7. Bài tập mở rộng</h2><ol>
-      <li>Nhận một số PWM từ 0–255 sau ký tự lệnh.</li>
-      <li>In dữ liệu dạng CSV để dùng Serial Plotter.</li>
-      <li>Ghép lệnh với các hàm động cơ ở Bài 6 nhưng mặc định luôn khởi động ở DỪNG.</li>
-    </ol></section>
-  <section class="lesson"><h2>8. Lỗi thường gặp và cách xử lý</h2><div class="warning">Chữ rác trên Serial: tốc độ Monitor không khớp 115200.</div>
-<div class="warning">Lệnh bị đọc thêm dòng trống: bỏ qua ký tự CR/LF như chương trình mẫu.</div>
-<div class="warning">Bluetooth chưa đấu nên không thay <code>Serial</code> bằng <code>Serial1</code> ở giai đoạn này.</div></section>
-  <section class="lesson"><h2>9. Kết luận</h2><p>Serial đã trở thành kênh debug chuẩn cho tất cả bài tiếp theo mà không chiếm hoặc làm xung đột chân robot.</p></section>
+  delay(60);
+}
+</code></pre></div></div></div></section>
+  <section class="lesson"><h2>5. Phân tích chương trình</h2><ul><li>Bộ đếm chỉ tăng trong hàm xử lý một sự kiện vật cản, tránh đếm nhiều vòng loop cho cùng một bức tường.</li><li>Laser ngoài tầm được quy ước là phía thoáng để robot có thể lựa chọn hướng.</li><li>Cờ lanTruocQuayPhai giúp phá hòa khi hai bên gần bằng nhau.</li></ul></section>
+  <section class="lesson"><h2>6. Quy trình thực hành và hiệu chỉnh</h2><ol><li>Tạo hành lang chữ L rồi kiểm tra hướng rẽ.</li><li>Che hai bên để thử ngõ cụt.</li><li>Theo dõi bộ đếm 1/5 đến 5/5 trên OLED và Serial.</li><li>Chỉnh thời gian quay 90°/180° trước khi chạy mê cung thật.</li></ol></section>
+  <section class="lesson"><h2>7. Bài tập mở rộng</h2><ol><li>Xác nhận vật cản bằng ba lần đo liên tiếp.</li><li>Thay quay theo thời gian bằng quay theo encoder.</li><li>Lưu chuỗi hướng rẽ để robot chạy ngược về điểm đầu.</li></ol></section>
+  <section class="lesson"><h2>8. Lỗi thường gặp và cách xử lý</h2><div class="warning">Đếm quá nhanh: tăng khoảng lùi hoặc thêm khóa chống lặp sau khi rẽ.</div><div class="warning">Quay về phía hẹp: kiểm tra D39 trái và D37 phải.</div><div class="warning">Mất Echo làm robot đứng: lựa chọn MAT_ECHO_XEM_LA_TRONG phải phù hợp sa hình.</div></section>
+  <section class="lesson"><h2>9. Kết luận</h2><p>Bài 20 hoàn thiện riêng khu vực mê cung và tạo điều kiện chuyển sang bài line.</p></section>
   <nav class="nav-bottom" aria-label="Điều hướng bài học">
-    <a href="bai3.html">← Bài 3</a>
+    <a href="bai19.html">← Bài 19</a>
     <a href="tailieu-kythuat.html">Danh sách bài học</a>
-    <a href="bai5.html">Bài 5 →</a>
+    <a href="bai21.html">Bài 21 →</a>
   </nav>
 </main>
 <!-- ===== NỘI DUNG===== -->

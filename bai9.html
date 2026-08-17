@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Bài 4. Giao tiếp Serial và debug chương trình</title>
+<title>Bài 9. Hai cảm biến đo xa laser VL53L0X</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -480,17 +480,18 @@ h1 {
 <main class="page">
   <section class="hero">
     <div class="label">BÀI GIẢNG LẬP TRÌNH ROBOT MÊ CUNG</div>
-    <h1>Bài 4. Giao tiếp Serial và debug chương trình</h1>
-    <p class="subtitle">Gửi dữ liệu, nhận lệnh thử nghiệm và quan sát trạng thái chương trình mà không chiếm các chân phần cứng của robot.</p>
+    <h1>Bài 9. Hai cảm biến đo xa laser VL53L0X</h1>
+    <p class="subtitle">Khởi tạo hai VL53L0X cùng loại bằng XSHUT, đổi địa chỉ I2C và đo khoảng cách vuông góc về hai bên trái–phải.</p>
   </section>
   <section class="lesson"><h2>1. Mục tiêu bài học</h2><ul>
-      <li>Khởi tạo Serial Monitor đúng 115200 baud.</li>
-      <li>In dữ liệu có nhãn để dễ phân tích.</li>
-      <li>Nhận ký tự lệnh và kiểm tra thuật toán ở chế độ không chạy động cơ.</li>
-      <li>Dùng millis() để gửi dữ liệu định kỳ.</li>
+      <li>Giải thích được nguyên nhân hai VL53L0X trùng địa chỉ mặc định 0x29.</li>
+      <li>Bật lần lượt cảm biến bằng XSHUT và đặt địa chỉ 0x30, 0x31.</li>
+      <li>Đọc khoảng cách trái–phải theo đúng vị trí lắp thực tế.</li>
+      <li>Phát hiện lỗi khởi tạo và phép đo ngoài tầm.</li>
     </ul></section>
-  <section class="lesson"><h2>2. Kiến thức trọng tâm</h2><p>Serial qua cổng USB là công cụ debug chính. Bài này không dùng nút D4 hoặc LED D8 như ví dụ cũ vì các chân đó thuộc cảm biến và không có LED rời trên robot.</p>
-      <p>Các ký tự F, B, L, R, S chỉ được giải mã và in tên lệnh. Động cơ chưa được kích hoạt, giúp sinh viên kiểm tra giao thức an toàn trước khi ghép với Bài 6.</p></section>
+  <section class="lesson"><h2>2. Kiến thức trọng tâm</h2><p>Hai VL53L0X dùng chung bus I2C D20/D21 và cùng có địa chỉ mặc định 0x29. Phải giữ cả hai ở trạng thái tắt, bật cảm biến trái để đổi thành 0x30, sau đó mới bật cảm biến phải và đổi thành 0x31.</p>
+    <p>Cảm biến trái có XSHUT D39 và nhìn sang trái; cảm biến phải có XSHUT D37 và nhìn sang phải. Ánh xạ này đã được dùng trong cấu hình thư viện mới nhất.</p>
+    <div class="warning">Nếu đổi thứ tự XSHUT hoặc nhầm trái–phải, thuật toán mê cung sẽ quay về phía gần vật cản hơn.</div></section>
   <section class="lesson"><h2>3. Kết nối phần cứng</h2><div class="pin-collapse open">
     <button class="pin-collapse-head" onclick="togglePinTable(this)">
       <span>📌 Bảng chân theo cấu hình robot mới nhất</span>
@@ -498,74 +499,146 @@ h1 {
     </button>
     <div class="pin-collapse-body"><table class="pin-table">
       <tr><th>Thiết bị / tín hiệu</th><th>Chân Mega 2560 Mini</th><th>Chức năng</th><th>Ghi chú</th></tr>
-      <tr><td>Serial USB</td><td>Serial</td><td>Debug với máy tính</td><td>115200 baud</td></tr>
-      <tr><td>Bluetooth</td><td>Serial1 D18/D19</td><td>Chưa sử dụng</td><td>Module chưa đấu nối</td></tr>
+      <tr><td>Laser trái XSHUT</td><td>D39</td><td>Bật/tắt cảm biến trái</td><td>Địa chỉ mới 0x30</td></tr>
+      <tr><td>Laser phải XSHUT</td><td>D37</td><td>Bật/tắt cảm biến phải</td><td>Địa chỉ mới 0x31</td></tr>
+      <tr><td>SDA/SCL</td><td>D20/D21</td><td>Bus I2C</td><td>Dùng chung OLED</td></tr>
+      <tr><td>OLED</td><td>I2C 0x3C</td><td>Hiển thị</td><td>Không trùng địa chỉ laser</td></tr>
     </table></div>
   </div></section>
   <section class="lesson"><h2>4. Chương trình thực hành</h2><p>Mã ví dụ sử dụng đúng cấu hình đã kiểm tra trên robot, có OLED và Serial để quan sát.</p><div class="code-collapse">
     <button class="code-collapse-head" onclick="toggleCode(this)">
-      <span>💻 Bài 4 – nhận lệnh Serial ở chế độ an toàn</span><span class="arrow">▶</span>
+      <span>💻 Bài 9 – đo độc lập hai laser trái/phải</span><span class="arrow">▶</span>
     </button>
     <div class="code-collapse-body"><div class="code-box">
-      <div class="code-title">Bài 4 – nhận lệnh Serial ở chế độ an toàn</div>
+      <div class="code-title">Bài 9 – đo độc lập hai laser trái/phải</div>
       <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-      <pre><code class="language-cpp">// BÀI 4: GIAO TIẾP SERIAL - CHƯA ĐIỀU KHIỂN ĐỘNG CƠ
+      <pre><code class="language-cpp">// BÀI 9: HAI CẢM BIẾN LASER VL53L0X
+#include &lt;Wire.h&gt;
+#include &lt;Adafruit_GFX.h&gt;
+#include &lt;Adafruit_SSD1306.h&gt;
+#include &lt;Adafruit_VL53L0X.h&gt;
+
+const uint8_t XSHUT_TRAI = 39;
+const uint8_t XSHUT_PHAI = 37;
+const uint8_t DIA_CHI_TRAI = 0x30;
+const uint8_t DIA_CHI_PHAI = 0x31;
+
+Adafruit_SSD1306 oled(128, 64, &amp;Wire, -1);
+Adafruit_VL53L0X laserTrai;
+Adafruit_VL53L0X laserPhai;
+
+void dungBaoLoi(const __FlashStringHelper *loi) {
+  Serial.println(loi);
+  oled.clearDisplay();
+  oled.setTextColor(SSD1306_WHITE);
+  oled.setTextSize(1);
+  oled.setCursor(0, 10);
+  oled.println(F("LOI KHOI TAO:"));
+  oled.println(loi);
+  oled.display();
+  while (true) delay(1000);
+}
+
+void khoiTaoHaiLaser() {
+  pinMode(XSHUT_TRAI, OUTPUT);
+  pinMode(XSHUT_PHAI, OUTPUT);
+  digitalWrite(XSHUT_TRAI, LOW);
+  digitalWrite(XSHUT_PHAI, LOW);
+  delay(10);
+
+  digitalWrite(XSHUT_TRAI, HIGH);
+  delay(10);
+  if (!laserTrai.begin(DIA_CHI_TRAI)) {
+    dungBaoLoi(F("LASER TRAI D39"));
+  }
+
+  digitalWrite(XSHUT_PHAI, HIGH);
+  delay(10);
+  if (!laserPhai.begin(DIA_CHI_PHAI)) {
+    dungBaoLoi(F("LASER PHAI D37"));
+  }
+}
+
+bool docLaser(Adafruit_VL53L0X &amp;laser, uint16_t &amp;mm) {
+  VL53L0X_RangingMeasurementData_t ketQua;
+  laser.rangingTest(&amp;ketQua, false);
+  if (ketQua.RangeStatus != 0) {
+    mm = 0;
+    return false;
+  }
+  mm = ketQua.RangeMilliMeter;
+  return true;
+}
+
+void hienThi(uint16_t trai, bool okTrai,
+             uint16_t phai, bool okPhai) {
+  oled.clearDisplay();
+  oled.drawRect(0, 0, 128, 64, SSD1306_WHITE);
+  oled.setTextColor(SSD1306_WHITE);
+  oled.setTextSize(1);
+  oled.setCursor(8, 4); oled.println(F("LASER TRAI / PHAI"));
+  oled.drawLine(0, 16, 127, 16, SSD1306_WHITE);
+  oled.setTextSize(2);
+  oled.setCursor(4, 23); oled.print(F("L:"));
+  okTrai ? oled.print(trai) : oled.print(F("--"));
+  oled.setCursor(4, 44); oled.print(F("R:"));
+  okPhai ? oled.print(phai) : oled.print(F("--"));
+  oled.setTextSize(1);
+  oled.setCursor(103, 50); oled.print(F("mm"));
+  oled.display();
+}
+
 void setup() {
   Serial.begin(115200);
-  Serial.println(F("Nhap F/B/L/R/S roi nhan Send"));
-  Serial.println(F("Chi giai ma lenh, robot KHONG chay"));
+  Wire.begin();
+  if (!oled.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println(F("LOI OLED 0x3C"));
+    while (true) delay(1000);
+  }
+  khoiTaoHaiLaser();
 }
 
 void loop() {
-  static unsigned long mocBaoCao = 0;
+  uint16_t trai, phai;
+  bool okTrai = docLaser(laserTrai, trai);
+  bool okPhai = docLaser(laserPhai, phai);
 
-  if (Serial.available() &gt; 0) {
-    char lenh = toupper(Serial.read());
-    if (lenh == '\n' || lenh == '\r') return;
+  Serial.print(F("Trai="));
+  okTrai ? Serial.print(trai) : Serial.print(F("LOI"));
+  Serial.print(F(" mm  Phai="));
+  okPhai ? Serial.print(phai) : Serial.print(F("LOI"));
+  Serial.println(F(" mm"));
 
-    Serial.print(F("Nhan lenh: "));
-    switch (lenh) {
-      case 'F': Serial.println(F("TIEN")); break;
-      case 'B': Serial.println(F("LUI")); break;
-      case 'L': Serial.println(F("TRAI")); break;
-      case 'R': Serial.println(F("PHAI")); break;
-      case 'S': Serial.println(F("DUNG")); break;
-      default:  Serial.println(F("KHONG HOP LE")); break;
-    }
-  }
-
-  if (millis() - mocBaoCao &gt;= 1000) {
-    mocBaoCao = millis();
-    Serial.print(F("Uptime: "));
-    Serial.print(millis() / 1000);
-    Serial.println(F(" s"));
-  }
+  hienThi(trai, okTrai, phai, okPhai);
+  delay(100);
 }</code></pre>
     </div></div>
   </div></section>
   <section class="lesson"><h2>5. Phân tích chương trình</h2><ul>
-      <li>Serial USB dùng riêng, không liên quan Serial1 dành cho Bluetooth chưa đấu.</li>
-      <li>Switch–case tách phần giải mã lệnh khỏi phần điều khiển phần cứng.</li>
-      <li>Báo cáo thời gian dùng millis() nên chương trình vẫn nhận lệnh liên tục.</li>
+      <li>Hai cảm biến được tắt đồng thời trước khi bắt đầu để tránh trùng địa chỉ 0x29.</li>
+      <li>Laser trái D39 được đổi thành 0x30 trước; laser phải D37 được đổi thành 0x31 sau.</li>
+      <li>RangeStatus khác 0 được giữ là lỗi phép đo và hiển thị <code>--</code>.</li>
+      <li>Hàm đọc dùng tham chiếu nên có thể tái sử dụng cho cả hai đối tượng cảm biến.</li>
     </ul></section>
   <section class="lesson"><h2>6. Quy trình thực hành</h2><ol>
-      <li>Mở Serial Monitor ở 115200 baud.</li>
-      <li>Gửi từng lệnh F/B/L/R/S và kiểm tra tên lệnh phản hồi.</li>
-      <li>Gửi một ký tự khác để kiểm tra nhánh KHÔNG HỢP LỆ.</li>
+      <li>Cài Adafruit VL53L0X và Adafruit BusIO trong Library Manager.</li>
+      <li>Đặt vật bên trái rồi bên phải, xác nhận nhãn L/R không bị đảo.</li>
+      <li>Thử tháo từng dây XSHUT để quan sát thông báo lỗi đúng cảm biến.</li>
+      <li>Đo tại 100, 200, 400 mm và ghi sai số.</li>
     </ol></section>
   <section class="lesson"><h2>7. Bài tập mở rộng</h2><ol>
-      <li>Nhận một số PWM từ 0–255 sau ký tự lệnh.</li>
-      <li>In dữ liệu dạng CSV để dùng Serial Plotter.</li>
-      <li>Ghép lệnh với các hàm động cơ ở Bài 6 nhưng mặc định luôn khởi động ở DỪNG.</li>
+      <li>Tính chênh lệch khoảng cách trái–phải.</li>
+      <li>Xác định bên có khoảng trống lớn hơn.</li>
+      <li>Lọc trung vị ba lần đo của mỗi laser.</li>
     </ol></section>
-  <section class="lesson"><h2>8. Lỗi thường gặp và cách xử lý</h2><div class="warning">Chữ rác trên Serial: tốc độ Monitor không khớp 115200.</div>
-<div class="warning">Lệnh bị đọc thêm dòng trống: bỏ qua ký tự CR/LF như chương trình mẫu.</div>
-<div class="warning">Bluetooth chưa đấu nên không thay <code>Serial</code> bằng <code>Serial1</code> ở giai đoạn này.</div></section>
-  <section class="lesson"><h2>9. Kết luận</h2><p>Serial đã trở thành kênh debug chuẩn cho tất cả bài tiếp theo mà không chiếm hoặc làm xung đột chân robot.</p></section>
+  <section class="lesson"><h2>8. Lỗi thường gặp và cách xử lý</h2><div class="warning">Cả hai laser không khởi tạo: kiểm tra SDA D20, SCL D21 và nguồn.</div>
+<div class="warning">Chỉ cảm biến thứ hai lỗi: kiểm tra quy trình đổi địa chỉ và XSHUT D37.</div>
+<div class="warning">Trái/phải bị ngược: xác nhận D39 là trái, D37 là phải trên robot thật.</div></section>
+  <section class="lesson"><h2>9. Kết luận</h2><p>Robot đã có hai khoảng cách bên đúng theo cấu hình thực tế, sẵn sàng cho bài bám tường và mê cung.</p></section>
   <nav class="nav-bottom" aria-label="Điều hướng bài học">
-    <a href="bai3.html">← Bài 3</a>
+    <a href="bai8.html">← Bài 8</a>
     <a href="tailieu-kythuat.html">Danh sách bài học</a>
-    <a href="bai5.html">Bài 5 →</a>
+    <a href="bai10.html">Bài 10 →</a>
   </nav>
 </main>
 <!-- ===== NỘI DUNG===== -->

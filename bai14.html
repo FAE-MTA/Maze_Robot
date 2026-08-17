@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Bài 4. Giao tiếp Serial và debug chương trình</title>
+<title>Bài 14. Ứng dụng encoder đo quãng đường và góc quay</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -480,92 +480,234 @@ h1 {
 <main class="page">
   <section class="hero">
     <div class="label">BÀI GIẢNG LẬP TRÌNH ROBOT MÊ CUNG</div>
-    <h1>Bài 4. Giao tiếp Serial và debug chương trình</h1>
-    <p class="subtitle">Gửi dữ liệu, nhận lệnh thử nghiệm và quan sát trạng thái chương trình mà không chiếm các chân phần cứng của robot.</p>
+    <h1>Bài 14. Ứng dụng encoder đo quãng đường và góc quay</h1>
+    <p class="subtitle">Chuyển số xung thành quãng đường bánh xe, đặt mục tiêu di chuyển và dừng robot an toàn theo phản hồi encoder.</p>
   </section>
-  <section class="lesson"><h2>1. Mục tiêu bài học</h2><ul>
-      <li>Khởi tạo Serial Monitor đúng 115200 baud.</li>
-      <li>In dữ liệu có nhãn để dễ phân tích.</li>
-      <li>Nhận ký tự lệnh và kiểm tra thuật toán ở chế độ không chạy động cơ.</li>
-      <li>Dùng millis() để gửi dữ liệu định kỳ.</li>
-    </ul></section>
-  <section class="lesson"><h2>2. Kiến thức trọng tâm</h2><p>Serial qua cổng USB là công cụ debug chính. Bài này không dùng nút D4 hoặc LED D8 như ví dụ cũ vì các chân đó thuộc cảm biến và không có LED rời trên robot.</p>
-      <p>Các ký tự F, B, L, R, S chỉ được giải mã và in tên lệnh. Động cơ chưa được kích hoạt, giúp sinh viên kiểm tra giao thức an toàn trước khi ghép với Bài 6.</p></section>
-  <section class="lesson"><h2>3. Kết nối phần cứng</h2><div class="pin-collapse open">
-    <button class="pin-collapse-head" onclick="togglePinTable(this)">
-      <span>📌 Bảng chân theo cấu hình robot mới nhất</span>
-      <span class="pin-collapse-arrow">▶</span>
-    </button>
-    <div class="pin-collapse-body"><table class="pin-table">
-      <tr><th>Thiết bị / tín hiệu</th><th>Chân Mega 2560 Mini</th><th>Chức năng</th><th>Ghi chú</th></tr>
-      <tr><td>Serial USB</td><td>Serial</td><td>Debug với máy tính</td><td>115200 baud</td></tr>
-      <tr><td>Bluetooth</td><td>Serial1 D18/D19</td><td>Chưa sử dụng</td><td>Module chưa đấu nối</td></tr>
-    </table></div>
-  </div></section>
-  <section class="lesson"><h2>4. Chương trình thực hành</h2><p>Mã ví dụ sử dụng đúng cấu hình đã kiểm tra trên robot, có OLED và Serial để quan sát.</p><div class="code-collapse">
-    <button class="code-collapse-head" onclick="toggleCode(this)">
-      <span>💻 Bài 4 – nhận lệnh Serial ở chế độ an toàn</span><span class="arrow">▶</span>
-    </button>
-    <div class="code-collapse-body"><div class="code-box">
-      <div class="code-title">Bài 4 – nhận lệnh Serial ở chế độ an toàn</div>
-      <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-      <pre><code class="language-cpp">// BÀI 4: GIAO TIẾP SERIAL - CHƯA ĐIỀU KHIỂN ĐỘNG CƠ
-void setup() {
-  Serial.begin(115200);
-  Serial.println(F("Nhap F/B/L/R/S roi nhan Send"));
-  Serial.println(F("Chi giai ma lenh, robot KHONG chay"));
+
+  <section class="lesson">
+    <h2>1. Mục tiêu bài học</h2>
+    <ul>
+      <li>Chuyển đổi số xung encoder thành số vòng và quãng đường di chuyển.</li>
+      <li>Tổ chức một chuyển động có mục tiêu, điều kiện hoàn thành và thời gian bảo vệ.</li>
+      <li>Dừng riêng từng bánh khi đạt mục tiêu để giảm vượt quá.</li>
+      <li>Hiệu chỉnh đường kính bánh, số xung/vòng và số xung quay góc trên robot thật.</li>
+    </ul>
+  </section>
+
+  <section class="lesson">
+    <h2>2. Kiến thức trọng tâm</h2>
+    <p>Một vòng bánh xe đi được quãng đường bằng chu vi <strong>π × đường kính bánh</strong>. Nếu encoder có N xung/vòng, quãng đường mỗi xung bằng chu vi/N. Hai bánh cùng đi một quãng đường tạo chuyển động thẳng; hai bánh quay ngược chiều tạo chuyển động quay tại chỗ.</p>
+    <div class="note"><strong>Quãng đường:</strong> s = |xung| × π × D / N. <strong>Quay tại chỗ:</strong> quãng đường mỗi bánh xấp xỉ π × khoảng cách hai bánh × góc/360°.</div>
+    <p>Công thức chỉ là mô hình ban đầu. Trượt bánh, độ mềm lốp và sai số đường kính làm kết quả thực tế khác nhau. Cần đo sai số và tạo hệ số hiệu chỉnh.</p>
+  </section>
+
+  <section class="lesson">
+    <h2>3. Kết nối phần cứng</h2>
+    
+    <div class="pin-collapse open">
+      <button class="pin-collapse-head" onclick="togglePinTable(this)">
+        <span>📌 Bảng kết nối sử dụng trong bài</span>
+        <span class="pin-collapse-arrow">▶</span>
+      </button>
+      <div class="pin-collapse-body">
+        <table class="pin-table">
+          <tr><th>Thiết bị / tín hiệu</th><th>Chân Mega 2560</th><th>Vai trò</th><th>Lưu ý</th></tr>
+          <tr><td>Động cơ trái</td><td>D5, D9</td><td>Điều khiển PWM</td><td>Theo Bài 6</td></tr>
+          <tr><td>Động cơ phải</td><td>D6, D10</td><td>Điều khiển PWM</td><td>Đảo chiều trong phần mềm</td></tr>
+          <tr><td>Encoder trái</td><td>D2, D12</td><td>Đếm xung và chiều</td><td>D2 là ngắt ngoài</td></tr>
+          <tr><td>Encoder phải</td><td>D3, D14</td><td>Đếm xung và chiều</td><td>D3 là ngắt ngoài</td></tr>
+          <tr><td>OLED</td><td>D20, D21</td><td>Theo dõi tiến độ</td><td>I2C 0x3C</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="lesson">
+    <h2>4. Chương trình thực hành</h2>
+    <p>Chương trình dưới đây được viết đầy đủ, có chú thích tiếng Việt và có thể mở trực tiếp trong Arduino IDE.</p>
+    <div class="code-collapse">
+      <button class="code-collapse-head" onclick="toggleCode(this)">
+        <span>💻 Bài 14 – robot tự đi 50 cm theo encoder</span><span class="arrow">▶</span>
+      </button>
+      <div class="code-collapse-body">
+        <div class="code-box">
+          <div class="code-title">Bài 14 – robot tự đi 50 cm theo encoder</div>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          <pre><code class="language-cpp">// BÀI 14: ĐI QUÃNG ĐƯỜNG ĐẶT TRƯỚC BẰNG ENCODER
+#include &lt;Wire.h&gt;
+#include &lt;Adafruit_GFX.h&gt;
+#include &lt;Adafruit_SSD1306.h&gt;
+
+const uint8_t MOTOR_TRAI_A = 5, MOTOR_TRAI_B = 9;
+const uint8_t MOTOR_PHAI_A = 6, MOTOR_PHAI_B = 10;
+const uint8_t ENC_TRAI_A = 2, ENC_TRAI_B = 12;
+const uint8_t ENC_PHAI_A = 3, ENC_PHAI_B = 14;
+
+const float XUNG_MOI_VONG = 20.0;   // Hiệu chỉnh thực tế.
+const float DUONG_KINH_BANH_CM = 6.5;
+const float QUANG_DUONG_MUC_TIEU_CM = 50.0;
+const int PWM_CHAY = 105;
+const unsigned long TIMEOUT_MS = 10000UL;
+
+volatile long xungTrai = 0;
+volatile long xungPhai = 0;
+Adafruit_SSD1306 oled(128, 64, &amp;Wire, -1);
+
+void ngatTrai() {
+  xungTrai += digitalRead(ENC_TRAI_B) ? 1 : -1;
+}
+void ngatPhai() {
+  // Đảo dấu vì encoder phải được lắp đối xứng.
+  xungPhai += digitalRead(ENC_PHAI_B) ? -1 : 1;
 }
 
-void loop() {
-  static unsigned long mocBaoCao = 0;
+void datMotDongCo(uint8_t a, uint8_t b, int pwm, bool dao) {
+  pwm = constrain(pwm, -255, 255);
+  if (dao) pwm = -pwm;
+  if (pwm &gt; 0) { analogWrite(a, pwm); analogWrite(b, 0); }
+  else if (pwm &lt; 0) { analogWrite(a, 0); analogWrite(b, -pwm); }
+  else { analogWrite(a, 0); analogWrite(b, 0); }
+}
+void datHaiDongCo(int trai, int phai) {
+  datMotDongCo(MOTOR_TRAI_A, MOTOR_TRAI_B, trai, false);
+  datMotDongCo(MOTOR_PHAI_A, MOTOR_PHAI_B, phai, true);
+}
+void dungRobot() { datHaiDongCo(0, 0); }
 
-  if (Serial.available() &gt; 0) {
-    char lenh = toupper(Serial.read());
-    if (lenh == '\n' || lenh == '\r') return;
+void datLaiEncoder() {
+  noInterrupts();
+  xungTrai = 0;
+  xungPhai = 0;
+  interrupts();
+}
 
-    Serial.print(F("Nhan lenh: "));
-    switch (lenh) {
-      case 'F': Serial.println(F("TIEN")); break;
-      case 'B': Serial.println(F("LUI")); break;
-      case 'L': Serial.println(F("TRAI")); break;
-      case 'R': Serial.println(F("PHAI")); break;
-      case 'S': Serial.println(F("DUNG")); break;
-      default:  Serial.println(F("KHONG HOP LE")); break;
+void chupEncoder(long &amp;trai, long &amp;phai) {
+  noInterrupts();
+  trai = xungTrai;
+  phai = xungPhai;
+  interrupts();
+}
+
+float xungSangCm(long soXung) {
+  return abs(soXung) * PI * DUONG_KINH_BANH_CM / XUNG_MOI_VONG;
+}
+
+bool diQuangDuong(float mucTieuCm) {
+  long xungMucTieu = lround(mucTieuCm * XUNG_MOI_VONG /
+                            (PI * DUONG_KINH_BANH_CM));
+  datLaiEncoder();
+  unsigned long batDau = millis();
+  unsigned long capNhatOled = 0;
+
+  while (millis() - batDau &lt; TIMEOUT_MS) {
+    long trai, phai;
+    chupEncoder(trai, phai);
+    long daDiTrai = abs(trai);
+    long daDiPhai = abs(phai);
+
+    bool traiDat = daDiTrai &gt;= xungMucTieu;
+    bool phaiDat = daDiPhai &gt;= xungMucTieu;
+    if (traiDat &amp;&amp; phaiDat) {
+      dungRobot();
+      return true;
+    }
+
+    // Bánh nào đạt trước sẽ dừng, bánh còn lại tiếp tục đến mục tiêu.
+    datHaiDongCo(traiDat ? 0 : PWM_CHAY,
+                 phaiDat ? 0 : PWM_CHAY);
+
+    if (millis() - capNhatOled &gt;= 150) {
+      capNhatOled = millis();
+      float cmTrai = xungSangCm(trai);
+      float cmPhai = xungSangCm(phai);
+      Serial.print("T/P cm: ");
+      Serial.print(cmTrai, 1); Serial.print(" / "); Serial.println(cmPhai, 1);
+
+      oled.clearDisplay();
+      oled.setTextColor(SSD1306_WHITE);
+      oled.setTextSize(1);
+      oled.setCursor(0, 0);  oled.println("DI 50 cm ENCODER");
+      oled.setCursor(0, 20); oled.print("Trai: "); oled.print(cmTrai, 1); oled.println(" cm");
+      oled.setCursor(0, 34); oled.print("Phai: "); oled.print(cmPhai, 1); oled.println(" cm");
+      oled.setCursor(0, 50); oled.print("Muc tieu: "); oled.println(mucTieuCm, 1);
+      oled.display();
     }
   }
 
-  if (millis() - mocBaoCao &gt;= 1000) {
-    mocBaoCao = millis();
-    Serial.print(F("Uptime: "));
-    Serial.print(millis() / 1000);
-    Serial.println(F(" s"));
+  dungRobot(); // Dừng an toàn nếu encoder hỏng hoặc robot bị kẹt.
+  return false;
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(MOTOR_TRAI_A, OUTPUT); pinMode(MOTOR_TRAI_B, OUTPUT);
+  pinMode(MOTOR_PHAI_A, OUTPUT); pinMode(MOTOR_PHAI_B, OUTPUT);
+  pinMode(ENC_TRAI_A, INPUT_PULLUP); pinMode(ENC_TRAI_B, INPUT_PULLUP);
+  pinMode(ENC_PHAI_A, INPUT_PULLUP); pinMode(ENC_PHAI_B, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(ENC_TRAI_A), ngatTrai, RISING);
+  attachInterrupt(digitalPinToInterrupt(ENC_PHAI_A), ngatPhai, RISING);
+  dungRobot();
+
+  Wire.begin();
+  if (!oled.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println("LOI OLED");
+    while (true) delay(1000);
   }
+
+  delay(2000);
+  bool thanhCong = diQuangDuong(QUANG_DUONG_MUC_TIEU_CM);
+  Serial.println(thanhCong ? "DA DAT MUC TIEU" : "LOI / TIMEOUT");
+}
+
+void loop() {
+  dungRobot(); // Chỉ thực hiện một lần sau khi khởi động.
 }</code></pre>
-    </div></div>
-  </div></section>
-  <section class="lesson"><h2>5. Phân tích chương trình</h2><ul>
-      <li>Serial USB dùng riêng, không liên quan Serial1 dành cho Bluetooth chưa đấu.</li>
-      <li>Switch–case tách phần giải mã lệnh khỏi phần điều khiển phần cứng.</li>
-      <li>Báo cáo thời gian dùng millis() nên chương trình vẫn nhận lệnh liên tục.</li>
-    </ul></section>
-  <section class="lesson"><h2>6. Quy trình thực hành</h2><ol>
-      <li>Mở Serial Monitor ở 115200 baud.</li>
-      <li>Gửi từng lệnh F/B/L/R/S và kiểm tra tên lệnh phản hồi.</li>
-      <li>Gửi một ký tự khác để kiểm tra nhánh KHÔNG HỢP LỆ.</li>
-    </ol></section>
-  <section class="lesson"><h2>7. Bài tập mở rộng</h2><ol>
-      <li>Nhận một số PWM từ 0–255 sau ký tự lệnh.</li>
-      <li>In dữ liệu dạng CSV để dùng Serial Plotter.</li>
-      <li>Ghép lệnh với các hàm động cơ ở Bài 6 nhưng mặc định luôn khởi động ở DỪNG.</li>
-    </ol></section>
-  <section class="lesson"><h2>8. Lỗi thường gặp và cách xử lý</h2><div class="warning">Chữ rác trên Serial: tốc độ Monitor không khớp 115200.</div>
-<div class="warning">Lệnh bị đọc thêm dòng trống: bỏ qua ký tự CR/LF như chương trình mẫu.</div>
-<div class="warning">Bluetooth chưa đấu nên không thay <code>Serial</code> bằng <code>Serial1</code> ở giai đoạn này.</div></section>
-  <section class="lesson"><h2>9. Kết luận</h2><p>Serial đã trở thành kênh debug chuẩn cho tất cả bài tiếp theo mà không chiếm hoặc làm xung đột chân robot.</p></section>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lesson">
+    <h2>5. Phân tích chương trình và thuật toán</h2>
+    <ul>
+      <li>Mục tiêu centimet được đổi sang xung trước khi động cơ chạy; mọi điều kiện hoàn thành sau đó dùng số nguyên ổn định.</li>
+      <li>Bánh đạt mục tiêu trước được dừng riêng, giúp giảm chênh lệch quãng đường cuối hành trình.</li>
+      <li>Timeout 10 giây bảo vệ khi robot bị kẹt hoặc encoder mất xung.</li>
+      <li>Hàm dùng <code>while</code> để minh họa một chuyển động có mục tiêu; bài nâng cao nên tổ chức thành máy trạng thái không chặn.</li>
+    </ul>
+  </section>
+
+  <section class="lesson">
+    <h2>6. Quy trình thực hành</h2>
+    <ol>
+      <li>Kê robot, nạp chương trình và kiểm tra hai encoder đều tăng theo chiều tiến.</li>
+      <li>Đặt robot trên sàn phẳng, đánh dấu vị trí đầu và cho robot chạy mục tiêu 50 cm.</li>
+      <li>Đo quãng đường thực tế ít nhất 5 lần, tính sai số trung bình.</li>
+      <li>Điều chỉnh đường kính hiệu dụng hoặc số xung/vòng, sau đó thử lại.</li>
+    </ol>
+  </section>
+
+  <section class="lesson">
+    <h2>7. Bài tập củng cố và mở rộng</h2>
+    <ol>
+      <li>Viết hàm <code>diLuiQuangDuong()</code> dùng cùng phép đổi xung.</li>
+      <li>Tính số xung cần thiết để robot quay tại chỗ 90° từ khoảng cách hai bánh.</li>
+      <li>Giảm dần PWM khi còn dưới 20% mục tiêu để giảm vượt quá.</li>
+    </ol>
+  </section>
+
+  <section class="lesson">
+    <h2>8. Lỗi thường gặp và cách xử lý</h2>
+    <div class="warning">Robot chạy nhưng báo timeout: ít nhất một encoder không có xung hoặc dấu encoder chưa đúng.</div>
+    <div class="warning">Quãng đường sai ổn định: hiệu chỉnh lại số xung/vòng và đường kính bánh hiệu dụng.</div>
+    <div class="warning">Robot lệch nhiều trước khi một bánh dừng: cần điều khiển đồng bộ tốc độ ở Bài 15, không chỉ dừng cuối hành trình.</div>
+    <div class="warning">Luôn giữ robot trong vùng thử an toàn vì lỗi encoder có thể khiến bánh tiếp tục chạy đến khi timeout.</div>
+  </section>
+<section class="lesson"><h2>9. Kết luận</h2><p>Encoder đã được dùng như phản hồi vị trí thay vì chỉ hiển thị tốc độ. Sinh viên đã có cấu trúc mục tiêu–phản hồi–dừng an toàn cho các chuyển động chính xác.</p></section>
   <nav class="nav-bottom" aria-label="Điều hướng bài học">
-    <a href="bai3.html">← Bài 3</a>
+    <a href="bai13.html">← Bài 13</a>
     <a href="tailieu-kythuat.html">Danh sách bài học</a>
-    <a href="bai5.html">Bài 5 →</a>
+    <a href="bai15.html">Bài 15 →</a>
   </nav>
 </main>
 <!-- ===== NỘI DUNG===== -->

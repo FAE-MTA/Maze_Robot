@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Bài 3. Điều khiển nút nhấn</title>
+<title>Bài 3. Nút nhấn và tín hiệu INPUT – bài tham khảo</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -472,390 +472,78 @@ h1 {
 
 <!-- ===== NỘI DUNG===== -->
 <main class="page">
-
   <section class="hero">
     <div class="label">BÀI GIẢNG LẬP TRÌNH ROBOT MÊ CUNG</div>
-
-    <h1>Bài 3. Nút nhấn và đọc tín hiệu INPUT</h1>
-
-    <p class="subtitle">
-      Bài học giúp học viên hiểu cách đọc tín hiệu nút nhấn bằng Arduino, gồm:
-      dùng điện trở kéo lên trong, điện trở kéo ngoài, đọc một nút bằng Analog và đọc nhiều nút trên cùng một chân A0.
-    </p>
+    <h1>Bài 3. Nút nhấn và tín hiệu INPUT – bài tham khảo</h1>
+    <p class="subtitle">Tìm hiểu INPUT và INPUT_PULLUP trên A0; nút hiện chưa đấu nối nên bài này dùng để học lý thuyết hoặc mô phỏng.</p>
   </section>
-
-  <section class="lesson">
-    <h2>1. Mục tiêu bài học</h2>
-    <ul>
-      <li>Hiểu khái niệm INPUT trong Arduino.</li>
-      <li>Biết đọc nút nhấn bằng <code>digitalRead()</code>.</li>
-      <li>Hiểu điện trở kéo lên trong <code>INPUT_PULLUP</code>.</li>
-      <li>Biết cách đấu nút dùng điện trở kéo ngoài.</li>
-      <li>Biết đọc nút nhấn bằng <code>analogRead()</code>.</li>
-      <li>Biết đọc 4 nút dùng chung một chân A0.</li>
-    </ul>
-  </section>
-
-  <section class="lesson">
-    <h2>2. Khái niệm INPUT</h2>
-
-    <p>
-      INPUT là chế độ để Arduino nhận tín hiệu từ bên ngoài, ví dụ: nút nhấn, công tắc,
-      cảm biến dò line, cảm biến siêu âm, cảm biến màu...
-    </p>
-
-    <div class="code-box">
-<pre><code class="language-cpp">pinMode(pin, INPUT);         // Đặt chân ở chế độ đọc tín hiệu ngoài
-pinMode(pin, INPUT_PULLUP);  // Đọc tín hiệu, dùng điện trở kéo lên bên trong Arduino
-digitalRead(pin);            // Đọc tín hiệu digital: HIGH hoặc LOW
-analogRead(pin);             // Đọc tín hiệu analog: 0 đến 1023</code></pre>
-    </div>
-
-        <div class="image-wrap">
-      <img src="DATA/Bai3.BUTTON_2.webp" class="lesson-img" alt="Các loại LED dùng với Arduino Mega">
-    </div>
-    <div class="note">
-  Mô phỏng Tinkercad:
-  <br>
-  <a href="https://www.tinkercad.com/things/1pb0HgWOLKE-button" 
-     target="_blank" 
-     class="lesson-link">
-     https://www.tinkercad.com/things/1pb0HgWOLKE-button
-  </a>
-  </div>
-  </section>
-
-  <section class="lesson">
-    <h2>3. Trường hợp 1: Một nút Digital dùng điện trở kéo lên (bên trong)</h2>
-
-    <h3>3.1. Mô tả đấu chân</h3>
-    <ul>
-      <li>Một chân nút nhấn nối với D3.</li>
-      <li>Chân còn lại của nút nhấn nối GND.</li>
-      <li>Không cần điện trở ngoài.</li>
-      <li>Trong code dùng <code>INPUT_PULLUP</code>.</li>
-    </ul>
-
-    <h3>3.2. Lệnh điều khiển</h3>
-
-    <div class="code-box">
-<pre><code class="language-cpp">pinMode(3, INPUT_PULLUP);    // Đặt chân D3 đọc nút, dùng điện trở kéo lên trong
-digitalRead(4);              // Đọc trạng thái nút ở chân D4</code></pre>
-    </div>
-
-    <h3>3.3. Code ví dụ</h3>
-
-    <div class="code-collapse">
-      <button class="code-collapse-head" onclick="toggleCode(this)">
-        <span>💻 Code đọc nút nhần dùng INPUT_PULLUP</span>
-        <span class="arrow">▶</span>
-      </button>
-
-      <div class="code-collapse-body">
-        <div class="code-box">
-          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-<pre><code class="language-cpp">#define BUTTON_PIN 3     // Nút nhấn nối với chân D3
-#define LED_PIN 8        // LED thường nối với chân D8
+  <section class="lesson"><h2>1. Mục tiêu bài học</h2><ul>
+      <li>Hiểu trạng thái INPUT_PULLUP và logic nút nhấn mức LOW.</li>
+      <li>Đọc thử A0 và quan sát trên Serial.</li>
+      <li>Phân biệt bài tham khảo với chức năng đã lắp trên robot.</li>
+      <li>Không sử dụng các chân D3/D4 của cấu hình cũ.</li>
+    </ul></section>
+  <section class="lesson"><h2>2. Kiến thức trọng tâm</h2><p>Khi dùng <code>INPUT_PULLUP</code>, chân được giữ ở HIGH lúc nút thả và nối GND thành LOW lúc nhấn. Trên robot hiện tại, đầu nút A0 <strong>chưa đấu nối</strong>, vì vậy chương trình chỉ là mẫu để mô phỏng hoặc dùng sau khi phần cứng được bổ sung.</p>
+      <div class="warning">Không chuyển nút sang D3 hoặc D4: D3 đang dùng encoder phải, D4 là Trigger siêu âm.</div></section>
+  <section class="lesson"><h2>3. Kết nối phần cứng</h2><div class="pin-collapse open">
+    <button class="pin-collapse-head" onclick="togglePinTable(this)">
+      <span>📌 Bảng chân theo cấu hình robot mới nhất</span>
+      <span class="pin-collapse-arrow">▶</span>
+    </button>
+    <div class="pin-collapse-body"><table class="pin-table">
+      <tr><th>Thiết bị / tín hiệu</th><th>Chân Mega 2560 Mini</th><th>Chức năng</th><th>Ghi chú</th></tr>
+      <tr><td>Nút dự kiến</td><td>A0</td><td>INPUT_PULLUP</td><td>Chưa đấu nối</td></tr>
+      <tr><td>Đầu còn lại của nút</td><td>GND</td><td>Kéo LOW khi nhấn</td><td>Chỉ đấu khi giảng viên cho phép</td></tr>
+      <tr><td>Serial</td><td>USB</td><td>Quan sát trạng thái</td><td>115200 baud</td></tr>
+    </table></div>
+  </div><div class="note">Có thể chạy bài trên Wokwi/Tinkercad trước. Khi chưa lắp nút thật, chân A0 thường giữ HIGH và chương trình luôn báo THẢ.</div></section>
+  <section class="lesson"><h2>4. Chương trình thực hành</h2><p>Mã ví dụ sử dụng đúng cấu hình đã kiểm tra trên robot, có OLED và Serial để quan sát.</p><div class="code-collapse">
+    <button class="code-collapse-head" onclick="toggleCode(this)">
+      <span>💻 Bài 3 – đọc nút A0 theo INPUT_PULLUP</span><span class="arrow">▶</span>
+    </button>
+    <div class="code-collapse-body"><div class="code-box">
+      <div class="code-title">Bài 3 – đọc nút A0 theo INPUT_PULLUP</div>
+      <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      <pre><code class="language-cpp">// BÀI 3: NÚT A0 - HIỆN CHƯA ĐẤU TRÊN ROBOT
+const uint8_t NUT_PIN = A0;
 
 void setup() {
-  pinMode(BUTTON_PIN, INPUT_PULLUP); // Dùng điện trở kéo lên trong
-  pinMode(LED_PIN, OUTPUT);          // LED là thiết bị đầu ra
+  Serial.begin(115200);
+  pinMode(NUT_PIN, INPUT_PULLUP);
+  Serial.println(F("NUT A0: BAI THAM KHAO, CHUA DAU NOI"));
 }
 
 void loop() {
-  int buttonState = digitalRead(BUTTON_PIN); // Đọc trạng thái nút
-
-  if (buttonState == LOW) {       // Nhấn nút thì đọc được LOW
-    digitalWrite(LED_PIN, HIGH);  // Bật LED
-  } else {
-    digitalWrite(LED_PIN, LOW);   // Tắt LED
-  }
-}</code></pre>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="lesson">
-    <h2>4. Trường hợp 2: Một nút Digital dùng điện trở kéo lên (bên ngoài)</h2>
-
-    <h3>4.1. Mô tả đấu chân</h3>
-    <ul>
-      <li>Chân D4 nối với một đầu nút nhấn.</li>
-      <li>Đầu còn lại của nút nhấn nối GND.</li>
-      <li>Chân D4 đồng thời nối với điện trở 10kΩ lên 5V.</li>
-    </ul>
-
-    <h3>4.2. Lệnh điều khiển</h3>
-
-    <div class="code-box">
-<pre><code class="language-cpp">pinMode(4, INPUT);       // Đặt chân D4 ở chế độ INPUT, vì đã có điện trở kéo ngoài
-digitalRead(4);          // Đọc trạng thái nút</code></pre>
-    </div>
-
-    <h3>4.3. Code ví dụ</h3>
-
-    <div class="code-collapse">
-      <button class="code-collapse-head" onclick="toggleCode(this)">
-        <span>💻 Code đọc nút D4 dùng điện trở kéo lên ngoài</span>
-        <span class="arrow">▶</span>
-      </button>
-
-      <div class="code-collapse-body">
-        <div class="code-box">
-          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-<pre><code class="language-cpp">#define BUTTON_PIN 4     // Nút nhấn nối với chân D4
-#define LED_PIN 8        // LED thường nối với chân D8
-
-void setup() {
-  pinMode(BUTTON_PIN, INPUT); // Dùng INPUT vì mạch đã có điện trở kéo lên ngoài
-  pinMode(LED_PIN, OUTPUT);   // LED là thiết bị đầu ra
-}
-
-void loop() {
-  int buttonState = digitalRead(BUTTON_PIN); // Đọc trạng thái nút
-
-  if (buttonState == LOW) {       // Nhấn nút kéo chân D4 xuống GND
-    digitalWrite(LED_PIN, HIGH);  // Bật LED
-  } else {
-    digitalWrite(LED_PIN, LOW);   // Tắt LED
-  }
-}</code></pre>
-        </div>
-      </div>
-    </div>
-
-  </section>
-
-  <section class="lesson">
-    <h2>5. Trường hợp 3: Một nút đọc bằng Analog</h2>
-
-    <h3>5.1. Mô tả đấu chân</h3>
-    <ul>
-      <li>Một chân nút nhấn nối với A0.</li>
-      <li>Chân còn lại nối GND.</li>
-      <li>Có thể dùng <code>pinMode(A0, INPUT_PULLUP)</code> để kéo A0 lên mức cao.</li>
-    </ul>
-
-    <h3>5.2. Lệnh điều khiển</h3>
-
-    <div class="code-box">
-<pre><code class="language-cpp">pinMode(A0, INPUT_PULLUP);   // Kéo A0 lên mức cao bằng điện trở trong
-analogRead(A0);              // Đọc giá trị analog từ 0 đến 1023</code></pre>
-    </div>
-
-    <h3>5.3. Code ví dụ</h3>
-
-    <div class="code-collapse">
-      <button class="code-collapse-head" onclick="toggleCode(this)">
-        <span>💻 Code đọc một nút bằng A0</span>
-        <span class="arrow">▶</span>
-      </button>
-
-      <div class="code-collapse-body">
-        <div class="code-box">
-          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-<pre><code class="language-cpp">#define BUTTON_A0 A0     // Nút nhấn nối với chân A0
-#define LED_PIN 8        // LED thường nối với chân D8
-
-void setup() {
-  pinMode(BUTTON_A0, INPUT_PULLUP); // Dùng điện trở kéo lên trong cho A0
-  pinMode(LED_PIN, OUTPUT);         // LED là thiết bị đầu ra
-  Serial.begin(9600);               // Mở Serial để xem giá trị analog
-}
-
-void loop() {
-  int value = analogRead(BUTTON_A0); // Đọc giá trị analog từ A0
-
-  Serial.println(value);             // In giá trị ra Serial Monitor
-
-  if (value &lt; 100) {                 // Nhấn nút thì giá trị gần 0
-    digitalWrite(LED_PIN, HIGH);     // Bật LED
-  } else {
-    digitalWrite(LED_PIN, LOW);      // Tắt LED
-  }
-
-  delay(50);                         // Giảm tốc độ đọc để dễ quan sát
-}</code></pre>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="lesson">
-    <h2>6. Trường hợp 4: Bốn nút dùng chung một chân A0</h2>
-
-    <h3>6.1. Nguyên lý</h3>
-
-    <p>
-      Bốn nút có thể dùng chung một chân A0 bằng mạch chia điện áp.
-      Mỗi nút được nối qua một điện trở khác nhau, nên khi nhấn từng nút,
-      A0 sẽ nhận được một mức điện áp khác nhau.
-    </p>
-
-    <h3>6.2. Mô tả đấu chân</h3>
-    <ul>
-      <li>A0 là điểm đọc tín hiệu chung.</li>
-      <li>A0 nối với điện trở 10kΩ xuống GND để tạo mức mặc định.</li>
-      <li>Nút 1 nối từ 5V qua điện trở 3.3kΩ về A0.</li>
-      <li>Nút 2 nối từ 5V qua điện trở 2*3.3kΩ về A0.</li>
-      <li>Nút 3 nối từ 5V qua điện trở 3*3.3kΩ về A0.</li>
-      <li>Nút 4 nối từ 5V qua điện trở 4*3.3kΩ về A0.</li>
-    </ul>
-
-    <div class="warning">
-      Giá trị analog phụ thuộc điện trở thực tế. Cần mở Serial Monitor để đo rồi chỉnh ngưỡng cho phù hợp.
-    </div>
-
-    <h3>6.3. Lệnh điều khiển</h3>
-
-    <div class="code-box">
-<pre><code class="language-cpp">int value = analogRead(A0);   // Đọc giá trị từ mạch 4 nút
-Serial.println(value);        // In giá trị để xác định ngưỡng từng nút</code></pre>
-    </div>
-
-    <h3>6.4. Code ví dụ đọc 4 nút</h3>
-
-    <div class="code-collapse">
-      <button class="code-collapse-head" onclick="toggleCode(this)">
-        <span>💻 Code đọc 4 nút dùng chung A0</span>
-        <span class="arrow">▶</span>
-      </button>
-
-      <div class="code-collapse-body">
-        <div class="code-box">
-          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-<pre><code class="language-cpp">#define BUTTONS_PIN A0   // Bốn nút dùng chung chân A0
-
-void setup() {
-  Serial.begin(9600);    // Mở Serial để xem giá trị từng nút
-}
-
-void loop() {
-  int value = analogRead(BUTTONS_PIN); // Đọc giá trị analog
-
-  Serial.print("Gia tri A0 = ");
-  Serial.println(value);
-
-  if (value &lt; 100) {
-    Serial.println("Nut 1");
-  }
-  else if (value &lt; 300) {
-    Serial.println("Nut 2");
-  }
-  else if (value &lt; 600) {
-    Serial.println("Nut 3");
-  }
-  else if (value &lt; 900) {
-    Serial.println("Nut 4");
-  }
-  else {
-    Serial.println("Khong nhan nut");
-  }
-
-  delay(200);
-}</code></pre>
-        </div>
-      </div>
-    </div>
-
-    <h3>6.5. Code ví dụ dùng 4 nút để đổi màu LED Ring</h3>
-
-    <div class="code-collapse">
-      <button class="code-collapse-head" onclick="toggleCode(this)">
-        <span>💻 Code 4 nút A0 điều khiển LED Ring</span>
-        <span class="arrow">▶</span>
-      </button>
-
-      <div class="code-collapse-body">
-        <div class="code-box">
-          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-<pre><code class="language-cpp">#include &lt;Adafruit_NeoPixel.h&gt;
-
-#define BUTTONS_PIN A0   // Bốn nút dùng chung chân A0
-#define LED_PIN 13       // LED Ring nối chân D13
-#define NUM_LEDS 16      // LED Ring có 16 LED
-
-Adafruit_NeoPixel ring(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
-
-void setRingColor(int r, int g, int b) {
-  for (int i = 0; i &lt; NUM_LEDS; i++) {
-    ring.setPixelColor(i, ring.Color(r, g, b)); // Gán màu cho LED thứ i
-  }
-  ring.show();                                  // Cập nhật toàn bộ LED Ring
-}
-
-void setup() {
-  Serial.begin(9600);      // Mở Serial để debug
-  ring.begin();            // Khởi tạo LED Ring
-  ring.show();             // Tắt LED ban đầu
-}
-
-void loop() {
-  int value = analogRead(BUTTONS_PIN); // Đọc giá trị từ A0
-
-  Serial.println(value);               // In ra để hiệu chỉnh ngưỡng
-
-  if (value &lt; 100) {
-    setRingColor(0, 255, 0);           // Nút 1: xanh lá - sẵn sàng
-  }
-  else if (value &lt; 300) {
-    setRingColor(0, 0, 255);           // Nút 2: xanh dương - đang chạy
-  }
-  else if (value &lt; 600) {
-    setRingColor(255, 0, 0);           // Nút 3: đỏ - lỗi
-  }
-  else if (value &lt; 900) {
-    setRingColor(255, 255, 0);         // Nút 4: vàng - chờ
-  }
-
+  bool dangNhan = digitalRead(NUT_PIN) == LOW;
+  Serial.println(dangNhan ? F("NUT: NHAN") : F("NUT: THA"));
   delay(100);
 }</code></pre>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="lesson">
-    <h2>7. Bài tập thực hành</h2>
-    <ul>
-      <li>Dùng nút D4 với <code>INPUT_PULLUP</code> để bật/tắt LED D8.</li>
-      <li>Dùng nút D4 với điện trở kéo ngoài để bật/tắt LED D8.</li>
-      <li>Đọc một nút bằng A0 và in giá trị ra Serial Monitor.</li>
-      <li>Đọc 4 nút bằng A0 và ghi lại giá trị thực tế của từng nút.</li>
-      <li>Dùng 4 nút A0 để chọn 4 màu khác nhau cho LED Ring.</li>
-    </ul>
-  </section>
-
-  <section class="lesson">
-    <h2>8. Lỗi thường gặp</h2>
-
-    <div class="warning">
-      <strong>Lỗi 1:</strong> Nút đọc lúc HIGH lúc LOW không ổn định do chân bị treo, chưa dùng điện trở kéo.
-    </div>
-
-    <div class="warning">
-      <strong>Lỗi 2:</strong> Dùng <code>INPUT_PULLUP</code> nhưng quên rằng nhấn nút là LOW, không nhấn là HIGH.
-    </div>
-
-    <div class="warning">
-      <strong>Lỗi 3:</strong> Mạch điện trở kéo ngoài đấu sai vị trí nên nút không hoạt động đúng.
-    </div>
-
-    <div class="warning">
-      <strong>Lỗi 4:</strong> Bốn nút A0 đọc sai vì ngưỡng chưa được hiệu chỉnh theo giá trị thực tế.
-    </div>
-
-    <div class="warning">
-      <strong>Lỗi 5:</strong> Nhấn nút một lần nhưng chương trình nhận nhiều lần do hiện tượng dội nút.
-    </div>
-  </section>
-
-  <div class="nav-bottom">
-    <a href="bai2.html">← Bài trước</a>
-    <a href="bai4.html">Bài tiếp theo →</a>
-  </div>
-
+    </div></div>
+  </div></section>
+  <section class="lesson"><h2>5. Phân tích chương trình</h2><ul>
+      <li>Điện trở kéo lên nội làm trạng thái mặc định là HIGH.</li>
+      <li>Biến <code>dangNhan</code> đổi logic LOW thành tên có ý nghĩa dễ đọc.</li>
+      <li>Chương trình không điều khiển động cơ nên an toàn khi học INPUT.</li>
+    </ul></section>
+  <section class="lesson"><h2>6. Quy trình thực hành</h2><ol>
+      <li>Chạy trên mô phỏng với nút nối A0–GND.</li>
+      <li>Quan sát HIGH khi thả và LOW khi nhấn.</li>
+      <li>Chỉ thử trên robot thật sau khi A0 đã được đấu và kiểm tra.</li>
+    </ol></section>
+  <section class="lesson"><h2>7. Bài tập mở rộng</h2><ol>
+      <li>Viết chống dội nút bằng millis().</li>
+      <li>Đếm số lần nhấn thay vì số vòng lặp đang giữ nút.</li>
+      <li>Dùng nút để chuyển trạng thái CHỜ–CHẠY sau khi phần cứng được lắp.</li>
+    </ol></section>
+  <section class="lesson"><h2>8. Lỗi thường gặp và cách xử lý</h2><div class="warning">A0 hiện chưa đấu nên không coi việc luôn báo THẢ là lỗi chương trình.</div>
+<div class="warning">Không dùng <code>analogRead()</code> nếu chỉ có một nút số nối GND.</div>
+<div class="warning">Không tự ý đấu vào chân đang dùng cho encoder, động cơ hoặc cảm biến.</div></section>
+  <section class="lesson"><h2>9. Kết luận</h2><p>Sinh viên hiểu cách đọc nút nhưng đồng thời biết kiểm tra trạng thái phần cứng trước khi sử dụng một chức năng trong nhiệm vụ thật.</p></section>
+  <nav class="nav-bottom" aria-label="Điều hướng bài học">
+    <a href="bai2.html">← Bài 2</a>
+    <a href="tailieu-kythuat.html">Danh sách bài học</a>
+    <a href="bai4.html">Bài 4 →</a>
+  </nav>
 </main>
 <!-- ===== NỘI DUNG===== -->
 <script>
