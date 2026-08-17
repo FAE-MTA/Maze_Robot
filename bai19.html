@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Bài 19. Robot di chuyển hình vuông bằng encoder</title>
+<title>Bài 19. Robot bám tường bằng hai laser</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -480,103 +480,84 @@ h1 {
 <main class="page">
   <section class="hero">
     <div class="label">BÀI HỌC NÂNG CAO · ĐÃ HOÀN THIỆN</div>
-    <h1>Bài 19. Robot di chuyển hình vuông bằng encoder</h1>
+    <h1>Bài 19. Robot bám tường bằng hai laser</h1>
     <p class="subtitle">Bài học liên thông sử dụng cấu hình robot mới nhất và thư viện hàm dùng chung.</p>
   </section>
-  <section class="lesson"><h2>1. Mục tiêu bài học</h2><ul><li>Đi thẳng một quãng đường theo số xung thay vì thời gian.</li><li>Quay phải 90° theo encoder.</li><li>Phát hiện kẹt bánh hoặc mất encoder bằng timeout.</li></ul><div class="note"><strong>Điều kiện học trước:</strong> Bài 6, 13, 14 và 15.</div></section>
-  <section class="lesson"><h2>2. Chuẩn bị</h2><p><strong>Phần cứng:</strong> Hai động cơ, hai encoder D2/D12 và D3/D14, OLED.</p><p><strong>Phần mềm:</strong> Arduino IDE, board Arduino Mega or Mega 2560, Serial Monitor 115200 baud.</p><div class="warning">Trước khi biên dịch, chép thư mục <strong>THU_VIEN_ROBOT/RobotMega2560Mini</strong> vào <strong>Documents/Arduino/libraries</strong>, sau đó khởi động lại Arduino IDE. Kê hai bánh khỏi mặt đất ở lần thử đầu tiên.</div></section>
-  <section class="lesson"><h2>3. Nguyên lý và thuật toán</h2><ol><li>Lặp bốn lần: đi một cạnh, dừng giảm trượt, quay phải 90°.</li><li>Mỗi chuyển động kết thúc khi hai encoder đạt số xung đặt trước.</li><li>Nếu hết thời gian mà chưa đủ xung, robot dừng an toàn và báo lỗi.</li></ol><div class="pin-collapse open"><button class="pin-collapse-head" onclick="togglePinTable(this)"><span>⚙️ Thông số cần hiệu chỉnh</span><span class="arrow">⌄</span></button><div class="pin-collapse-body"><div class="pin-table-wrap"><table class="pin-table"><thead><tr><th>Thông số</th><th>Giá trị ban đầu</th><th>Ý nghĩa</th></tr></thead><tbody><tr><td>SO_XUNG_MOT_CANH</td><td>300 xung</td><td>Hiệu chỉnh chiều dài cạnh</td></tr><tr><td>SO_XUNG_QUAY_90</td><td>82 xung</td><td>Hiệu chỉnh góc quay 90°</td></tr><tr><td>PWM_DI / PWM_QUAY</td><td>105</td><td>Tốc độ thấp để giảm trượt</td></tr><tr><td>TIMEOUT</td><td>7 s / 3.5 s</td><td>Dừng khi robot kẹt</td></tr></tbody></table></div></div></div></section>
-  <section class="lesson"><h2>4. Chương trình hoàn chỉnh</h2><div class="note">Chương trình sử dụng thư viện chung <strong>RobotMega2560Mini</strong>. <a href="CODE_BAI_18_24_NANG_CAO/Bai_19_Hinh_vuong_encoder/Bai_19_Hinh_vuong_encoder.ino" download style="color:#7afcff;font-weight:bold;">Tải file .ino</a></div><div class="code-collapse"><button class="code-collapse-head" onclick="toggleCode(this)"><span>💻 Xem code ví dụ</span><span class="arrow">⌄</span></button><div class="code-collapse-body"><div class="code-box"><div class="code-title">Bai_19_Hinh_vuong_encoder.ino</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-cpp">#include &lt;Robot.h&gt;
+  <section class="lesson"><h2>1. Mục tiêu bài học</h2><ul><li>Hiểu sai số khoảng cách giữa robot và tường.</li><li>Dùng điều khiển tỉ lệ P để hiệu chỉnh tốc độ hai bánh.</li><li>Dừng hoặc đổi hướng an toàn khi phía trước có vật cản.</li></ul><div class="note"><strong>Điều kiện học trước:</strong> Bài 6, 8, 9, 15 và 17.</div></section>
+  <section class="lesson"><h2>2. Chuẩn bị</h2><p><strong>Phần cứng:</strong> Hai VL53L0X nhìn sang trái/phải, HC-SR04 phía trước, hai động cơ và OLED.</p><p><strong>Phần mềm:</strong> Arduino IDE, board Arduino Mega or Mega 2560, Serial Monitor 115200 baud.</p><div class="warning">Trước khi biên dịch, chép thư mục <strong>THU_VIEN_ROBOT/RobotMega2560Mini</strong> vào <strong>Documents/Arduino/libraries</strong>, sau đó khởi động lại Arduino IDE. Kê hai bánh khỏi mặt đất ở lần thử đầu tiên.</div></section>
+  <section class="lesson"><h2>3. Nguyên lý và thuật toán</h2><ol><li>Đọc đồng thời khoảng cách trước, trái và phải.</li><li>Chọn bám tường trái hoặc phải; lấy khoảng cách đặt trừ khoảng cách đo để tạo sai số.</li><li>Nhân sai số với KP rồi cộng/trừ vào PWM hai bánh.</li><li>Nếu không thấy tường, robot quay nhẹ về phía cần tìm; nếu phía trước bị chặn, robot lùi và đổi hướng.</li></ol><div class="pin-collapse open"><button class="pin-collapse-head" onclick="togglePinTable(this)"><span>⚙️ Thông số cần hiệu chỉnh</span><span class="arrow">⌄</span></button><div class="pin-collapse-body"><div class="pin-table-wrap"><table class="pin-table"><thead><tr><th>Thông số</th><th>Giá trị ban đầu</th><th>Ý nghĩa</th></tr></thead><tbody><tr><td>BAM_TUONG_TRAI</td><td>true</td><td>Đổi thành false để bám tường phải</td></tr><tr><td>KHOANG_CACH_DAT_MM</td><td>180 mm</td><td>Khoảng cách mong muốn đến tường</td></tr><tr><td>KP_TUONG</td><td>0.35</td><td>Độ mạnh của hiệu chỉnh</td></tr><tr><td>NGUONG_TRUOC_CM</td><td>23 cm</td><td>Ngưỡng tránh va chạm phía trước</td></tr></tbody></table></div></div></div></section>
+  <section class="lesson"><h2>4. Chương trình hoàn chỉnh</h2><div class="note">Chương trình sử dụng thư viện chung <strong>RobotMega2560Mini</strong>. <a href="CODE_BAI_18_25_THU_VIEN_VA_NANG_CAO/Bai_19_Bam_tuong_hai_laser/Bai_19_Bam_tuong_hai_laser.ino" download style="color:#7afcff;font-weight:bold;">Tải file .ino</a></div><div class="code-collapse"><button class="code-collapse-head" onclick="toggleCode(this)"><span>💻 Xem code ví dụ</span><span class="arrow">⌄</span></button><div class="code-collapse-body"><div class="code-box"><div class="code-title">Bai_19_Bam_tuong_hai_laser.ino</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-cpp">#include &lt;Robot.h&gt;
 
-// BÀI 19: ROBOT DI CHUYỂN HÌNH VUÔNG BẰNG ENCODER
-// Robot đi bốn cạnh bằng số xung encoder, sau mỗi cạnh quay phải 90 độ.
-// Hai hằng SO_XUNG_MOT_CANH và SO_XUNG_QUAY_90 phải đo lại trên robot thật.
+// BÀI 19: ROBOT BÁM TƯỜNG BẰNG LASER
+// Hai laser đặt bên hông; siêu âm phía trước dùng để tránh va chạm.
 
-const long SO_XUNG_MOT_CANH = 300;
-const long SO_XUNG_QUAY_90 = 82;
-const int PWM_DI = 105;
-const int PWM_QUAY = 105;
-const unsigned long TIMEOUT_DI_MS = 7000UL;
-const unsigned long TIMEOUT_QUAY_MS = 3500UL;
+const bool BAM_TUONG_TRAI = true;  // Đổi false để bám tường phải.
+const uint16_t KHOANG_CACH_DAT_MM = 180;
+const int PWM_CO_BAN = 120;
+const int PWM_QUAY = 125;
+const float KP_TUONG = 0.35f;
+const float NGUONG_TRUOC_CM = 23.0f;
 
-bool daChayXong = false;
-bool coLoi = false;
-
-void hienThiHinhVuong(const char *trangThai, uint8_t canh) {
-  long trai, phai;
-  docHaiEncoder(trai, phai);
-
+void hienThiBamTuong(const char *trangThai, const DuLieuKhoangCach &amp;d) {
   oledXoa();
-  oledTieuDe("BAI 19 - HINH VUONG");
-  oledInChu(4, 17, trangThai);
-  oledInChu(4, 31, "CANH:"); oledInSo(39, 31, canh);
-  oledInChu(55, 31, "/4");
-  oledInChu(4, 46, "E T/P:");
-  oledInSo(45, 46, trai); oledInSo(86, 46, phai);
+  oledTieuDe("BAI 19 - BAM TUONG");
+  oledInChu(4, 16, trangThai);
+  oledInChu(4, 30, "F:");
+  if (d.sieuAmHopLe) oledInSoThuc(18, 30, d.truocCm); else oledInChu(18, 30, "NO ECHO");
+  oledInChu(4, 46, "L:");
+  if (d.laserTraiHopLe) oledInSo(18, 46, d.traiMm); else oledInChu(18, 46, "LOI");
+  oledInChu(65, 46, "R:");
+  if (d.laserPhaiHopLe) oledInSo(79, 46, d.phaiMm); else oledInChu(79, 46, "LOI");
   oledCapNhat();
 
-  Serial.print(F("Canh=")); Serial.print(canh); Serial.print(F("/4  "));
-  Serial.print(trangThai); Serial.print(F("  Encoder T/P="));
-  Serial.print(trai); Serial.print('/'); Serial.println(phai);
+  Serial.print(trangThai); Serial.print(F(" F/L/R="));
+  Serial.print(d.truocCm); Serial.print('/'); Serial.print(d.traiMm);
+  Serial.print('/'); Serial.println(d.phaiMm);
 }
 
-void baoLoi(const char *noiDung, uint8_t canh) {
+void tranhVatCanTruoc(const DuLieuKhoangCach &amp;d) {
   dungRobot();
-  coLoi = true;
-  hienThiHinhVuong(noiDung, canh);
-  Serial.println(F("Robot dung an toan. Kiem tra encoder hoac vat can."));
+  hienThiBamTuong("VAT CAN PHIA TRUOC", d);
+  delay(120);
+  diLui(105); delay(300); dungRobot();
+  if (BAM_TUONG_TRAI) quayPhaiTheoThoiGian(PWM_QUAY, 480);
+  else quayTraiTheoThoiGian(PWM_QUAY, 480);
 }
 
 void setup() {
   batDauSerial();
   oledBatDau();
   dongCoBatDau();
-  encoderBatDau();
-  oledThongBao("BAI 19", "HINH VUONG ENCODER",
-               "DAT ROBOT LEN SAN", "CHO 2 GIAY");
-  delay(2000);
+  sieuAmBatDau();
+  laserBatDau();
+  oledThongBao("BAI 19 - BAM TUONG",
+               BAM_TUONG_TRAI ? "BAM BEN TRAI" : "BAM BEN PHAI",
+               "CHO 1 GIAY", "");
+  delay(1000);
 }
 
 void loop() {
-  if (daChayXong || coLoi) {
+  DuLieuKhoangCach d = docBaHuong();
+  if (!d.sieuAmHopLe) {
     dungRobot();
-    return;
+    hienThiBamTuong("DUNG - MAT ECHO", d);
+  } else if (d.truocCm &lt;= NGUONG_TRUOC_CM) {
+    tranhVatCanTruoc(d);
+  } else {
+    bool thayTuong = bamTuongMotBuoc(BAM_TUONG_TRAI,
+                                     KHOANG_CACH_DAT_MM,
+                                     PWM_CO_BAN, KP_TUONG);
+    hienThiBamTuong(thayTuong ? "DANG BAM TUONG" : "DANG TIM TUONG", d);
   }
-
-  for (uint8_t canh = 1; canh &lt;= 4; canh++) {
-    hienThiHinhVuong("DI MOT CANH", canh);
-    if (!diTheoSoXung(SO_XUNG_MOT_CANH, PWM_DI, TIMEOUT_DI_MS)) {
-      baoLoi("LOI DI THANG", canh);
-      return;
-    }
-    hienThiHinhVuong("DUNG GIAM TRUOT", canh);
-    delay(350);
-
-    hienThiHinhVuong("QUAY PHAI 90", canh);
-    if (!quayPhaiTheoSoXung(SO_XUNG_QUAY_90, PWM_QUAY,
-                            TIMEOUT_QUAY_MS)) {
-      baoLoi("LOI QUAY 90", canh);
-      return;
-    }
-    delay(350);
-  }
-
-  dungRobot();
-  daChayXong = true;
-  hienThiHinhVuong("HOAN THANH", 4);
-  Serial.println(F("Da di xong hinh vuong. Nhan RESET de chay lai."));
+  delay(80);
 }
 </code></pre></div></div></div></section>
-  <section class="lesson"><h2>5. Phân tích chương trình</h2><ul><li>Số xung của một cạnh phụ thuộc đường kính bánh và độ phân giải encoder.</li><li>Số xung quay 90° phụ thuộc khoảng cách hai bánh và ma sát mặt sàn.</li><li>Dừng 350 ms sau mỗi pha giúp bánh giảm quán tính trước lệnh tiếp theo.</li></ul></section>
-  <section class="lesson"><h2>6. Quy trình thực hành và hiệu chỉnh</h2><ol><li>Đo số xung khi robot đi đúng 30 cm để đặt SO_XUNG_MOT_CANH.</li><li>Đánh dấu hướng ban đầu, chỉnh SO_XUNG_QUAY_90 cho đúng góc.</li><li>Chạy đủ bốn cạnh và đo sai lệch vị trí cuối.</li><li>Thử giữ một bánh để xác nhận timeout dừng robot.</li></ol></section>
-  <section class="lesson"><h2>7. Bài tập mở rộng</h2><ol><li>Viết hàm diHinhChuNhat(dai, rong).</li><li>Cho robot quay trái thay vì quay phải.</li><li>Tính số xung tự động từ kích thước bánh và khoảng cách hai bánh.</li></ol></section>
-  <section class="lesson"><h2>8. Lỗi thường gặp và cách xử lý</h2><div class="warning">Góc tăng dần sau mỗi cạnh: giảm tốc hoặc thêm hiệu chỉnh sai số tích lũy.</div><div class="warning">Một encoder đếm ngược: kiểm tra hướng encoder trong RobotConfig/RobotEncoder.</div><div class="warning">Robot chạy mãi: phải giữ timeout và kê bánh khi thử lần đầu.</div></section>
-  <section class="lesson"><h2>9. Kết luận</h2><p>Bài 19 minh họa chuyển động hình học chính xác hơn nhờ phản hồi encoder.</p></section>
-  <nav class="nav-bottom" aria-label="Điều hướng bài học">
-    <a href="bai18.html">← Bài 18</a>
-    <a href="tailieu-kythuat.html">Danh sách bài học</a>
-    <a href="bai20.html">Bài 20 →</a>
-  </nav>
+  <section class="lesson"><h2>5. Phân tích chương trình</h2><ul><li>Hàm bamTuongMotBuoc() đóng gói thuật toán P nhưng chỉ xử lý một chu kỳ, vì vậy loop() vẫn cập nhật được OLED và cảm biến trước.</li><li>Giá trị KP quá nhỏ làm robot phản ứng chậm; quá lớn làm robot lắc qua lại.</li><li>Laser ngoài tầm không được dùng như một số đo thật; chương trình chuyển sang trạng thái tìm tường.</li></ul></section>
+  <section class="lesson"><h2>6. Quy trình thực hành và hiệu chỉnh</h2><ol><li>Kê bánh và kiểm tra D39 đúng là laser trái, D37 đúng là laser phải.</li><li>Đặt robot song song với tường ở 180 mm, chạy PWM thấp.</li><li>Tăng KP từng bước 0.05 đến khi robot bám nhanh nhưng không rung.</li><li>Thử cuối hành lang để kiểm tra HC-SR04 và thao tác đổi hướng.</li></ol></section>
+  <section class="lesson"><h2>7. Bài tập mở rộng</h2><ol><li>Bổ sung thành phần D để giảm dao động.</li><li>Cho phép đổi bên bám tường qua Serial Monitor.</li><li>Ghi sai số và PWM ra Serial Plotter.</li></ol></section>
+  <section class="lesson"><h2>8. Lỗi thường gặp và cách xử lý</h2><div class="warning">Robot rời xa tường: kiểm tra lại lựa chọn bên bám và chiều hiệu chỉnh.</div><div class="warning">Giá trị laser luôn lỗi: kiểm tra XSHUT D39/D37 và địa chỉ 0x30/0x31.</div><div class="warning">Robot tiến thành lùi: không thay cờ đảo chiều động cơ phải trong thư viện.</div></section>
+  <section class="lesson"><h2>9. Kết luận</h2><p>Bài 19 tạo hành vi bám tường có thể tái sử dụng cho hành lang và mê cung.</p></section>
+  <nav class="nav-bottom" aria-label="Điều hướng bài học"><a href="bai18.html">← Bài 18</a><a href="tailieu-kythuat.html">Danh sách bài học</a><a href="bai20.html">Bài 20 →</a></nav>
 </main>
 <!-- ===== NỘI DUNG===== -->
 <script>

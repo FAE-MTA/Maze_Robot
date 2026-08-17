@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Bài 20. Robot vượt mê cung – thoát sau 5 vật cản</title>
+<title>Bài 20. Robot di chuyển hình vuông bằng encoder</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -480,176 +480,99 @@ h1 {
 <main class="page">
   <section class="hero">
     <div class="label">BÀI HỌC NÂNG CAO · ĐÃ HOÀN THIỆN</div>
-    <h1>Bài 20. Robot vượt mê cung – thoát sau 5 vật cản</h1>
+    <h1>Bài 20. Robot di chuyển hình vuông bằng encoder</h1>
     <p class="subtitle">Bài học liên thông sử dụng cấu hình robot mới nhất và thư viện hàm dùng chung.</p>
   </section>
-  <section class="lesson"><h2>1. Mục tiêu bài học</h2><ul><li>Chọn hướng rộng hơn khi gặp tường trước.</li><li>Xử lý ngõ cụt và mất phép đo.</li><li>Đếm năm lần gặp vật cản để xác định kết thúc khu vực mê cung.</li></ul><div class="note"><strong>Điều kiện học trước:</strong> Bài 17 và 18.</div></section>
-  <section class="lesson"><h2>2. Chuẩn bị</h2><p><strong>Phần cứng:</strong> HC-SR04 phía trước, hai VL53L0X hai bên, hai động cơ và OLED.</p><p><strong>Phần mềm:</strong> Arduino IDE, board Arduino Mega or Mega 2560, Serial Monitor 115200 baud.</p><div class="warning">Trước khi biên dịch, chép thư mục <strong>THU_VIEN_ROBOT/RobotMega2560Mini</strong> vào <strong>Documents/Arduino/libraries</strong>, sau đó khởi động lại Arduino IDE. Kê hai bánh khỏi mặt đất ở lần thử đầu tiên.</div></section>
-  <section class="lesson"><h2>3. Nguyên lý và thuật toán</h2><ol><li>Robot đi thẳng khi HC-SR04 chưa thấy vật cản.</li><li>Khi vật cản được xác nhận, tăng bộ đếm đúng một lần.</li><li>So sánh hai laser: phía xa hơn là phía ưu tiên quay; hai bên cùng gần là ngõ cụt nên lùi và quay 180°.</li><li>Sau lần thứ năm, robot dừng và chuyển trạng thái đã thoát mê cung.</li></ol><div class="pin-collapse open"><button class="pin-collapse-head" onclick="togglePinTable(this)"><span>⚙️ Thông số cần hiệu chỉnh</span><span class="arrow">⌄</span></button><div class="pin-collapse-body"><div class="pin-table-wrap"><table class="pin-table"><thead><tr><th>Thông số</th><th>Giá trị ban đầu</th><th>Ý nghĩa</th></tr></thead><tbody><tr><td>NGUONG_TRUOC_CM</td><td>25 cm</td><td>Phát hiện tường trước</td></tr><tr><td>NGUONG_NGO_CUT_MM</td><td>180 mm</td><td>Hai bên cùng hẹp</td></tr><tr><td>SO_LAN_VAT_CAN_DE_THOAT</td><td>5</td><td>Điều kiện kết thúc</td></tr><tr><td>THOI_GIAN_QUAY_90_MS</td><td>520 ms</td><td>Cần hiệu chỉnh trên sân</td></tr></tbody></table></div></div></div></section>
-  <section class="lesson"><h2>4. Chương trình hoàn chỉnh</h2><div class="note">Chương trình sử dụng thư viện chung <strong>RobotMega2560Mini</strong>. <a href="CODE_BAI_18_24_NANG_CAO/Bai_20_Vuot_me_cung_5_vat_can/Bai_20_Vuot_me_cung_5_vat_can.ino" download style="color:#7afcff;font-weight:bold;">Tải file .ino</a></div><div class="code-collapse"><button class="code-collapse-head" onclick="toggleCode(this)"><span>💻 Xem code ví dụ</span><span class="arrow">⌄</span></button><div class="code-collapse-body"><div class="code-box"><div class="code-title">Bai_20_Vuot_me_cung_5_vat_can.ino</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-cpp">#include &lt;Robot.h&gt;
+  <section class="lesson"><h2>1. Mục tiêu bài học</h2><ul><li>Đi thẳng một quãng đường theo số xung thay vì thời gian.</li><li>Quay phải 90° theo encoder.</li><li>Phát hiện kẹt bánh hoặc mất encoder bằng timeout.</li></ul><div class="note"><strong>Điều kiện học trước:</strong> Bài 6, 13, 14 và 15.</div></section>
+  <section class="lesson"><h2>2. Chuẩn bị</h2><p><strong>Phần cứng:</strong> Hai động cơ, hai encoder D2/D12 và D3/D14, OLED.</p><p><strong>Phần mềm:</strong> Arduino IDE, board Arduino Mega or Mega 2560, Serial Monitor 115200 baud.</p><div class="warning">Trước khi biên dịch, chép thư mục <strong>THU_VIEN_ROBOT/RobotMega2560Mini</strong> vào <strong>Documents/Arduino/libraries</strong>, sau đó khởi động lại Arduino IDE. Kê hai bánh khỏi mặt đất ở lần thử đầu tiên.</div></section>
+  <section class="lesson"><h2>3. Nguyên lý và thuật toán</h2><ol><li>Lặp bốn lần: đi một cạnh, dừng giảm trượt, quay phải 90°.</li><li>Mỗi chuyển động kết thúc khi hai encoder đạt số xung đặt trước.</li><li>Nếu hết thời gian mà chưa đủ xung, robot dừng an toàn và báo lỗi.</li></ol><div class="pin-collapse open"><button class="pin-collapse-head" onclick="togglePinTable(this)"><span>⚙️ Thông số cần hiệu chỉnh</span><span class="arrow">⌄</span></button><div class="pin-collapse-body"><div class="pin-table-wrap"><table class="pin-table"><thead><tr><th>Thông số</th><th>Giá trị ban đầu</th><th>Ý nghĩa</th></tr></thead><tbody><tr><td>SO_XUNG_MOT_CANH</td><td>300 xung</td><td>Hiệu chỉnh chiều dài cạnh</td></tr><tr><td>SO_XUNG_QUAY_90</td><td>82 xung</td><td>Hiệu chỉnh góc quay 90°</td></tr><tr><td>PWM_DI / PWM_QUAY</td><td>105</td><td>Tốc độ thấp để giảm trượt</td></tr><tr><td>TIMEOUT</td><td>7 s / 3.5 s</td><td>Dừng khi robot kẹt</td></tr></tbody></table></div></div></div></section>
+  <section class="lesson"><h2>4. Chương trình hoàn chỉnh</h2><div class="note">Chương trình sử dụng thư viện chung <strong>RobotMega2560Mini</strong>. <a href="CODE_BAI_18_25_THU_VIEN_VA_NANG_CAO/Bai_20_Hinh_vuong_encoder/Bai_20_Hinh_vuong_encoder.ino" download style="color:#7afcff;font-weight:bold;">Tải file .ino</a></div><div class="code-collapse"><button class="code-collapse-head" onclick="toggleCode(this)"><span>💻 Xem code ví dụ</span><span class="arrow">⌄</span></button><div class="code-collapse-body"><div class="code-box"><div class="code-title">Bai_20_Hinh_vuong_encoder.ino</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-cpp">#include &lt;Robot.h&gt;
 
-// BÀI 20: VƯỢT MÊ CUNG BẰNG SIÊU ÂM VÀ HAI LASER
-// Thuật toán được lấy từ bài 11_Kết hợp siêu âm và laser:
-// 1. Phía trước trống: robot đi thẳng.
-// 2. Siêu âm thấy vật cản: dừng và đọc khoảng cách hai bên.
-// 3. Robot quay về bên có khoảng trống lớn hơn.
-// 4. Hai bên đều gần: lùi rồi quay 180 độ để thoát ngõ cụt.
-// 5. Sau 5 lần siêu âm phát hiện vật cản, coi như đã ra khỏi mê cung.
+// BÀI 20: ROBOT DI CHUYỂN HÌNH VUÔNG BẰNG ENCODER
+// Robot đi bốn cạnh bằng số xung encoder, sau mỗi cạnh quay phải 90 độ.
+// Hai hằng SO_XUNG_MOT_CANH và SO_XUNG_QUAY_90 phải đo lại trên robot thật.
 
-const float NGUONG_TRUOC_CM = 25.0f;
-const uint16_t NGUONG_NGO_CUT_MM = 180;
-const uint16_t KHOANG_CACH_MO_MM = 2000;
-const uint8_t SO_LAN_VAT_CAN_DE_THOAT = 5;
-const int PWM_DI = 110;
-const int PWM_QUAY = 120;
-const int PWM_LUI = 100;
-const unsigned long QUAY_90_MS = 520;   // Hiệu chỉnh trên robot thật.
-const unsigned long QUAY_180_MS = 1050; // Hiệu chỉnh trên robot thật.
-const bool MAT_ECHO_XEM_LA_TRONG = true;
+const long SO_XUNG_MOT_CANH = 300;
+const long SO_XUNG_QUAY_90 = 82;
+const int PWM_DI = 105;
+const int PWM_QUAY = 105;
+const unsigned long TIMEOUT_DI_MS = 7000UL;
+const unsigned long TIMEOUT_QUAY_MS = 3500UL;
 
-uint8_t soLanGapVatCan = 0;
-bool lanTruocQuayPhai = false;
-bool daRaKhoiMeCung = false;
+bool daChayXong = false;
+bool coLoi = false;
 
-void hienThiMeCung(const char *trangThai, const DuLieuKhoangCach &amp;d) {
+void hienThiHinhVuong(const char *trangThai, uint8_t canh) {
+  long trai, phai;
+  docHaiEncoder(trai, phai);
+
   oledXoa();
-  oledTieuDe("BAI 20 - ME CUNG");
-  oledInChu(4, 16, trangThai);
-
-  oledInChu(4, 30, "F:");
-  if (d.sieuAmHopLe) oledInSoThuc(18, 30, d.truocCm);
-  else oledInChu(18, 30, "NO ECHO");
-
-  oledInChu(4, 43, "L:");
-  if (d.laserTraiHopLe) oledInSo(18, 43, d.traiMm);
-  else oledInChu(18, 43, "LOI");
-  oledInChu(64, 43, "R:");
-  if (d.laserPhaiHopLe) oledInSo(78, 43, d.phaiMm);
-  else oledInChu(78, 43, "LOI");
-
-  oledInChu(4, 55, "VAT CAN:");
-  oledInSo(58, 55, soLanGapVatCan);
-  oledInChu(69, 55, "/5");
+  oledTieuDe("BAI 20 - HINH VUONG");
+  oledInChu(4, 17, trangThai);
+  oledInChu(4, 31, "CANH:"); oledInSo(39, 31, canh);
+  oledInChu(55, 31, "/4");
+  oledInChu(4, 46, "E T/P:");
+  oledInSo(45, 46, trai); oledInSo(86, 46, phai);
   oledCapNhat();
 
-  Serial.print(trangThai);
-  Serial.print(F("  F="));
-  if (d.sieuAmHopLe) Serial.print(d.truocCm);
-  else Serial.print(F("NO_ECHO"));
-  Serial.print(F("cm L=")); Serial.print(d.traiMm);
-  Serial.print(F("mm R=")); Serial.print(d.phaiMm);
-  Serial.print(F("mm  So lan vat can="));
-  Serial.print(soLanGapVatCan);
-  Serial.print('/'); Serial.println(SO_LAN_VAT_CAN_DE_THOAT);
+  Serial.print(F("Canh=")); Serial.print(canh); Serial.print(F("/4  "));
+  Serial.print(trangThai); Serial.print(F("  Encoder T/P="));
+  Serial.print(trai); Serial.print('/'); Serial.println(phai);
 }
 
-void quayTrai90(const DuLieuKhoangCach &amp;d) {
-  hienThiMeCung("QUAY TRAI", d);
-  quayTraiTheoThoiGian(PWM_QUAY, QUAY_90_MS);
-  lanTruocQuayPhai = false;
-}
-
-void quayPhai90(const DuLieuKhoangCach &amp;d) {
-  hienThiMeCung("QUAY PHAI", d);
-  quayPhaiTheoThoiGian(PWM_QUAY, QUAY_90_MS);
-  lanTruocQuayPhai = true;
-}
-
-void thoatNgoCut(const DuLieuKhoangCach &amp;d) {
-  hienThiMeCung("NGO CUT - DANG LUI", d);
-  diLui(PWM_LUI);
-  delay(300);
+void baoLoi(const char *noiDung, uint8_t canh) {
   dungRobot();
-  delay(100);
-
-  hienThiMeCung("NGO CUT - QUAY 180", d);
-  quayPhaiTheoThoiGian(PWM_QUAY, QUAY_180_MS);
-  lanTruocQuayPhai = true;
-}
-
-void xuLyMotLanVatCan(const DuLieuKhoangCach &amp;d) {
-  // Mỗi lần vào hàm này là một lần siêu âm xác nhận vật cản mới
-  // và robot thực hiện một thao tác đổi hướng.
-  soLanGapVatCan++;
-  dungRobot();
-  hienThiMeCung("VAT CAN PHIA TRUOC", d);
-  delay(150);
-
-  // Laser đã khởi tạo nhưng báo ngoài tầm đo được xem là phía rất thoáng,
-  // giống quy ước 2000 mm trong bài 11 gốc.
-  bool dungDuocLaserTrai = d.laserTraiHopLe || laserTraiDaSanSang();
-  bool dungDuocLaserPhai = d.laserPhaiHopLe || laserPhaiDaSanSang();
-  uint16_t traiDeChon = d.laserTraiHopLe ? d.traiMm : KHOANG_CACH_MO_MM;
-  uint16_t phaiDeChon = d.laserPhaiHopLe ? d.phaiMm : KHOANG_CACH_MO_MM;
-
-  if (dungDuocLaserTrai &amp;&amp; dungDuocLaserPhai &amp;&amp;
-      traiDeChon &lt; NGUONG_NGO_CUT_MM &amp;&amp; phaiDeChon &lt; NGUONG_NGO_CUT_MM) {
-    thoatNgoCut(d);
-  } else if (dungDuocLaserTrai &amp;&amp; dungDuocLaserPhai) {
-    if (traiDeChon &gt; phaiDeChon + 40) quayTrai90(d);
-    else if (phaiDeChon &gt; traiDeChon + 40) quayPhai90(d);
-    else if (lanTruocQuayPhai) quayTrai90(d);
-    else quayPhai90(d);
-  } else if (dungDuocLaserTrai) {
-    quayTrai90(d);
-  } else if (dungDuocLaserPhai) {
-    quayPhai90(d);
-  } else {
-    dungRobot();
-    hienThiMeCung("LOI CA HAI LASER", d);
-  }
-
-  if (soLanGapVatCan &gt;= SO_LAN_VAT_CAN_DE_THOAT) {
-    dungRobot();
-    daRaKhoiMeCung = true;
-    oledThongBao("BAI 20 - ME CUNG", "DA GAP 5 VAT CAN",
-                 "COI NHU DA THOAT", "DUNG ROBOT");
-    Serial.println(F("Da du 5 lan sieu am thay vat can: ket thuc me cung."));
-  }
+  coLoi = true;
+  hienThiHinhVuong(noiDung, canh);
+  Serial.println(F("Robot dung an toan. Kiem tra encoder hoac vat can."));
 }
 
 void setup() {
   batDauSerial();
   oledBatDau();
   dongCoBatDau();
-  sieuAmBatDau();
-  laserBatDau();
-  oledThongBao("BAI 20 - ME CUNG", "DAT ROBOT DAU LOI",
-               "THOAT SAU 5 VAT CAN", "CHO 2 GIAY");
+  encoderBatDau();
+  oledThongBao("BAI 20", "HINH VUONG ENCODER",
+               "DAT ROBOT LEN SAN", "CHO 2 GIAY");
   delay(2000);
 }
 
 void loop() {
-  if (daRaKhoiMeCung) {
+  if (daChayXong || coLoi) {
     dungRobot();
     return;
   }
 
-  DuLieuKhoangCach d = docBaHuong();
-  bool coVatCan = d.sieuAmHopLe &amp;&amp; d.truocCm &lt;= NGUONG_TRUOC_CM;
+  for (uint8_t canh = 1; canh &lt;= 4; canh++) {
+    hienThiHinhVuong("DI MOT CANH", canh);
+    if (!diTheoSoXung(SO_XUNG_MOT_CANH, PWM_DI, TIMEOUT_DI_MS)) {
+      baoLoi("LOI DI THANG", canh);
+      return;
+    }
+    hienThiHinhVuong("DUNG GIAM TRUOT", canh);
+    delay(350);
 
-  if (coVatCan) {
-    xuLyMotLanVatCan(d);
-  } else if (!d.sieuAmHopLe &amp;&amp; !MAT_ECHO_XEM_LA_TRONG) {
-    dungRobot();
-    hienThiMeCung("DUNG - MAT ECHO", d);
-  } else {
-    diThang(PWM_DI);
-    hienThiMeCung("DI THANG", d);
+    hienThiHinhVuong("QUAY PHAI 90", canh);
+    if (!quayPhaiTheoSoXung(SO_XUNG_QUAY_90, PWM_QUAY,
+                            TIMEOUT_QUAY_MS)) {
+      baoLoi("LOI QUAY 90", canh);
+      return;
+    }
+    delay(350);
   }
-  delay(60);
+
+  dungRobot();
+  daChayXong = true;
+  hienThiHinhVuong("HOAN THANH", 4);
+  Serial.println(F("Da di xong hinh vuong. Nhan RESET de chay lai."));
 }
 </code></pre></div></div></div></section>
-  <section class="lesson"><h2>5. Phân tích chương trình</h2><ul><li>Bộ đếm chỉ tăng trong hàm xử lý một sự kiện vật cản, tránh đếm nhiều vòng loop cho cùng một bức tường.</li><li>Laser ngoài tầm được quy ước là phía thoáng để robot có thể lựa chọn hướng.</li><li>Cờ lanTruocQuayPhai giúp phá hòa khi hai bên gần bằng nhau.</li></ul></section>
-  <section class="lesson"><h2>6. Quy trình thực hành và hiệu chỉnh</h2><ol><li>Tạo hành lang chữ L rồi kiểm tra hướng rẽ.</li><li>Che hai bên để thử ngõ cụt.</li><li>Theo dõi bộ đếm 1/5 đến 5/5 trên OLED và Serial.</li><li>Chỉnh thời gian quay 90°/180° trước khi chạy mê cung thật.</li></ol></section>
-  <section class="lesson"><h2>7. Bài tập mở rộng</h2><ol><li>Xác nhận vật cản bằng ba lần đo liên tiếp.</li><li>Thay quay theo thời gian bằng quay theo encoder.</li><li>Lưu chuỗi hướng rẽ để robot chạy ngược về điểm đầu.</li></ol></section>
-  <section class="lesson"><h2>8. Lỗi thường gặp và cách xử lý</h2><div class="warning">Đếm quá nhanh: tăng khoảng lùi hoặc thêm khóa chống lặp sau khi rẽ.</div><div class="warning">Quay về phía hẹp: kiểm tra D39 trái và D37 phải.</div><div class="warning">Mất Echo làm robot đứng: lựa chọn MAT_ECHO_XEM_LA_TRONG phải phù hợp sa hình.</div></section>
-  <section class="lesson"><h2>9. Kết luận</h2><p>Bài 20 hoàn thiện riêng khu vực mê cung và tạo điều kiện chuyển sang bài line.</p></section>
-  <nav class="nav-bottom" aria-label="Điều hướng bài học">
-    <a href="bai19.html">← Bài 19</a>
-    <a href="tailieu-kythuat.html">Danh sách bài học</a>
-    <a href="bai21.html">Bài 21 →</a>
-  </nav>
+  <section class="lesson"><h2>5. Phân tích chương trình</h2><ul><li>Số xung của một cạnh phụ thuộc đường kính bánh và độ phân giải encoder.</li><li>Số xung quay 90° phụ thuộc khoảng cách hai bánh và ma sát mặt sàn.</li><li>Dừng 350 ms sau mỗi pha giúp bánh giảm quán tính trước lệnh tiếp theo.</li></ul></section>
+  <section class="lesson"><h2>6. Quy trình thực hành và hiệu chỉnh</h2><ol><li>Đo số xung khi robot đi đúng 30 cm để đặt SO_XUNG_MOT_CANH.</li><li>Đánh dấu hướng ban đầu, chỉnh SO_XUNG_QUAY_90 cho đúng góc.</li><li>Chạy đủ bốn cạnh và đo sai lệch vị trí cuối.</li><li>Thử giữ một bánh để xác nhận timeout dừng robot.</li></ol></section>
+  <section class="lesson"><h2>7. Bài tập mở rộng</h2><ol><li>Viết hàm diHinhChuNhat(dai, rong).</li><li>Cho robot quay trái thay vì quay phải.</li><li>Tính số xung tự động từ kích thước bánh và khoảng cách hai bánh.</li></ol></section>
+  <section class="lesson"><h2>8. Lỗi thường gặp và cách xử lý</h2><div class="warning">Góc tăng dần sau mỗi cạnh: giảm tốc hoặc thêm hiệu chỉnh sai số tích lũy.</div><div class="warning">Một encoder đếm ngược: kiểm tra hướng encoder trong RobotConfig/RobotEncoder.</div><div class="warning">Robot chạy mãi: phải giữ timeout và kê bánh khi thử lần đầu.</div></section>
+  <section class="lesson"><h2>9. Kết luận</h2><p>Bài 20 minh họa chuyển động hình học chính xác hơn nhờ phản hồi encoder.</p></section>
+  <nav class="nav-bottom" aria-label="Điều hướng bài học"><a href="bai19.html">← Bài 19</a><a href="tailieu-kythuat.html">Danh sách bài học</a><a href="bai21.html">Bài 21 →</a></nav>
 </main>
 <!-- ===== NỘI DUNG===== -->
 <script>

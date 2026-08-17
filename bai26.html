@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Bài 21. Robot vượt mê cung – thoát sau 5 vật cản</title>
+<title>Bài 26. Kho chương trình tham khảo</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -479,173 +479,22 @@ h1 {
 <!-- ===== NỘI DUNG===== -->
 <main class="page">
   <section class="hero">
-    <div class="label">BÀI HỌC NÂNG CAO · ĐÃ HOÀN THIỆN</div>
-    <h1>Bài 21. Robot vượt mê cung – thoát sau 5 vật cản</h1>
-    <p class="subtitle">Bài học liên thông sử dụng cấu hình robot mới nhất và thư viện hàm dùng chung.</p>
+    <div class="label">TÀI NGUYÊN HỌC TẬP</div>
+    <h1>Bài 26. Kho chương trình tham khảo</h1>
+    <p class="subtitle">Ba bộ chương trình giúp sinh viên học từ thao tác với từng linh kiện đến nhiệm vụ robot hoàn chỉnh.</p>
   </section>
-  <section class="lesson"><h2>1. Mục tiêu bài học</h2><ul><li>Chọn hướng rộng hơn khi gặp tường trước.</li><li>Xử lý ngõ cụt và mất phép đo.</li><li>Đếm năm lần gặp vật cản để xác định kết thúc khu vực mê cung.</li></ul><div class="note"><strong>Điều kiện học trước:</strong> Bài 17, 18 và 19.</div></section>
-  <section class="lesson"><h2>2. Chuẩn bị</h2><p><strong>Phần cứng:</strong> HC-SR04 phía trước, hai VL53L0X hai bên, hai động cơ và OLED.</p><p><strong>Phần mềm:</strong> Arduino IDE, board Arduino Mega or Mega 2560, Serial Monitor 115200 baud.</p><div class="warning">Trước khi biên dịch, chép thư mục <strong>THU_VIEN_ROBOT/RobotMega2560Mini</strong> vào <strong>Documents/Arduino/libraries</strong>, sau đó khởi động lại Arduino IDE. Kê hai bánh khỏi mặt đất ở lần thử đầu tiên.</div></section>
-  <section class="lesson"><h2>3. Nguyên lý và thuật toán</h2><ol><li>Robot đi thẳng khi HC-SR04 chưa thấy vật cản.</li><li>Khi vật cản được xác nhận, tăng bộ đếm đúng một lần.</li><li>So sánh hai laser: phía xa hơn là phía ưu tiên quay; hai bên cùng gần là ngõ cụt nên lùi và quay 180°.</li><li>Sau lần thứ năm, robot dừng và chuyển trạng thái đã thoát mê cung.</li></ol><div class="pin-collapse open"><button class="pin-collapse-head" onclick="togglePinTable(this)"><span>⚙️ Thông số cần hiệu chỉnh</span><span class="arrow">⌄</span></button><div class="pin-collapse-body"><div class="pin-table-wrap"><table class="pin-table"><thead><tr><th>Thông số</th><th>Giá trị ban đầu</th><th>Ý nghĩa</th></tr></thead><tbody><tr><td>NGUONG_TRUOC_CM</td><td>25 cm</td><td>Phát hiện tường trước</td></tr><tr><td>NGUONG_NGO_CUT_MM</td><td>180 mm</td><td>Hai bên cùng hẹp</td></tr><tr><td>SO_LAN_VAT_CAN_DE_THOAT</td><td>5</td><td>Điều kiện kết thúc</td></tr><tr><td>THOI_GIAN_QUAY_90_MS</td><td>520 ms</td><td>Cần hiệu chỉnh trên sân</td></tr></tbody></table></div></div></div></section>
-  <section class="lesson"><h2>4. Chương trình hoàn chỉnh</h2><div class="note">Chương trình sử dụng thư viện chung <strong>RobotMega2560Mini</strong>. <a href="CODE_BAI_18_25_THU_VIEN_VA_NANG_CAO/Bai_21_Vuot_me_cung_5_vat_can/Bai_21_Vuot_me_cung_5_vat_can.ino" download style="color:#7afcff;font-weight:bold;">Tải file .ino</a></div><div class="code-collapse"><button class="code-collapse-head" onclick="toggleCode(this)"><span>💻 Xem code ví dụ</span><span class="arrow">⌄</span></button><div class="code-collapse-body"><div class="code-box"><div class="code-title">Bai_21_Vuot_me_cung_5_vat_can.ino</div><button class="copy-btn" onclick="copyCode(this)">Copy</button><pre><code class="language-cpp">#include &lt;Robot.h&gt;
-
-// BÀI 21: VƯỢT MÊ CUNG BẰNG SIÊU ÂM VÀ HAI LASER
-// Thuật toán được lấy từ bài 11_Kết hợp siêu âm và laser:
-// 1. Phía trước trống: robot đi thẳng.
-// 2. Siêu âm thấy vật cản: dừng và đọc khoảng cách hai bên.
-// 3. Robot quay về bên có khoảng trống lớn hơn.
-// 4. Hai bên đều gần: lùi rồi quay 180 độ để thoát ngõ cụt.
-// 5. Sau 5 lần siêu âm phát hiện vật cản, coi như đã ra khỏi mê cung.
-
-const float NGUONG_TRUOC_CM = 25.0f;
-const uint16_t NGUONG_NGO_CUT_MM = 180;
-const uint16_t KHOANG_CACH_MO_MM = 2000;
-const uint8_t SO_LAN_VAT_CAN_DE_THOAT = 5;
-const int PWM_DI = 110;
-const int PWM_QUAY = 120;
-const int PWM_LUI = 100;
-const unsigned long QUAY_90_MS = 520;   // Hiệu chỉnh trên robot thật.
-const unsigned long QUAY_180_MS = 1050; // Hiệu chỉnh trên robot thật.
-const bool MAT_ECHO_XEM_LA_TRONG = true;
-
-uint8_t soLanGapVatCan = 0;
-bool lanTruocQuayPhai = false;
-bool daRaKhoiMeCung = false;
-
-void hienThiMeCung(const char *trangThai, const DuLieuKhoangCach &amp;d) {
-  oledXoa();
-  oledTieuDe("BAI 21 - ME CUNG");
-  oledInChu(4, 16, trangThai);
-
-  oledInChu(4, 30, "F:");
-  if (d.sieuAmHopLe) oledInSoThuc(18, 30, d.truocCm);
-  else oledInChu(18, 30, "NO ECHO");
-
-  oledInChu(4, 43, "L:");
-  if (d.laserTraiHopLe) oledInSo(18, 43, d.traiMm);
-  else oledInChu(18, 43, "LOI");
-  oledInChu(64, 43, "R:");
-  if (d.laserPhaiHopLe) oledInSo(78, 43, d.phaiMm);
-  else oledInChu(78, 43, "LOI");
-
-  oledInChu(4, 55, "VAT CAN:");
-  oledInSo(58, 55, soLanGapVatCan);
-  oledInChu(69, 55, "/5");
-  oledCapNhat();
-
-  Serial.print(trangThai);
-  Serial.print(F("  F="));
-  if (d.sieuAmHopLe) Serial.print(d.truocCm);
-  else Serial.print(F("NO_ECHO"));
-  Serial.print(F("cm L=")); Serial.print(d.traiMm);
-  Serial.print(F("mm R=")); Serial.print(d.phaiMm);
-  Serial.print(F("mm  So lan vat can="));
-  Serial.print(soLanGapVatCan);
-  Serial.print('/'); Serial.println(SO_LAN_VAT_CAN_DE_THOAT);
-}
-
-void quayTrai90(const DuLieuKhoangCach &amp;d) {
-  hienThiMeCung("QUAY TRAI", d);
-  quayTraiTheoThoiGian(PWM_QUAY, QUAY_90_MS);
-  lanTruocQuayPhai = false;
-}
-
-void quayPhai90(const DuLieuKhoangCach &amp;d) {
-  hienThiMeCung("QUAY PHAI", d);
-  quayPhaiTheoThoiGian(PWM_QUAY, QUAY_90_MS);
-  lanTruocQuayPhai = true;
-}
-
-void thoatNgoCut(const DuLieuKhoangCach &amp;d) {
-  hienThiMeCung("NGO CUT - DANG LUI", d);
-  diLui(PWM_LUI);
-  delay(300);
-  dungRobot();
-  delay(100);
-
-  hienThiMeCung("NGO CUT - QUAY 180", d);
-  quayPhaiTheoThoiGian(PWM_QUAY, QUAY_180_MS);
-  lanTruocQuayPhai = true;
-}
-
-void xuLyMotLanVatCan(const DuLieuKhoangCach &amp;d) {
-  // Mỗi lần vào hàm này là một lần siêu âm xác nhận vật cản mới
-  // và robot thực hiện một thao tác đổi hướng.
-  soLanGapVatCan++;
-  dungRobot();
-  hienThiMeCung("VAT CAN PHIA TRUOC", d);
-  delay(150);
-
-  // Laser đã khởi tạo nhưng báo ngoài tầm đo được xem là phía rất thoáng,
-  // giống quy ước 2000 mm trong bài 11 gốc.
-  bool dungDuocLaserTrai = d.laserTraiHopLe || laserTraiDaSanSang();
-  bool dungDuocLaserPhai = d.laserPhaiHopLe || laserPhaiDaSanSang();
-  uint16_t traiDeChon = d.laserTraiHopLe ? d.traiMm : KHOANG_CACH_MO_MM;
-  uint16_t phaiDeChon = d.laserPhaiHopLe ? d.phaiMm : KHOANG_CACH_MO_MM;
-
-  if (dungDuocLaserTrai &amp;&amp; dungDuocLaserPhai &amp;&amp;
-      traiDeChon &lt; NGUONG_NGO_CUT_MM &amp;&amp; phaiDeChon &lt; NGUONG_NGO_CUT_MM) {
-    thoatNgoCut(d);
-  } else if (dungDuocLaserTrai &amp;&amp; dungDuocLaserPhai) {
-    if (traiDeChon &gt; phaiDeChon + 40) quayTrai90(d);
-    else if (phaiDeChon &gt; traiDeChon + 40) quayPhai90(d);
-    else if (lanTruocQuayPhai) quayTrai90(d);
-    else quayPhai90(d);
-  } else if (dungDuocLaserTrai) {
-    quayTrai90(d);
-  } else if (dungDuocLaserPhai) {
-    quayPhai90(d);
-  } else {
-    dungRobot();
-    hienThiMeCung("LOI CA HAI LASER", d);
-  }
-
-  if (soLanGapVatCan &gt;= SO_LAN_VAT_CAN_DE_THOAT) {
-    dungRobot();
-    daRaKhoiMeCung = true;
-    oledThongBao("BAI 21 - ME CUNG", "DA GAP 5 VAT CAN",
-                 "COI NHU DA THOAT", "DUNG ROBOT");
-    Serial.println(F("Da du 5 lan sieu am thay vat can: ket thuc me cung."));
-  }
-}
-
-void setup() {
-  batDauSerial();
-  oledBatDau();
-  dongCoBatDau();
-  sieuAmBatDau();
-  laserBatDau();
-  oledThongBao("BAI 21 - ME CUNG", "DAT ROBOT DAU LOI",
-               "THOAT SAU 5 VAT CAN", "CHO 2 GIAY");
-  delay(2000);
-}
-
-void loop() {
-  if (daRaKhoiMeCung) {
-    dungRobot();
-    return;
-  }
-
-  DuLieuKhoangCach d = docBaHuong();
-  bool coVatCan = d.sieuAmHopLe &amp;&amp; d.truocCm &lt;= NGUONG_TRUOC_CM;
-
-  if (coVatCan) {
-    xuLyMotLanVatCan(d);
-  } else if (!d.sieuAmHopLe &amp;&amp; !MAT_ECHO_XEM_LA_TRONG) {
-    dungRobot();
-    hienThiMeCung("DUNG - MAT ECHO", d);
-  } else {
-    diThang(PWM_DI);
-    hienThiMeCung("DI THANG", d);
-  }
-  delay(60);
-}
-</code></pre></div></div></div></section>
-  <section class="lesson"><h2>5. Phân tích chương trình</h2><ul><li>Bộ đếm chỉ tăng trong hàm xử lý một sự kiện vật cản, tránh đếm nhiều vòng loop cho cùng một bức tường.</li><li>Laser ngoài tầm được quy ước là phía thoáng để robot có thể lựa chọn hướng.</li><li>Cờ lanTruocQuayPhai giúp phá hòa khi hai bên gần bằng nhau.</li></ul></section>
-  <section class="lesson"><h2>6. Quy trình thực hành và hiệu chỉnh</h2><ol><li>Tạo hành lang chữ L rồi kiểm tra hướng rẽ.</li><li>Che hai bên để thử ngõ cụt.</li><li>Theo dõi bộ đếm 1/5 đến 5/5 trên OLED và Serial.</li><li>Chỉnh thời gian quay 90°/180° trước khi chạy mê cung thật.</li></ol></section>
-  <section class="lesson"><h2>7. Bài tập mở rộng</h2><ol><li>Xác nhận vật cản bằng ba lần đo liên tiếp.</li><li>Thay quay theo thời gian bằng quay theo encoder.</li><li>Lưu chuỗi hướng rẽ để robot chạy ngược về điểm đầu.</li></ol></section>
-  <section class="lesson"><h2>8. Lỗi thường gặp và cách xử lý</h2><div class="warning">Đếm quá nhanh: tăng khoảng lùi hoặc thêm khóa chống lặp sau khi rẽ.</div><div class="warning">Quay về phía hẹp: kiểm tra D39 trái và D37 phải.</div><div class="warning">Mất Echo làm robot đứng: lựa chọn MAT_ECHO_XEM_LA_TRONG phải phù hợp sa hình.</div></section>
-  <section class="lesson"><h2>9. Kết luận</h2><p>Bài 21 hoàn thiện riêng khu vực mê cung và tạo điều kiện chuyển sang bài line.</p></section>
-  <nav class="nav-bottom" aria-label="Điều hướng bài học"><a href="bai20.html">← Bài 20</a><a href="tailieu-kythuat.html">Danh sách bài học</a><a href="bai22.html">Bài 22 →</a></nav>
+  <section class="lesson"><h2>1. Mục tiêu</h2><ul><li>Biết sự khác nhau giữa ba bộ chương trình.</li><li>Chọn đúng bộ mã theo trình độ và mục đích.</li><li>Biết cách dùng chương trình tham khảo mà không bỏ qua bước kiểm tra phần cứng.</li></ul></section>
+  <section class="lesson"><h2>2. Ba bộ chương trình</h2>
+    <div class="note"><strong>Bộ 1 – Test độc lập:</strong> lập trình chi tiết từ đầu cho từng linh kiện và từng nhiệm vụ. Phù hợp khi học nguyên lý chân, tín hiệu và cấu trúc chương trình Arduino.</div>
+    <div class="note"><strong>Bộ 2 – Xây dựng thư viện:</strong> tập trung các hàm phức tạp vào thư viện RobotMega2560Mini. Sinh viên có thể đọc mã thư viện để hiểu cách tổ chức hàm và tái sử dụng chương trình.</div>
+    <div class="note"><strong>Bộ 3 – Sử dụng thư viện:</strong> áp dụng các hàm có sẵn để viết lại các bài của Bộ 1. Phần chương trình chính ngắn hơn và làm rõ thuật toán điều khiển robot.</div>
+  </section>
+  <section class="lesson"><h2>3. Trình tự học khuyến nghị</h2><ol><li>Chạy Bộ 1 để kiểm tra từng phần cứng và hiểu tín hiệu vào/ra.</li><li>Đọc Bộ 2, đặc biệt RobotConfig.h, Robot.h và các tệp chức năng.</li><li>Dùng Bộ 3 để ghép hành vi và thay đổi thuật toán.</li><li>Cuối cùng học Bài 19–25 để xử lý các nhiệm vụ liên thông.</li></ol></section>
+  <section class="lesson"><h2>4. Truy cập chương trình</h2><p style="text-align:center;margin:24px 0;"><a href="https://drive.google.com/drive/folders/1CGWtgv5pVlSgHswvHZc0IFRFgLymemg5?usp=sharing" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:14px 24px;border-radius:14px;background:linear-gradient(135deg,#00aee8,#0757c8);color:white;text-decoration:none;font-weight:800;box-shadow:0 0 22px rgba(0,220,255,.35);">📂 Mở kho chương trình trên Google Drive</a></p><div class="note">Liên kết ở chế độ công khai. Nên tải cả thư mục của từng bộ để giữ đúng cấu trúc thư viện và chương trình ví dụ.</div></section>
+  <section class="lesson"><h2>5. Cách dùng với ChatGPT</h2><ol><li>Gửi kèm tệp RobotConfig.h và nêu rõ đang dùng Mega 2560 Mini.</li><li>Nêu tên bộ và bài đang phát triển; ví dụ: “Dùng Bộ 3, sửa bài bám line để dừng sau hai vật cản”.</li><li>Mô tả hiện tượng trên robot thật, giá trị OLED/Serial và phần đã kiểm tra.</li><li>Yêu cầu giữ nguyên cấu hình chân, chú thích tiếng Việt và dừng an toàn khi cảm biến lỗi.</li></ol><div class="warning"><strong>Mẫu yêu cầu:</strong> “Hãy dùng thư viện RobotMega2560Mini và cấu hình hiện tại. Viết một bài bám tường phải, hiển thị khoảng cách trên OLED và Serial. Không thay đổi chân, động cơ phải đang đảo chiều.”</div></section>
+  <section class="lesson"><h2>6. Quy tắc an toàn</h2><ul><li>Luôn Verify trước khi Upload.</li><li>Kê bánh khi thử động cơ hoặc chương trình tổng hợp lần đầu.</li><li>Bluetooth, nút A0 và MPU6050 hiện chưa đấu nối; không giả định chúng đã hoạt động.</li><li>Không thay RobotConfig.h nếu chưa kiểm tra lại sơ đồ chân robot thật.</li></ul></section>
+  <section class="lesson"><h2>7. Kết luận</h2><p>Ba bộ chương trình không thay thế nhau mà tạo thành một lộ trình: hiểu chi tiết, học cách xây dựng thư viện, rồi dùng thư viện để giải bài toán robot.</p></section>
+  <nav class="nav-bottom" aria-label="Điều hướng bài học"><a href="bai25.html">← Bài 25</a><a href="tailieu-kythuat.html">Danh sách bài học</a><a href="https://drive.google.com/drive/folders/1CGWtgv5pVlSgHswvHZc0IFRFgLymemg5?usp=sharing" target="_blank" rel="noopener noreferrer">Mở Google Drive →</a></nav>
 </main>
 <!-- ===== NỘI DUNG===== -->
 <script>
